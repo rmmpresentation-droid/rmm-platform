@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { Logo } from '@/components/brand/Logo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { businessForms } from '@/lib/business-fields.mjs';
-import { monthDays, appointmentsByDay } from '@/lib/agenda.mjs';
+import { weekDays, appointmentsByDay, appointmentHour } from '@/lib/agenda.mjs';
 import { statuses, type Item, type Section } from '@/lib/local-workspace.mjs';
 
 type Role = 'superadmin' | 'admin' | 'presentateur' | 'networker';
@@ -22,19 +22,19 @@ async function api<T>(url:string, options:RequestInit = {}):Promise<T> {
   return body as T;
 }
 function AppointmentCalendar({ entries }: { entries: Entry[] }) {
-  const [month, setMonth] = useState(() => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1); });
-  const [selected, setSelected] = useState<string | null>(null);
-  const days = monthDays(month.getFullYear(), month.getMonth());
+  const [week, setWeek] = useState(() => new Date());
+  const days = weekDays(week);
   const appointments = appointmentsByDay(entries);
-  const monthName = new Intl.DateTimeFormat('fr-TN', { month: 'long', year: 'numeric' }).format(month);
-  const moveMonth = (delta: number) => { setMonth(new Date(month.getFullYear(), month.getMonth() + delta, 1)); setSelected(null); };
+  const labelDay = (key: string) => { const [y,m,d] = key.split('-').map(Number); return new Intl.DateTimeFormat('fr-TN', {weekday:'short',day:'numeric',month:'short'}).format(new Date(y,m-1,d)); };
+  const moveWeek = (delta: number) => setWeek(current => new Date(current.getFullYear(), current.getMonth(), current.getDate() + delta * 7));
+  const card = (item: Entry) => <li key={item.id} className="rounded-md border border-[var(--gold)]/40 bg-card p-2 text-xs break-words"><strong>{appointmentHour(item.date) !== null && `${item.date.slice(11,16)} · `}{item.title}</strong><span className="mt-1 block text-muted-foreground">{item.status}</span>{item.extra?.participant && <span className="mt-1 block">{item.extra.participant}</span>}{item.extra?.location && <span className="mt-1 block text-muted-foreground">{item.extra.location}</span>}</li>;
   return <section aria-label="Agenda des rendez-vous" className="mt-8 rounded-xl bg-card hairline p-5 sm:p-6">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Agenda des rendez-vous</h2><p className="mt-1 text-sm text-muted-foreground">Rendez-vous datés, hors annulations. Une demande n’est pas une confirmation de disponibilité.</p></div><div className="flex items-center gap-3"><button type="button" className="rounded-md border border-border px-3 py-2" aria-label="Mois précédent" onClick={()=>moveMonth(-1)}>←</button><h3 className="min-w-32 text-center font-medium capitalize" aria-live="polite">{monthName}</h3><button type="button" className="rounded-md border border-border px-3 py-2" aria-label="Mois suivant" onClick={()=>moveMonth(1)}>→</button></div></div>
-    <div className="mt-5 grid grid-cols-7 gap-1 sm:gap-2" role="group" aria-label={`Jours de ${monthName}`}>
-      {['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(day=><div key={day} className="text-center text-xs text-muted-foreground">{day}</div>)}
-      {days.map((day,index)=>day ? <button key={day} type="button" onClick={()=>setSelected(day)} aria-label={`${day} : ${appointments[day]?.length || 0} rendez-vous`} aria-pressed={selected===day} className={`min-h-14 rounded-md border p-1 text-center text-sm sm:min-h-20 ${selected===day?'border-[var(--gold)] bg-background':'border-border hover:border-[var(--gold)]'}`}><span>{Number(day.slice(-2))}</span>{!!appointments[day]?.length && <span className="mt-1 block text-xs font-semibold text-[var(--gold)]">{appointments[day].length} RDV</span>}</button> : <div key={`empty-${index}`} aria-hidden="true"/>)}
-    </div>
-    {selected && <div className="mt-5 border-t border-border pt-4" aria-live="polite"><h3 className="font-medium">Rendez-vous du {selected.split('-').reverse().join('/')}</h3>{appointments[selected]?.length ? <ul className="mt-2 space-y-2">{appointments[selected].map(item=><li key={item.id} className="rounded-md border border-border bg-background p-3 text-sm"><strong>{item.date.length > 10 ? item.date.slice(11,16) + ' · ' : ''}{item.title}</strong><span className="ml-2 text-muted-foreground">{item.status}</span>{item.extra?.participant && <p className="mt-1 text-muted-foreground">Participant : {item.extra.participant}</p>}{item.extra?.location && <p className="mt-1 text-muted-foreground">Lieu : {item.extra.location}</p>}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Aucun rendez-vous ce jour.</p>}</div>}
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Agenda hebdomadaire</h2><p className="mt-1 text-sm text-muted-foreground">Heures saisies (heure locale de Tunis) · Les demandes ne sont pas des rendez-vous confirmés.</p></div><div className="flex items-center gap-2"><button type="button" className="rounded-md border border-border px-3 py-2" aria-label="Semaine précédente" onClick={()=>moveWeek(-1)}>←</button><button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={()=>setWeek(new Date())}>Cette semaine</button><button type="button" className="rounded-md border border-border px-3 py-2" aria-label="Semaine suivante" onClick={()=>moveWeek(1)}>→</button></div></div>
+    <p className="mt-4 text-sm font-medium capitalize" aria-live="polite">Semaine du {days[0].split('-').reverse().join('/')} au {days[6].split('-').reverse().join('/')}</p>
+    <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[850px] table-fixed border-collapse text-left" aria-label="Rendez-vous par jour et par heure"><colgroup><col className="w-16"/>{days.map(day=><col key={day}/>)}</colgroup><thead><tr><th scope="col" className="border border-border p-2 text-xs">Heure</th>{days.map(day=><th scope="col" key={day} className="border border-border p-2 text-xs capitalize">{labelDay(day)}</th>)}</tr></thead><tbody>
+      <tr><th scope="row" className="border border-border p-2 text-xs text-muted-foreground">Sans heure</th>{days.map(day=><td key={day} className="border border-border p-1 align-top"><ul className="space-y-1">{(appointments[day] || []).filter(item=>appointmentHour(item.date)===null).map(card)}</ul></td>)}</tr>
+      {Array.from({length:24},(_,hour)=><tr key={hour}><th scope="row" className="border border-border p-2 align-top text-xs text-muted-foreground">{String(hour).padStart(2,'0')}:00</th>{days.map(day=><td key={day} className="h-12 border border-border bg-background/40 p-1 align-top"><ul className="space-y-1">{(appointments[day] || []).filter(item=>appointmentHour(item.date)===hour).map(card)}</ul></td>)}</tr>)}
+    </tbody></table></div><p className="mt-3 text-xs text-muted-foreground">Faites défiler horizontalement sur petit écran. Les rendez-vous annulés ou sans date restent dans la liste ci-dessous. Aucun contrôle de disponibilité ou de conflit n'est effectué.</p>
   </section>;
 }
 export function LocalWorkspace() {
