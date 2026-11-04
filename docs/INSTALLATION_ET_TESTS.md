@@ -85,3 +85,7 @@ Les anciennes fiches `localStorage` ne sont pas automatiquement transférées da
 5. Les anciens enregistrements sont conservés lors du démarrage de l'API ; les nouveaux champs restent vides jusqu'à modification. Sauvegardez le volume PostgreSQL avant toute mise à jour. Les tests automatisés utilisent pg-mem et ne remplacent pas un test sur PostgreSQL réel.
 
 Un networker ne peut pas confirmer lui-même une demande ni modifier une séance confirmée ; l'administration renseigne le compte rendu et les changements ultérieurs. Le suivi de présence structuré, les notifications et la gestion des disponibilités restent à développer.
+
+### Agenda des rendez-vous
+
+Dans **Rendez-vous**, naviguez entre les mois avec les flèches, puis sélectionnez un jour pour voir les séances datées, leur heure et leur statut. L'agenda montre toutes les demandes et séances non annulées accessibles au compte connecté ; une demande n'est pas une réservation confirmée. Les fiches sans date et les rendez-vous annulés restent consultables dans la liste mais n'apparaissent pas sur l'agenda. Les dates sont affichées telles qu'elles ont été saisies, sans conversion de fuseau horaire. L'agenda ne détecte pas les conflits et ne gère pas les disponibilités.
