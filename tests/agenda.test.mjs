@@ -23,3 +23,13 @@ test('agenda classe les rendez-vous datés, par heure, hors annulations', () => 
   assert.equal(appointmentHour(entries[4].date),null);
   assert.equal(appointmentHour('2026-12-01T24:00'),null);
 });
+
+test('planning de 08:00 à 22:00 inclus', async () => {
+  const { inPlanningHours } = await import('../src/lib/agenda.mjs');
+  assert.equal(inPlanningHours('2026-12-01T07:59'), false);
+  assert.equal(inPlanningHours('2026-12-01T08:00'), true);
+  assert.equal(inPlanningHours('2026-12-01T21:59'), true);
+  assert.equal(inPlanningHours('2026-12-01T22:00'), true);
+  assert.equal(inPlanningHours('2026-12-01T22:01'), false);
+  assert.equal(inPlanningHours('2026-12-01'), false);
+});

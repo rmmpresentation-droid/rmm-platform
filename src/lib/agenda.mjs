@@ -24,3 +24,11 @@ export function appointmentHour(date) {
   const match = /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d/.exec(date || '');
   return match ? Number(match[1]) : null;
 }
+
+// 22:00 is included, but later times are outside the displayed planning.
+export function inPlanningHours(date) {
+  const match = /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):([0-5]\d)/.exec(date || '');
+  if (!match) return false;
+  const minutes = Number(match[1]) * 60 + Number(match[2]);
+  return minutes >= 8 * 60 && minutes <= 22 * 60;
+}
