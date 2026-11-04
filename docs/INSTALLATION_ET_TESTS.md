@@ -1,64 +1,76 @@
-# Guide d’installation et de test local
+# Installation et tests locaux
 
-## 1. Prérequis
+## Prérequis et récupération
 
-- Git et Docker Desktop avec Docker Compose v2 pour la méthode Docker ; ou Node.js 22 et npm pour la méthode sans Docker.
-- Un navigateur moderne. Accès Internet nécessaire lors de l'installation des dépendances et pour les ressources distantes de la template.
-- Ce prototype est local, sans base de données ou comptes utilisateurs. N'utilisez que des données fictives.
-
-## 2. Récupérer le projet
+Installer Git, Docker Desktop et Docker Compose v2. La machine doit avoir accès à Internet pour télécharger les images et dépendances.
 
 ```sh
 git clone https://github.com/rmmpresentation-droid/rmm-platform.git
 cd rmm-platform
-git fetch origin arena/bdff8fd2-rmm-platform
-git checkout arena/bdff8fd2-rmm-platform
+git switch --track origin/arena/bdff8fd2-rmm-platform
+cp .env.example .env
 ```
 
-Le code de cette branche n'est pas automatiquement intégré à `main`.
+Sous Windows, copier `.env.example` vers `.env` avec l'explorateur ou `copy .env.example .env`. Modifier dans `.env` l'adresse et le mot de passe initial (`RMM_ADMIN_EMAIL`, `RMM_ADMIN_PASSWORD` ; 12 caractères minimum). Ne pas partager ni committer ce fichier. Si le mot de passe contient des caractères spéciaux, l'entourer de guillemets simples dans `.env`.
 
-## 3. Démarrage avec Docker
+## Démarrage Docker
 
 ```sh
 docker compose up --build
 ```
 
-Ouvrir http://localhost:8080. Arrêter avec Ctrl+C, puis `docker compose down`. Le port est lié à `127.0.0.1` pour limiter l'exposition à l'ordinateur local. Pour reconstruire après une mise à jour : `docker compose up --build`.
+Ouvrir http://localhost:8080/dashboard. Le navigateur utilise le port 8080 ; l'API et la base ne sont pas publiées directement. PostgreSQL conserve les données dans le volume Docker `rmm_db`. Le serveur initialise les tables et le premier superadministrateur uniquement lorsque la table des utilisateurs est vide. Changer `.env` par la suite ne modifie pas un compte déjà créé.
 
-Les données de l'espace de travail sont stockées dans le navigateur, pas dans le conteneur. Un autre navigateur ou appareil ne les verra pas. Un nettoyage du stockage du navigateur les supprime ; exportez d'abord un JSON. Docker n'est pas requis pour les conserver.
+Arrêter avec Ctrl+C puis `docker compose down`. Ne pas utiliser `docker compose down -v` si les données doivent être conservées : cette commande supprime le volume de la base. Pour reconstruire après un pull, relancer `docker compose up --build`.
 
-## 4. Démarrage sans Docker
+## Sans Docker
+
+Prérequis : Node.js 22, npm et PostgreSQL 16 disponible localement avec une base et un utilisateur. Utiliser deux terminaux :
 
 ```sh
 npm ci --legacy-peer-deps
+export DATABASE_URL='postgres://rmm:rmm_local@localhost:5432/rmm'
+export RMM_ADMIN_EMAIL='admin@example.test'
+export RMM_ADMIN_PASSWORD='un-mot-de-passe-local-long'
+npm run api
+```
+
+Dans le second terminal :
+
+```sh
 npm run dev -- --host 127.0.0.1 --port 8080
 ```
 
-L'option `--legacy-peer-deps` est nécessaire pour les dépendances de la template. Ouvrir http://localhost:8080. Ctrl+C arrête le serveur.
+La base et son utilisateur doivent être créés au préalable ; adapter `DATABASE_URL` à votre installation. L'API utilise le port 3001, et Vite redirige `/api` vers elle. Sous Windows, utiliser la syntaxe de variables d'environnement adaptée à votre terminal. `--legacy-peer-deps` est nécessaire aux dépendances de la template.
 
-## 5. Vérifications automatiques
+## Parcours manuels
+
+1. Ouvrir `/dashboard` : sans session, le formulaire de connexion s'affiche. Tester un mot de passe incorrect, puis les identifiants initiaux.
+2. Depuis le superadministrateur, ouvrir Utilisateurs et créer au moins un administrateur, un présentateur et deux networkers avec des mots de passe de 12 caractères minimum. Se déconnecter.
+3. Se connecter comme networker : créer un prospect et une tâche, modifier leur statut, recharger la page et vérifier leur persistance. Le tableau de bord affiche les nombres des fiches accessibles.
+4. Se connecter comme deuxième networker : vérifier que les prospects du premier ne sont pas visibles. Le rôle présentateur ne voit que rendez-vous, formations et ressources. Ces deux rôles ont un accès en lecture seule aux formations et ressources.
+5. Se connecter comme administrateur : vérifier l'accès aux fiches et au menu Analytique ; les comptes et les fiches sont comptés par rôle ou statut. Il ne s'agit pas de chiffres d'affaires.
+6. Utiliser le bouton Clair/Sombre et recharger ; le choix est conservé dans le navigateur. Tester les interfaces sur petit et grand écran.
+7. Se déconnecter : `/api/me` doit répondre 401. L'accès direct à `/api/analytics` avec un compte networker doit répondre 403.
+8. Arrêter et redémarrer Compose sans supprimer le volume : les comptes et les fiches restent présents.
+
+## Vérifications automatiques
 
 ```sh
+npm ci --legacy-peer-deps
 npm test
 npm run typecheck
 npm run build
 ```
 
-Les tests automatisés actuels vérifient seulement la validation des sauvegardes : JSON correct, sections manquantes, statuts incorrects et identifiants dupliqués. Ils ne constituent pas une recette complète des fonctionnalités ni des tests de sécurité. La compilation valide la construction du projet mais ne met rien en production.
+Les tests d'API utilisent PostgreSQL simulé en mémoire (`pg-mem`) : ils couvrent connexion, déconnexion, rôles, isolation des fiches et accès analytique. Ils ne remplacent pas un test sur PostgreSQL réel ni une recette de sécurité complète.
 
-## 6. Scénarios manuels
+## Migration de l'ancien prototype navigateur
 
-1. Aller sur `/admin` ; constater l'avertissement de prototype. Choisir un profil de démonstration dans le menu.
-2. Dans Prospects, créer un prospect fictif et vérifier son apparition, la recherche, la modification et le passage de « Premier contact » à « Présentation », puis « Closing » ou « Sans commande ».
-3. Dans Tâches, créer une tâche fictive avec responsable et échéance, passer son statut à « Terminée » et vérifier après rechargement.
-4. Dans Rendez-vous, créer une demande fictive, lui attribuer un responsable et une date, puis changer son statut. Aucun message ou rappel n'est envoyé.
-5. Dans Networkers, Formations, Ressources, Commandes et Produits et stock, ajouter une fiche fictive, modifier son statut, la modifier et la supprimer après confirmation. Ces fiches sont des données génériques : elles ne réalisent pas encore les processus métier associés.
-6. Exporter le JSON, changer une fiche, importer le JSON exporté et confirmer le remplacement ; vérifier que l'état exporté est restauré. Tester un fichier JSON incorrect : l'import est refusé et les données précédentes restent présentes.
-7. Aller sur `/dashboard`, choisir Networker ou Présentateur et observer les sections proposées. Le choix de profil est visuel, pas un contrôle d'accès. La boutique `/boutique` est encore une maquette non reliée à l'espace local.
+Les anciennes fiches `localStorage` ne sont pas automatiquement transférées dans PostgreSQL. L'ancien stockage sous la clé `rmm-local-workspace-v1` reste dans le navigateur ; conservez-en une copie avant de l'effacer. L'import/export JSON de l'ancien prototype n'est pas disponible dans la nouvelle interface ; migration manuelle ou script à développer.
 
-## 7. Diagnostic
+## Diagnostic
 
-- Port occupé : arrêtez le service qui utilise le port 8080, ou modifiez le port Docker publié dans `compose.yaml`.
-- Échec `npm ci` : utiliser Node 22 et la commande exacte avec `--legacy-peer-deps`. Vérifier l'accès au registre npm.
-- Données absentes : vérifier que vous utilisez le même navigateur, le même profil et la même origine (localhost/port). Le stockage ne suit pas le dépôt Git.
-- Import refusé : ne modifiez pas les sections ni les champs du JSON exporté. L'import remplace tout le contenu existant après confirmation.
+- Si la connexion échoue, vérifier les logs `docker compose logs api db` ; l'initialisation exige un mot de passe d'au moins 12 caractères et une base vide pour créer le compte initial.
+- Si le port 8080 est occupé, changer le port hôte dans `compose.yaml` puis redémarrer.
+- Les pages publiques restent des maquettes ; les données PostgreSQL ne remplissent pas automatiquement la boutique.

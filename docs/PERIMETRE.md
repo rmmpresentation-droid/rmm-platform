@@ -1,28 +1,19 @@
-# Périmètre et architecture du prototype
+# Périmètre et architecture
 
-## Existant
+## Fonctionnalités présentes
 
-- Template TanStack Start / React / Vite : accueil, catalogue, fiches produits et page réseau, avec contenu de démonstration.
-- Espace local `/admin` et `/dashboard` : sélection de profil de démonstration, création, modification, recherche, changement de statut et suppression de fiches génériques pour prospects, tâches, rendez-vous, networkers, formations, ressources, commandes et stock.
-- Persistance dans `localStorage`, export et import JSON validé, tests unitaires du format de sauvegarde.
-- Docker Compose démarre le serveur de développement local ; pas de CI/CD ou de configuration de production.
+- Interface issue de la template React/TanStack Start, avec thèmes clair et sombre mémorisés par navigateur.
+- API Express + PostgreSQL. Initialisation de la base et d'un superadministrateur depuis `.env` lorsque la table utilisateurs est vide. Mots de passe hachés avec bcrypt ; session opaque conservée en base et cookie HttpOnly SameSite=Lax ; déconnexion et expiration après 12 heures.
+- Le superadministrateur peut créer des comptes superadmin, admin, présentateur et networker. Chaque rôle reçoit son tableau de bord et ses sections autorisées. Les admins voient les fiches de tous ; présentateurs et networkers voient leurs propres fiches, avec lecture partagée des formations et ressources. Les champs « responsable » restent du texte libre, pas une affectation réelle.
+- Création, modification, suppression et statuts de fiches génériques. Interface analytique réservée aux admins : nombre de fiches par statut et de comptes par rôle.
+- Docker Compose avec PostgreSQL persistant, API et serveur web. Aucun CI/CD ni déploiement n'est configuré.
 
-## Ce qui reste à réaliser
+## Limites importantes
 
-Le référentiel Notion contient beaucoup plus que les fiches génériques du prototype. Les cas d'utilisation suivants ne sont **pas implémentés** :
+Ce n'est pas une application de production : pas de TLS, de récupération/changement de mot de passe, de révocation administrative, d'audit, de MFA ni d'administration complète des utilisateurs. Les tentatives de connexion sont limitées en mémoire par processus. Les cookies et identifiants PostgreSQL sont configurés pour le développement local uniquement. Pas de sauvegarde automatique : le volume doit être sauvegardé séparément.
 
-- Authentification réelle, création de comptes, isolation des données par rôle et réseau, audit et base de données partagée.
-- Formation Days 1–3 avec contenus fournis par RMM, quiz configurable, score et restriction effective d'accès.
-- Arbre de parrainage, gestion complète des packs, règles de rangs, PP, gains et commissions, retours et historiques financiers. Les règles doivent être approuvées par RMM.
-- Disponibilités, détection de conflits, affectation et présence aux rendez-vous, tâches individuelles/groupées et notifications Telegram avec deux rappels.
-- Boutique reliée au panier, commande effective, stock transactionnel, factures, paiement et suivi de livraison ; statistiques fiables, modération et rapports.
-- Gestion structurée des supports/événements, téléchargements sécurisés, droits des présentateurs, contrôle d'accès aux prospects et prise en compte des obligations légales de conservation.
-- Tests fonctionnels et d'intégration couvrant les parcours et la sécurité ; sauvegarde serveur et restauration partagée.
+Les fiches ne sont pas des processus métier complets. Les fonctions suivantes restent à implémenter : formation Days 1–3 avec quiz et accès bloquant ; calculs de points, commissions, rangs et arbre de parrainage ; affectation des tâches et disponibilités ; calendrier avec détection de conflits et présences ; notifications Telegram et rappels ; catalogue et stocks transactionnels ; panier, factures, paiement et livraison ; analytics financières. Les règles métier, contenus et conditions juridiques restent à valider avec RMM. La boutique de la template et ses valeurs sont des exemples non vérifiés, non reliés à la base.
 
-Les fiches génériques ne calculent rien et ne constituent pas la réalisation des processus ci-dessus. Les valeurs, tarifs et allégations dans la template sont à confirmer. Aucun cas d'utilisation IA n'est prévu.
+## Architecture
 
-## Flux technique actuel
-
-Navigateur → serveur local Vite/TanStack → interface React. Les fiches sont enregistrées dans le localStorage du navigateur, et non dans le conteneur Docker. Les fichiers JSON exportés sont sous la responsabilité de l'utilisateur. L'import remplace l'ensemble des données locales, sans fusion.
-
-Pour la suite, consulter le référentiel Notion approuvé et définir les règles métier manquantes ; prévoir une base de données locale, une authentification et des autorisations vérifiées côté serveur avant de manipuler des données sensibles.
+Navigateur → Vite/TanStack (port 8080) → proxy `/api` → API Express (port 3001) → PostgreSQL (5432). Le navigateur ne contacte pas directement PostgreSQL. L'API impose les rôles et la visibilité, et vérifie les données. Les données anciennes du prototype localStorage ne sont pas migrées automatiquement. Consultez le guide d'installation pour plus de détails.

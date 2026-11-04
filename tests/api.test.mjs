@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { newDb } from 'pg-mem';
+import request from 'supertest';
+import { initialize, createApp } from '../server/app.mjs';
+
+test('connexion, autorisations, isolation et analytique', async () => {
+  const memory = newDb();
+  const { Pool } = memory.adapters.createPg();
+  const pool = new Pool();
+  await initialize(pool, 'admin@example.test', 'longpassword123');
+  const app = createApp(pool); const root = request.agent(app); const member = request.agent(app); const other = request.agent(app);
+  assert.equal((await request(app).get('/api/analytics')).status, 401);
+  assert.equal((await root.post('/api/login').send({email:'admin@example.test',password:'incorrect'})).status, 401);
+  assert.equal((await root.post('/api/login').send({email:'admin@example.test',password:'longpassword123'})).status, 200);
+  for (const email of ['membre@example.test','autre@example.test']) assert.equal((await root.post('/api/users').send({name:'Membre',email,password:'longpassword123',role:'networker'})).status, 201);
+  assert.equal((await member.post('/api/login').send({email:'membre@example.test',password:'longpassword123'})).status, 200);
+  assert.equal((await other.post('/api/login').send({email:'autre@example.test',password:'longpassword123'})).status, 200);
+  assert.equal((await member.get('/api/analytics')).status, 403);
+  assert.equal((await member.post('/api/entries/prospects').set('Origin','https://evil.example').send({})).status, 403);
+  assert.equal((await root.post('/api/users').send({name:'Test',email:'long@example.test',password:'a'.repeat(73),role:'networker'})).status, 400);
+  assert.equal((await member.get('/api/users')).status, 403);
+  assert.equal((await member.get('/api/entries/commandes')).status, 403);
+  const payload = {title:'Test',detail:'',owner:'',date:'',status:'Premier contact'};
+  const created = await member.post('/api/entries/prospects').send(payload); assert.equal(created.status, 201);
+  assert.equal((await other.get('/api/entries/prospects')).body.length, 0);
+  assert.equal((await other.put(`/api/entries/prospects/${created.body.id}`).send(payload)).status, 404);
+  assert.equal((await member.post('/api/entries/prospects').send({...payload,status:'invalide'})).status, 400);
+  assert.equal((await root.get('/api/entries/prospects')).body.length, 1);
+  assert.equal((await root.get('/api/analytics')).status, 200);
+  assert.equal((await member.post('/api/logout')).status, 200);
+  assert.equal((await member.get('/api/me')).status, 401);
+  await pool.end();
+});

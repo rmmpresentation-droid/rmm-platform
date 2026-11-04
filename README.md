@@ -1,19 +1,21 @@
-# RMM — prototype local
+# RMM — application locale
 
-Prototype local basé sur la template `rmmpresentation-droid/rmm` (React, TanStack Start et Vite). Son objectif est de faciliter les essais avant la réalisation complète du projet RMM. Aucun pipeline CI/CD ni déploiement n'est configuré.
+Application de démonstration locale issue de la template `rmmpresentation-droid/rmm` : React, TanStack Start, API Express et PostgreSQL. Elle comprend connexion par session, rôles, fiches persistantes, tableaux de bord, analytics et thèmes clair/sombre. Aucune CI/CD ni configuration de production n'est fournie.
 
-## Démarrage rapide
-
-Avec Docker et Docker Compose :
+## Démarrage rapide avec Docker
 
 ```sh
+git fetch origin
+git switch arena/bdff8fd2-rmm-platform
+git pull origin arena/bdff8fd2-rmm-platform
+cp .env.example .env
+# Modifier l'e-mail et le mot de passe initial dans .env
+# Le mot de passe doit contenir au moins 12 caractères.
 docker compose up --build
 ```
 
-Puis ouvrir http://localhost:8080. Sans Docker : `npm ci --legacy-peer-deps` puis `npm run dev -- --host 127.0.0.1 --port 8080`.
+Ouvrir http://localhost:8080/dashboard et se connecter avec les identifiants définis dans `.env`. Le premier compte est créé uniquement si la base est vide. Le superadministrateur crée ensuite les autres comptes depuis « Utilisateurs ».
 
-**[Guide complet d'installation et de tests](docs/INSTALLATION_ET_TESTS.md)** · **[Périmètre, architecture et travaux restants](docs/PERIMETRE.md)**
+**[Guide détaillé d'installation et de test](docs/INSTALLATION_ET_TESTS.md)** · **[Périmètre et limites](docs/PERIMETRE.md)**
 
-## Avertissement
-
-Il s'agit d'un prototype incomplet, pas d'une application exploitable en entreprise. Les données sont dans le navigateur, non chiffrées et non partagées. Le sélecteur de rôle n'est pas une authentification ; n'utilisez aucune donnée réelle. La boutique et certaines actions de la template sont des maquettes. Aucun paiement ni notification n'est envoyé. Les informations et allégations de la template sont à vérifier avant toute utilisation.
+Cette application reste un prototype local, non prêt pour la production. Ne pas utiliser de données réelles ni l'exposer sur Internet. Les fiches génériques ne couvrent pas encore l'ensemble des processus métier du référentiel Notion. La boutique est une maquette non reliée aux commandes. Aucun paiement ni notification n'est envoyé.

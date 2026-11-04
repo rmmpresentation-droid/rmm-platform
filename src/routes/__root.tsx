@@ -101,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
@@ -119,7 +119,7 @@ import { Footer } from "../components/layout/Footer";
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouter().state.location.pathname;
-  const isAdmin = pathname.startsWith("/admin");
+  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/dashboard");
 
   return (
     <QueryClientProvider client={queryClient}>

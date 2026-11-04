@@ -1,72 +1,53 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Logo } from '@/components/brand/Logo';
-import { emptyStore, parseBackup, statuses, type Item, type Section, type Store } from '@/lib/local-workspace.mjs';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { statuses, type Item, type Section } from '@/lib/local-workspace.mjs';
 
-type Role = 'Superadministrateur' | 'Administrateur' | 'Présentateur' | 'Networker';
+type Role = 'superadmin' | 'admin' | 'presentateur' | 'networker';
+type User = { id:string; email:string; name:string; role:Role };
+type Entry = Item & { created_by: string };
+type Analytics = { entries: {section:Section;status:string;count:number}[]; users:{role:Role;count:number}[] };
 const labels: Record<Section, string> = { prospects: 'Prospects', taches: 'Tâches', rendezvous: 'Rendez-vous', networkers: 'Networkers', formations: 'Formations', ressources: 'Ressources', commandes: 'Commandes', stock: 'Produits et stock' };
-const key = 'rmm-local-workspace-v1';
+const roles:Record<Role,string> = {superadmin:'Superadministrateur',admin:'Administrateur',presentateur:'Présentateur',networker:'Networker'};
+const access:Record<Role, Section[]> = {superadmin:Object.keys(labels) as Section[],admin:Object.keys(labels) as Section[],presentateur:['rendezvous','formations','ressources'],networker:['prospects','taches','rendezvous','formations','ressources']};
 const field = 'w-full rounded-md border border-border bg-background px-3 py-2 text-sm';
-const action = 'rounded-md bg-gradient-gold px-4 py-2 text-sm font-semibold text-background';
-
-export function LocalWorkspace({ initialRole = 'Administrateur' }: { initialRole?: Role }) {
-  const [role, setRole] = useState<Role>(initialRole);
-  const [section, setSection] = useState<Section>('prospects');
-  const [data, setData] = useState<Store>(emptyStore);
-  const [ready, setReady] = useState(false);
-  const [title, setTitle] = useState('');
-  const [detail, setDetail] = useState('');
-  const [owner, setOwner] = useState('');
-  const [date, setDate] = useState('');
-  const [query, setQuery] = useState('');
-  const [editing, setEditing] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    try { const saved = localStorage.getItem(key); if (saved) setData(parseBackup(saved)); }
-    catch { setError('Lecture des données impossible. Exportez ou récupérez le stockage du navigateur avant toute modification.'); return; }
-    setReady(true);
-  }, []);
-  function save(next: Store) {
-    try { localStorage.setItem(key, JSON.stringify(next)); setData(next); setError(''); }
-    catch { setError('Enregistrement impossible : vérifiez le stockage du navigateur.'); }
-  }
-  const available: Section[] = role === 'Présentateur' ? ['rendezvous', 'formations', 'ressources'] : role === 'Networker' ? ['prospects', 'taches', 'rendezvous', 'formations', 'ressources', 'networkers'] : Object.keys(labels) as Section[];
-  function add(e: FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    const original = data[section].find(item => item.id === editing);
-    const item: Item = { id: original?.id ?? crypto.randomUUID(), title: title.trim(), detail: detail.trim(), owner: owner.trim(), date, status: original?.status ?? statuses[section][0] };
-    save({ ...data, [section]: original ? data[section].map(entry => entry.id === editing ? item : entry) : [item, ...data[section]] });
-    setTitle(''); setDetail(''); setOwner(''); setDate(''); setEditing(null);
-  }
-  function update(id: string, patch: Partial<Item>) { save({ ...data, [section]: data[section].map(item => item.id === id ? { ...item, ...patch } : item) }); }
-  function remove(id: string) { if (window.confirm('Supprimer cet élément local ?')) save({ ...data, [section]: data[section].filter(item => item.id !== id) }); }
-  function edit(item: Item) { setEditing(item.id); setTitle(item.title); setDetail(item.detail); setOwner(item.owner); setDate(item.date); }
-  function changeSection(s: Section) { setSection(s); setQuery(''); setEditing(null); setTitle(''); setDetail(''); setOwner(''); setDate(''); }
-  async function importData(file: File | undefined) {
-    if (!file || !window.confirm('Remplacer toutes les données locales par cette sauvegarde ?')) return;
-    try { const imported = parseBackup(await file.text()); save(imported); }
-    catch { setError('Import refusé : fichier JSON incorrect ou sauvegarde incompatible. Les données existantes sont conservées.'); }
-  }
-  const list = data[section].filter(item => `${item.title} ${item.detail} ${item.owner} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
-  function exportData() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'rmm-donnees-locales.json'; a.click(); URL.revokeObjectURL(url);
-  }
-  return <div className="min-h-screen bg-background text-foreground">
-    <header className="border-b border-border px-5 py-4"><div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-4"><Link to="/"><Logo compact /></Link><div className="flex items-center gap-3"><span className="text-xs text-muted-foreground">Profil de démonstration</span><select aria-label="Profil de démonstration" value={role} onChange={e => { const r = e.target.value as Role; setRole(r); changeSection(r === 'Présentateur' ? 'rendezvous' : 'prospects'); }} className={field}>{(['Superadministrateur', 'Administrateur', 'Présentateur', 'Networker'] as Role[]).map(r => <option key={r}>{r}</option>)}</select></div></div></header>
-    <main className="mx-auto max-w-7xl px-5 py-8">
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100"><strong>Prototype local uniquement.</strong> Données enregistrées dans ce navigateur, non partagées et non chiffrées. Le choix du rôle n’est pas une authentification : ne saisissez aucune donnée réelle ou sensible. Aucun message Telegram ni paiement n’est envoyé.</div>
-      {error && <p role="alert" className="mt-4 text-red-400">{error}</p>}
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-[.25em] text-[var(--gold)]">RMM · Espace de travail</p><h1 className="mt-2 font-serif text-4xl">{labels[section]}</h1><p className="mt-2 text-sm text-muted-foreground">Gestion locale • {role}</p></div><div className="flex flex-wrap gap-2"><button className="rounded-md border border-border px-4 py-2 text-sm" onClick={exportData}>Exporter JSON</button><label className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm">Importer JSON<input aria-label="Importer une sauvegarde JSON" type="file" accept="application/json,.json" className="sr-only" onChange={e => { void importData(e.target.files?.[0]); e.target.value = ''; }} /></label></div></div>
-      <div className="mt-8 flex flex-wrap gap-2">{available.map(s => <button key={s} onClick={() => changeSection(s)} className={`rounded-full px-4 py-2 text-sm ${section === s ? 'bg-gradient-gold text-background' : 'border border-border hover:border-[var(--gold)]'}`}>{labels[s]} <span className="opacity-70">{data[s].length}</span></button>)}</div>
-      {section === 'formations' && <div className="mt-6 rounded-lg border border-border p-4 text-sm text-muted-foreground">Days 1, 2 et 3 et quiz : contenu et seuil de réussite à fournir et valider par RMM. Le contrôle d’accès à la formation n’est pas encore implémenté.</div>}
-      <div className="mt-8 grid gap-6 lg:grid-cols-[340px_1fr]">
-        <form onSubmit={add} className="h-fit rounded-xl bg-card hairline p-6 space-y-4"><h2 className="font-serif text-2xl">{editing ? "Modifier" : "Ajouter"}</h2><label className="block text-sm">Nom / sujet<input required maxLength={160} className={`${field} mt-2`} value={title} onChange={e => setTitle(e.target.value)} /></label><label className="block text-sm">Détails<textarea maxLength={1000} className={`${field} mt-2 min-h-24`} value={detail} onChange={e => setDetail(e.target.value)} /></label><label className="block text-sm">Responsable / destinataire<input className={`${field} mt-2`} value={owner} onChange={e => setOwner(e.target.value)} /></label><label className="block text-sm">Date et heure<input type="datetime-local" className={`${field} mt-2`} value={date} onChange={e => setDate(e.target.value)} /></label><div className="flex gap-3"><button disabled={!ready} className={action}>Enregistrer</button>{editing && <button type="button" onClick={() => changeSection(section)} className="text-sm text-muted-foreground">Annuler</button>}</div></form>
-        <section className="rounded-xl bg-card hairline p-6"><div className="flex flex-wrap items-center justify-between gap-4"><h2 className="font-serif text-2xl">Liste <span className="text-muted-foreground text-base">({list.length})</span></h2><input aria-label="Rechercher" placeholder="Rechercher…" value={query} onChange={e => setQuery(e.target.value)} className={`${field} max-w-64`} /></div>
-          {!ready ? <p className="mt-6 text-sm text-muted-foreground">Chargement…</p> : list.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">Aucun élément. Ajoutez-en un pour commencer.</p> : <div className="mt-5 space-y-3">{list.map(item => <article key={item.id} className="rounded-lg border border-border bg-background p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-medium">{item.title}</h3>{item.detail && <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.detail}</p>}<p className="mt-2 text-xs text-muted-foreground">{[item.owner, item.date ? item.date.replace('T', ' ') : ''].filter(Boolean).join(' · ') || 'Sans responsable ni date'}</p></div><div className="flex gap-2"><select aria-label={`Statut de ${item.title}`} className={field} value={item.status} onChange={e => update(item.id, { status: e.target.value })}>{statuses[section].map(s => <option key={s}>{s}</option>)}</select><button className="px-2 text-xs text-[var(--gold)]" onClick={() => edit(item)}>Modifier</button><button className="px-2 text-xs text-red-400" onClick={() => remove(item.id)}>Supprimer</button></div></div></article>)}</div>}
-        </section>
-      </div>
-    </main>
-  </div>;
+const action = 'rounded-md bg-gradient-gold px-4 py-2 text-sm font-semibold text-black';
+async function api<T>(url:string, options:RequestInit = {}):Promise<T> {
+  const response = await fetch(url,{...options,headers:{'Content-Type':'application/json',...options.headers}});
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || 'Service indisponible');
+  return body as T;
+}
+export function LocalWorkspace() {
+  const [user,setUser] = useState<User|null>(null); const [loading,setLoading]=useState(true);
+  const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [error,setError]=useState('');
+  const [view,setView]=useState<Section|'dashboard'|'analytics'|'users'>('dashboard');
+  const [data,setData]=useState<Partial<Record<Section,Entry[]>>>({}); const [analytics,setAnalytics]=useState<Analytics|null>(null); const [users,setUsers]=useState<User[]>([]);
+  const [title,setTitle]=useState('');const [detail,setDetail]=useState('');const [owner,setOwner]=useState('');const [date,setDate]=useState('');const [editing,setEditing]=useState<Entry|null>(null);const [query,setQuery]=useState('');
+  const [newName,setNewName]=useState('');const [newEmail,setNewEmail]=useState('');const [newPassword,setNewPassword]=useState('');const [newRole,setNewRole]=useState<Role>('networker');
+  useEffect(()=>{api<User>('/api/me').then(setUser).catch(()=>{}).finally(()=>setLoading(false));},[]);
+  async function refresh(u:User) { try {const results=await Promise.all(access[u.role].map(async section=>[section,await api<Entry[]>(`/api/entries/${section}`)] as const));setData(Object.fromEntries(results));if(u.role==='admin'||u.role==='superadmin') setAnalytics(await api<Analytics>('/api/analytics'));if(u.role==='superadmin') setUsers(await api<User[]>('/api/users'));setError('');}catch(e){setError((e as Error).message);} }
+  useEffect(()=>{if(user) void refresh(user);},[user]);
+  async function login(e:FormEvent){e.preventDefault();try {setUser(await api<User>('/api/login',{method:'POST',body:JSON.stringify({email,password})}));setPassword('');setError('');}catch(e){setError((e as Error).message);}}
+  async function logout(){try{await api('/api/logout',{method:'POST'});}catch{}setUser(null);setData({});setAnalytics(null);setUsers([]);setView('dashboard');}
+  async function save(e:FormEvent) { e.preventDefault(); if(!user || view==='dashboard'||view==='analytics'||view==='users')return;
+    try{const payload={title,detail,owner,date,status:editing?.status || statuses[view][0]};await api(`/api/entries/${view}${editing?'/'+editing.id:''}`,{method:editing?'PUT':'POST',body:JSON.stringify(payload)});setTitle('');setDetail('');setOwner('');setDate('');setEditing(null);await refresh(user);}catch(e){setError((e as Error).message);} }
+  async function changeStatus(entry:Entry,status:string){if(!user || view==='dashboard'||view==='analytics'||view==='users')return;try{await api(`/api/entries/${view}/${entry.id}`,{method:'PUT',body:JSON.stringify({...entry,status})});await refresh(user);}catch(e){setError((e as Error).message);}}
+  async function remove(entry:Entry){if(!user||view==='dashboard'||view==='analytics'||view==='users'||!confirm('Supprimer cette fiche ?'))return;try{await api(`/api/entries/${view}/${entry.id}`,{method:'DELETE'});await refresh(user);}catch(e){setError((e as Error).message);}}
+  async function createUser(e:FormEvent){e.preventDefault();if(!user)return;try{await api('/api/users',{method:'POST',body:JSON.stringify({name:newName,email:newEmail,password:newPassword,role:newRole})});setNewName('');setNewEmail('');setNewPassword('');await refresh(user);}catch(e){setError((e as Error).message);}}
+  function changeView(v:typeof view){setView(v);setEditing(null);setTitle('');setDetail('');setOwner('');setDate('');setQuery('');}
+  const canAdmin=user?.role==='admin'||user?.role==='superadmin';
+  const list = view in labels ? (data[view as Section] || []).filter(item=>`${item.title} ${item.detail} ${item.owner} ${item.status}`.toLowerCase().includes(query.toLowerCase())) : [];
+  return <div className="min-h-screen bg-background text-foreground"><header className="border-b border-border px-5 py-4"><div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-4"><Link to="/"><Logo compact /></Link><div className="flex items-center gap-3"><ThemeToggle />{user && <><span className="text-sm text-muted-foreground">{user.name} · {roles[user.role]}</span><button className="border border-border rounded-md px-3 py-2 text-sm" onClick={logout}>Déconnexion</button></>}</div></div></header>
+  <main className="mx-auto max-w-7xl px-5 py-8">{error && <p role="alert" className="mb-5 rounded-md border border-red-400/40 p-3 text-red-500">{error}</p>}
+  {loading ? <p>Chargement…</p> : !user ? <form onSubmit={login} className="mx-auto max-w-md rounded-xl bg-card hairline p-8 space-y-5"><p className="text-xs uppercase tracking-widest text-[var(--gold)]">RMM · Accès local</p><h1 className="font-serif text-3xl">Connexion</h1><p className="text-sm text-muted-foreground">Connectez-vous avec votre compte. Le premier compte est configuré au démarrage.</p><label className="block text-sm">Adresse e-mail<input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className={`${field} mt-2`} autoComplete="username" /></label><label className="block text-sm">Mot de passe<input required type="password" value={password} onChange={e=>setPassword(e.target.value)} className={`${field} mt-2`} autoComplete="current-password" /></label><button className={action}>Se connecter</button></form> : <>
+  <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Version locale : les fiches sont enregistrées dans PostgreSQL. Les processus avancés (paiement, PP, quiz et notifications) ne sont pas encore implémentés.</div>
+  <div className="mt-7"><p className="text-xs uppercase tracking-[.25em] text-[var(--gold)]">RMM · {roles[user.role]}</p><h1 className="mt-2 font-serif text-4xl">{view==='dashboard'?'Tableau de bord':view==='analytics'?'Analytique':view==='users'?'Utilisateurs':labels[view]}</h1></div>
+  <nav className="mt-7 flex flex-wrap gap-2" aria-label="Navigation espace"><button onClick={()=>changeView('dashboard')} className={`rounded-full px-4 py-2 text-sm ${view==='dashboard'?'bg-gradient-gold text-black':'border border-border'}`}>Vue d'ensemble</button>{access[user.role].map(s=><button key={s} onClick={()=>changeView(s)} className={`rounded-full px-4 py-2 text-sm ${view===s?'bg-gradient-gold text-black':'border border-border'}`}>{labels[s]}</button>)}{canAdmin && <button onClick={()=>changeView('analytics')} className={`rounded-full px-4 py-2 text-sm ${view==='analytics'?'bg-gradient-gold text-black':'border border-border'}`}>Analytique</button>}{user.role==='superadmin' && <button onClick={()=>changeView('users')} className={`rounded-full px-4 py-2 text-sm ${view==='users'?'bg-gradient-gold text-black':'border border-border'}`}>Utilisateurs</button>}</nav>
+  {view==='dashboard' && <><p className="mt-8 text-muted-foreground">Bienvenue {user.name}. Voici les fiches accessibles à votre profil.</p><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{access[user.role].map(s=><button key={s} onClick={()=>changeView(s)} className="text-left rounded-xl bg-card hairline p-6 hover:border-[var(--gold)]"><div className="text-sm text-muted-foreground">{labels[s]}</div><div className="mt-3 font-serif text-3xl text-[var(--gold)]">{data[s]?.length ?? '—'}</div><div className="mt-2 text-xs text-muted-foreground">Voir les fiches →</div></button>)}</div><div className="mt-6 rounded-xl bg-card hairline p-6"><h2 className="font-serif text-xl">À venir</h2>{(data.rendezvous||[]).filter(x=>x.date && x.status!=='Annulé').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(x=><p key={x.id} className="mt-3 text-sm">{x.date.replace('T',' ')} · {x.title} · {x.status}</p>)}{!(data.rendezvous||[]).some(x=>x.date&&x.status!=='Annulé') && <p className="mt-3 text-sm text-muted-foreground">Aucun rendez-vous daté.</p>}</div></>}
+  {view==='analytics' && canAdmin && <div className="mt-8 grid gap-6 lg:grid-cols-2"><section className="rounded-xl bg-card hairline p-6"><h2 className="font-serif text-2xl">Fiches par statut</h2><p className="mt-1 text-sm text-muted-foreground">Comptage de toutes les fiches enregistrées, pas de chiffres financiers.</p>{analytics?.entries.length ? analytics.entries.map(x=><div key={x.section+x.status} className="flex justify-between border-b border-border py-3 text-sm"><span>{labels[x.section]} · {x.status}</span><strong>{x.count}</strong></div>):<p className="mt-4 text-sm text-muted-foreground">Aucune donnée.</p>}</section><section className="rounded-xl bg-card hairline p-6"><h2 className="font-serif text-2xl">Utilisateurs par rôle</h2>{analytics?.users.map(x=><div key={x.role} className="flex justify-between border-b border-border py-3 text-sm"><span>{roles[x.role]}</span><strong>{x.count}</strong></div>)}</section></div>}
+  {view==='users' && user.role==='superadmin' && <div className="mt-8 grid gap-6 lg:grid-cols-2"><form onSubmit={createUser} className="rounded-xl bg-card hairline p-6 space-y-4"><h2 className="font-serif text-2xl">Créer un compte</h2><label className="block text-sm">Nom<input className={`${field} mt-2`} required maxLength={100} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label className="block text-sm">E-mail<input className={`${field} mt-2`} required type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)}/></label><label className="block text-sm">Mot de passe temporaire (12 caractères minimum)<input className={`${field} mt-2`} required minLength={12} maxLength={256} type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/></label><label className="block text-sm">Rôle<select className={`${field} mt-2`} value={newRole} onChange={e=>setNewRole(e.target.value as Role)}>{Object.entries(roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><button className={action}>Créer le compte</button></form><section className="rounded-xl bg-card hairline p-6"><h2 className="font-serif text-2xl">Comptes</h2>{users.map(u=><div key={u.id} className="border-b border-border py-3 text-sm"><strong>{u.name}</strong><p className="text-muted-foreground">{u.email} · {roles[u.role]}</p></div>)}</section></div>}
+  {view in labels && <div className="mt-8 grid gap-6 lg:grid-cols-[340px_1fr]">{(canAdmin || !['formations','ressources'].includes(view)) && <form onSubmit={save} className="h-fit rounded-xl bg-card hairline p-6 space-y-4"><h2 className="font-serif text-2xl">{editing?'Modifier':'Ajouter'}</h2><label className="block text-sm">Nom / sujet<input required maxLength={160} className={`${field} mt-2`} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="block text-sm">Détails<textarea maxLength={1000} className={`${field} mt-2 min-h-24`} value={detail} onChange={e=>setDetail(e.target.value)}/></label><label className="block text-sm">Responsable (texte libre)<input maxLength={160} className={`${field} mt-2`} value={owner} onChange={e=>setOwner(e.target.value)}/></label><label className="block text-sm">Date et heure<input type="datetime-local" className={`${field} mt-2`} value={date} onChange={e=>setDate(e.target.value)}/></label><button className={action}>Enregistrer</button>{editing && <button type="button" onClick={()=>changeView(view)} className="ml-4 text-sm">Annuler</button>}</form>}<section className="rounded-xl bg-card hairline p-6"><div className="flex flex-wrap items-center justify-between gap-4"><h2 className="font-serif text-2xl">Liste ({list.length})</h2><input aria-label="Rechercher" placeholder="Rechercher…" className={`${field} max-w-64`} value={query} onChange={e=>setQuery(e.target.value)}/></div>{!list.length?<p className="mt-6 text-sm text-muted-foreground">Aucune fiche.</p>:<div className="mt-5 space-y-3">{list.map(item=><article key={item.id} className="rounded-lg border border-border bg-background p-4"><h3 className="font-medium">{item.title}</h3><p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.detail}</p><p className="mt-2 text-xs text-muted-foreground">{[item.owner,item.date?.replace('T',' ')].filter(Boolean).join(' · ')}</p><div className="mt-3 flex flex-wrap items-center gap-3">{canAdmin || !['formations','ressources'].includes(view)?<><select aria-label={`Statut de ${item.title}`} className={`${field} max-w-48`} value={item.status} onChange={e=>void changeStatus(item,e.target.value)}>{statuses[view as Section].map(s=><option key={s}>{s}</option>)}</select><button className="text-sm text-[var(--gold)]" onClick={()=>{setEditing(item);setTitle(item.title);setDetail(item.detail);setOwner(item.owner);setDate(item.date);}}>Modifier</button><button className="text-sm text-red-500" onClick={()=>void remove(item)}>Supprimer</button></>:<span className="text-sm">{item.status}</span>}</div></article>)}</div>}</section></div>}
+  </>}</main></div>;
 }
