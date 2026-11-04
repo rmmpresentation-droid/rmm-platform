@@ -23,4 +23,4 @@ Cette application reste un prototype local, non prêt pour la production. Ne pas
 
 ### Espaces présentateur et networker
 
-Le superadministrateur crée chaque compte depuis **Utilisateurs**. Le networker peut suivre ses prospects et demander un rendez-vous ; l'administration peut le confirmer et affecter un présentateur, qui retrouve la séance ainsi que les supports partagés. Aucun compte de démonstration n'est créé automatiquement. Voir le [guide de test](docs/INSTALLATION_ET_TESTS.md#tester-les-espaces-métiers) et les [limites fonctionnelles](docs/PERIMETRE.md).
+Le superadministrateur crée chaque compte depuis **Utilisateurs**. Le networker peut suivre ses prospects et demander un rendez-vous ; l'administration peut le confirmer et affecter un présentateur, qui retrouve la séance et les formations. Aucun compte de démonstration n'est créé automatiquement. Voir le [guide de test](docs/INSTALLATION_ET_TESTS.md#tester-les-espaces-métiers) et les [limites fonctionnelles](docs/PERIMETRE.md).
