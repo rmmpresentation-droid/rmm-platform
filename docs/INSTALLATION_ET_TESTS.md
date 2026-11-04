@@ -74,3 +74,14 @@ Les anciennes fiches `localStorage` ne sont pas automatiquement transférées da
 - Si la connexion échoue, vérifier les logs `docker compose logs api db` ; l'initialisation exige un mot de passe d'au moins 12 caractères et une base vide pour créer le compte initial.
 - Si le port 8080 est occupé, changer le port hôte dans `compose.yaml` puis redémarrer.
 - Les pages publiques restent des maquettes ; les données PostgreSQL ne remplissent pas automatiquement la boutique.
+
+
+## Tester les espaces métiers
+
+1. Connectez-vous avec le superadministrateur configuré dans `.env`. Dans **Utilisateurs**, créez séparément un compte « présentateur » et un compte « networker » avec leurs propres adresses et mots de passe. Aucun compte de démonstration ni mot de passe fixe n'est créé automatiquement.
+2. Connectez-vous en networker : créez un prospect (téléphone et centre d'intérêt obligatoires), puis une demande de rendez-vous avec son sujet et son type. La date saisie est une préférence.
+3. En administrateur, ouvrez le rendez-vous, affectez le présentateur et fixez son statut et sa date. Le participant est actuellement un nom libre, pas un lien vers le prospect.
+4. Connectez-vous en présentateur : il voit les rendez-vous qui lui sont affectés et les ressources/formations partagées, en lecture seule. Un autre présentateur ne voit pas ce rendez-vous.
+5. Les anciens enregistrements sont conservés lors du démarrage de l'API ; les nouveaux champs restent vides jusqu'à modification. Sauvegardez le volume PostgreSQL avant toute mise à jour. Les tests automatisés utilisent pg-mem et ne remplacent pas un test sur PostgreSQL réel.
+
+Un networker ne peut pas confirmer lui-même une demande ni modifier une séance confirmée ; l'administration renseigne le compte rendu et les changements ultérieurs. Le suivi de présence structuré, les notifications et la gestion des disponibilités restent à développer.
