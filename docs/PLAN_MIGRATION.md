@@ -1,6 +1,6 @@
 # Plan de migration — proposition à valider
 
-**7 novembre 2026 — aucune migration, infrastructure distante, CI ni déploiement n'a été exécuté.** Voir [AUDIT.md](AUDIT.md) pour la mesure initiale. Sans validation explicite de cette phase, ne pas commencer la phase 1. Pas de production sans « GO PROD », pas de données réelles en développement, pas de facturation ni d'essai avec carte.
+**7 novembre 2026 — aucune migration, infrastructure distante, CI ni déploiement n'a été exécuté. Plan validé par le propriétaire ; phase 1 commencée et bloquée par l’absence de Docker/Podman.** Voir [AUDIT.md](AUDIT.md) pour la mesure initiale. La phase 1 ne peut pas être validée tant que les tests sur Supabase local et le lint ne passent pas. Pas de production sans « GO PROD », pas de données réelles en développement, pas de facturation ni d'essai avec carte.
 
 ## Principes transverses
 
@@ -12,8 +12,8 @@
 ## Phase 0 — état et prérequis restant à lever
 
 1. L'audit et ce plan constituent le livrable soumis à approbation. Les quatre commandes demandées ont réussi, mais le lint et l'audit de dépendances sont en échec : voir [AUDIT.md](AUDIT.md).
-2. **Non réalisé** : Supabase local via CLI et CI. Docker, Supabase CLI et PostgreSQL ne sont pas disponibles ici ; la CI serait rouge avec le lint existant. Prévoir un environnement disposant de Docker et valider l'approche de correction des vulnérabilités, du lint, des dépendances npm et des variables d'exemple. Ne pas contourner les vérifications en désactivant des règles.
-3. Après accord, installer les outils gratuits compatibles et vérifier leurs licences, initialiser uniquement Supabase local avec données fictives ; ajouter une CI sans secrets et couvrant installation, tests, types, lint, scan de secrets et tests SQL lorsque disponibles. Aucun projet Supabase distant n'est nécessaire pour valider le local.
+2. **Depuis validation** : configuration locale initialisée par `npx --yes supabase@3.0.0 init`. `supabase start` échoue car Docker et Podman ne sont pas disponibles ; PostgreSQL n’est pas disponible ici non plus. La CI n’est pas configurée ; la CI serait rouge avec le lint existant. Prévoir un environnement disposant de Docker et valider l'approche de correction des vulnérabilités, du lint, des dépendances npm et des variables d'exemple. Ne pas contourner les vérifications en désactivant des règles.
+3. Installer les outils gratuits compatibles et vérifier leurs licences, initialiser uniquement Supabase local avec données fictives ; ajouter une CI sans secrets et couvrant installation, tests, types, lint, scan de secrets et tests SQL lorsque disponibles. Aucun projet Supabase distant n'est nécessaire pour valider le local.
 
 ## Phases proposées après approbation
 
@@ -41,3 +41,7 @@
 ## Questions pour lancer la suite
 
 La liste métier de la section 8 du référentiel est reproduite dans [AUDIT.md](AUDIT.md). Confirmer notamment contenus et règles du quiz, permissions exactes, règles et limites des packs, textes et données personnelles, responsables exploitation/sauvegardes et conditions gratuites. La règle de conflit **par ressource**, l'absence de vente en ligne et la limitation stricte aux previews fictives sont déjà imposées par la demande actuelle ; elles ne sont pas à remettre en cause par défaut.
+
+## Contenu pédagogique fourni après audit
+
+Le propriétaire a fourni le programme arabe « المنظومة التدريبية الموحدة RMM » et confirmé qu’il remplace Days 1–3 comme formation obligatoire. Il sera intégré à la phase 2, après validation des fondations de phase 1. Le programme est conçu en semaines et étapes : ne pas le redécouper artificiellement en trois jours. Les questions du quiz, son seuil, les tentatives et les exceptions restent à confirmer ; la qualification sera contrôlée en base et côté serveur. Aucune publication ni allégation santé/financière n’est autorisée avant la revue documentaire et juridique demandée.

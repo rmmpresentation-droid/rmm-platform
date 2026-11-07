@@ -2,6 +2,10 @@
 
 **Statut : plan à valider ; prototype local seulement, non utilisable en production.** Audit du commit `131c506fe8e71752c9ac3728658061ad265f0a7a`, branche `arena/74d803db-rmm-platform`. Aucun projet distant, déploiement, migration de données ou compte réel n'a été créé. Les versions du référentiel Notion sont des documents de travail ; les instructions explicites les plus récentes excluent l'e-commerce, Next.js, Prisma et l'IA.
 
+## Suite après validation du plan
+
+Le propriétaire a approuvé le plan et confirmé que le programme arabe fourni remplacera Days 1–3. La configuration Supabase locale a été initialisée après l’audit ; son démarrage a échoué faute de Docker/Podman. Elle ne constitue ni une migration ni une preuve de fonctionnement RLS. Voir le plan actualisé.
+
 ## Commandes réellement exécutées
 
 Environnement : Node `v22.22.3`, npm `10.9.8`. Aucun exécutable `docker`, `supabase` ou `psql` trouvé dans le PATH.
