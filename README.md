@@ -14,7 +14,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Ouvrir http://localhost:8080/dashboard et se connecter avec les identifiants définis dans `.env`. Le premier compte est créé uniquement si la base est vide. Le superadministrateur crée ensuite les autres comptes depuis « Utilisateurs ».
+Ouvrir http://localhost:8081/dashboard et se connecter avec les identifiants définis dans `.env`. Le premier compte est créé uniquement si la base est vide. Le superadministrateur crée ensuite les autres comptes depuis « Utilisateurs ».
 
 **[Guide détaillé d'installation et de test](docs/INSTALLATION_ET_TESTS.md)** · **[Périmètre et limites](docs/PERIMETRE.md)**
 

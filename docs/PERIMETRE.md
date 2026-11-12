@@ -20,4 +20,4 @@ Les données anciennes ne sont pas automatiquement enrichies des nouveaux liens.
 
 ## Architecture
 
-Navigateur → Vite/TanStack (port 8080) → proxy `/api` → API Express (port 3001) → PostgreSQL (5432). Les évolutions du schéma sont additives ; sauvegardez le volume avant mise à jour. Les anciennes fiches du prototype localStorage ne sont pas migrées automatiquement. Les tests API utilisent pg-mem, pas un PostgreSQL réel. Voir le guide d'installation.
+Navigateur → Vite/TanStack (port 8081) → proxy `/api` → API Express (port 3001) → PostgreSQL (5432). Les évolutions du schéma sont additives ; sauvegardez le volume avant mise à jour. Les anciennes fiches du prototype localStorage ne sont pas migrées automatiquement. Les tests API utilisent pg-mem, pas un PostgreSQL réel. Voir le guide d'installation.

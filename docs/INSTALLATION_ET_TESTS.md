@@ -19,7 +19,7 @@ Sous Windows, copier `.env.example` vers `.env` avec l'explorateur ou `copy .env
 docker compose up --build
 ```
 
-Ouvrir http://localhost:8080/dashboard. Le navigateur utilise le port 8080 ; l'API et la base ne sont pas publiées directement. PostgreSQL conserve les données dans le volume Docker `rmm_db`. Le serveur initialise les tables et le premier superadministrateur uniquement lorsque la table des utilisateurs est vide. Changer `.env` par la suite ne modifie pas un compte déjà créé.
+Ouvrir http://localhost:8081/dashboard. Le navigateur utilise le port 8081 ; l'API et la base ne sont pas publiées directement. PostgreSQL conserve les données dans le volume Docker `rmm_db`. Le serveur initialise les tables et le premier superadministrateur uniquement lorsque la table des utilisateurs est vide. Changer `.env` par la suite ne modifie pas un compte déjà créé.
 
 Arrêter avec Ctrl+C puis `docker compose down`. Ne pas utiliser `docker compose down -v` si les données doivent être conservées : cette commande supprime le volume de la base. Pour reconstruire après un pull, relancer `docker compose up --build`.
 
@@ -38,7 +38,7 @@ npm run api
 Dans le second terminal :
 
 ```sh
-npm run dev -- --host 127.0.0.1 --port 8080
+npm run dev -- --host 127.0.0.1 --port 8081
 ```
 
 La base et son utilisateur doivent être créés au préalable ; adapter `DATABASE_URL` à votre installation. L'API utilise le port 3001, et Vite redirige `/api` vers elle. Sous Windows, utiliser la syntaxe de variables d'environnement adaptée à votre terminal. `--legacy-peer-deps` est nécessaire aux dépendances de la template.
@@ -113,7 +113,7 @@ Les anciennes fiches `localStorage` ne sont pas automatiquement transférées da
 ## Diagnostic
 
 - Si la connexion échoue, vérifier les logs `docker compose logs api db` ; l'initialisation exige un mot de passe d'au moins 12 caractères et une base vide pour créer le compte initial.
-- Si le port 8080 est occupé, changer le port hôte dans `compose.yaml` puis redémarrer.
+- Si le port 8081 est occupé, changer le port hôte dans `compose.yaml` puis redémarrer.
 - Les pages publiques restent des maquettes ; les données PostgreSQL ne remplissent pas automatiquement la boutique.
 
 
