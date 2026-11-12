@@ -1,119 +1,75 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { products } from "@/lib/data";
+import { ProductCard } from "@/components/product/ProductCard";
+import { PackCard } from "@/components/product/PackCard";
+import { Section } from "@/components/layout/Section";
+import { products, packs } from "@/lib/data";
 
 export const Route = createFileRoute("/boutique")({
   head: () => ({
     meta: [
-      { title: "Notre univers — RMM" },
-      {
-        name: "description",
-        content:
-          "Explorez l’univers RMM et découvrez une sélection illustrative de références SwisDerm.",
-      },
+      { title: "Boutique SwisDerm — Collection Exclusive | RMM" },
+      { name: "description", content: "Toute la gamme SwisDerm Switzerland disponible en Tunisie." },
     ],
   }),
-  component: Catalogue,
+  component: Shop,
 });
-const categories = [
-  "Tous",
-  "Soin Visage",
-  "Soin Corps",
-  "Compléments",
-  "Bien-être",
-  "Maquillage",
-] as const;
-function Catalogue() {
-  const [category, setCategory] = useState<(typeof categories)[number]>("Tous");
-  const shown = category === "Tous" ? products : products.filter((p) => p.category === category);
+
+const categories = ["Tous", "Soin Visage", "Soin Corps", "Compléments", "Bien-être", "Maquillage"] as const;
+
+function Shop() {
+  const [cat, setCat] = useState<(typeof categories)[number]>("Tous");
+  const list = cat === "Tous" ? products : products.filter((p) => p.category === cat);
+
   return (
-    <>
-      <section className="site-page-hero">
-        <div className="site-container">
-          <p className="site-kicker">L’UNIVERS RMM / SWISDERM</p>
-          <div className="site-page-title-row">
-            <h1>
-              La curiosité est
-              <br />
-              <em>un beau début.</em>
-            </h1>
-            <p>
-              Une invitation à découvrir un univers de produits et à poser vos questions, sans
-              engagement.
-            </p>
+    <div>
+      <section className="relative pt-20 pb-12 border-b border-border">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full bg-[var(--gold)]/10 blur-[100px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-6">
+            <span className="text-[10px] tracking-[0.3em] uppercase text-[var(--gold)]">Collection Exclusive</span>
           </div>
+          <h1 className="font-serif text-5xl lg:text-6xl">Boutique <span className="text-gradient-gold">SwisDerm</span></h1>
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">11 références premium, formulées en Suisse, distribuées en Tunisie par RMM.</p>
         </div>
       </section>
-      <section className="site-section site-catalogue">
-        <div className="site-container">
-          <div className="site-catalogue-head">
-            <div>
-              <p className="site-kicker">EXPLORER LA COLLECTION</p>
-              <h2>
-                Une sélection <em>à découvrir.</em>
-              </h2>
-            </div>
-            <p>
-              Catalogue illustratif issu de la maquette. Les disponibilités et informations
-              officielles restent à confirmer par RMM.
-            </p>
-          </div>
-          <div className="site-filters" aria-label="Catégories de produits">
-            {categories.map((c) => (
-              <button
-                type="button"
-                key={c}
-                aria-pressed={category === c}
-                className={category === c ? "selected" : ""}
-                onClick={() => setCategory(c)}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="site-product-grid">
-            {shown.map((p, i) => (
-              <Link key={p.id} to="/produit/$id" params={{ id: p.id }} className="site-product">
-                <div className={`site-product-art tone-${i % 4}`}>
-                  <span className="site-product-index">{String(i + 1).padStart(2, "0")} / RMM</span>
-                  <div className="site-product-placeholder">
-                    <small>SWISDERM</small>
-                    <strong>{p.name}</strong>
-                    <span>VISUEL ILLUSTRATIF</span>
-                  </div>
-                  <span className="site-product-arrow">
-                    <ArrowUpRight size={18} />
-                  </span>
-                </div>
-                <div className="site-product-info">
-                  <div>
-                    <span>{p.category}</span>
-                    <h3>{p.name}</h3>
-                  </div>
-                  <ArrowUpRight size={17} />
-                </div>
-              </Link>
-            ))}
-          </div>
-          {!shown.length && <p className="site-body">Aucune référence dans cette catégorie.</p>}
+
+      <Section>
+        <div className="flex flex-wrap gap-2 mb-10 justify-center">
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCat(c)}
+              className={`px-4 py-2 rounded-full text-xs uppercase tracking-[0.2em] transition border ${
+                cat === c
+                  ? "bg-gradient-gold text-background border-transparent"
+                  : "border-border text-foreground/70 hover:border-[var(--gold)]/40 hover:text-[var(--gold)]"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
         </div>
-      </section>
-      <section className="site-mini-cta">
-        <div className="site-container">
-          <div>
-            <p className="site-kicker">UNE QUESTION ?</p>
-            <h2>
-              La bonne information
-              <br />
-              <em>fait la différence.</em>
-            </h2>
-          </div>
-          <Link to="/networker" className="site-button site-button-outline">
-            Découvrir RMM <ArrowUpRight size={18} />
-          </Link>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {list.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
-      </section>
-    </>
+      </Section>
+
+      <Section eyebrow="Devenez partenaire" title={<>Packs de <span className="text-gradient-gold">Démarrage</span></>} subtitle="Lancez votre activité RMM avec le pack adapté à vos ambitions. Tous incluent l'accès au catalogue networker et nos formations." className="bg-[#0F0F0F]">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          {packs.map((p) => <PackCard key={p.id} pack={p} />)}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Vous êtes déjà networker ?{" "}
+            <Link to="/dashboard" className="text-[var(--gold)] hover:underline">Connectez-vous pour voir vos prix</Link>
+          </p>
+        </div>
+      </Section>
+    </div>
   );
 }
