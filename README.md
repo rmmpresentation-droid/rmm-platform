@@ -6,8 +6,8 @@ Application de démonstration locale issue de la template `rmmpresentation-droid
 
 ```sh
 git fetch origin
-git switch arena/bdff8fd2-rmm-platform
-git pull origin arena/bdff8fd2-rmm-platform
+git switch arena/74d803db-rmm-platform
+git pull origin arena/74d803db-rmm-platform
 cp .env.example .env
 # Modifier l'e-mail et le mot de passe initial dans .env
 # Le mot de passe doit contenir au moins 12 caractères.
@@ -24,3 +24,5 @@ Cette application reste un prototype local, non prêt pour la production. Ne pas
 ### Espaces présentateur et networker
 
 Le superadministrateur crée chaque compte depuis **Utilisateurs**. Le networker peut suivre ses prospects et demander un rendez-vous ; l'administration peut le confirmer et affecter un présentateur, qui retrouve la séance et les formations. Aucun compte de démonstration n'est créé automatiquement. Voir le [guide de test](docs/INSTALLATION_ET_TESTS.md#tester-les-espaces-métiers) et les [limites fonctionnelles](docs/PERIMETRE.md).
+
+En cas de refus de connexion après modification de `.env`, voir [Identifiants et comptes fictifs](docs/INSTALLATION_ET_TESTS.md#identifiants-et-comptes-fictifs--prototype-express-local) : le premier compte n’est initialisé que sur une base vide.

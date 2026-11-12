@@ -7,7 +7,7 @@ Installer Git, Docker Desktop et Docker Compose v2. La machine doit avoir accès
 ```sh
 git clone https://github.com/rmmpresentation-droid/rmm-platform.git
 cd rmm-platform
-git switch --track origin/arena/bdff8fd2-rmm-platform
+git switch --track origin/arena/74d803db-rmm-platform
 cp .env.example .env
 ```
 
@@ -42,6 +42,47 @@ npm run dev -- --host 127.0.0.1 --port 8080
 ```
 
 La base et son utilisateur doivent être créés au préalable ; adapter `DATABASE_URL` à votre installation. L'API utilise le port 3001, et Vite redirige `/api` vers elle. Sous Windows, utiliser la syntaxe de variables d'environnement adaptée à votre terminal. `--legacy-peer-deps` est nécessaire aux dépendances de la template.
+
+## Identifiants et comptes fictifs — prototype Express local
+
+Ces commandes concernent **uniquement le prototype local**, pas Supabase. Avant toute modification, sauvegardez le volume PostgreSQL. Ne partagez jamais vos identifiants dans un message et n'utilisez pas ces comptes avec des données réelles.
+
+Le superadministrateur défini dans `.env` est créé **une seule fois si la table `users` est vide**. Modifier `.env` ne change pas un compte existant. Un 401 sur `/api/me` avant connexion signifie seulement qu'il n'y a pas de session ; le 401 sur `/api/login` signifie que la connexion a été refusée, sans identifier la cause précise. Les 404 de favicon et le message React DevTools ne sont pas la cause de l'échec de connexion.
+
+1. Remplissez les deux variables dans `.env`, puis actualisez le code et les services depuis la branche courante :
+
+```sh
+git pull origin arena/74d803db-rmm-platform
+docker compose up -d --build
+```
+
+2. Pour examiner les comptes **sans afficher de mot de passe** :
+
+```sh
+docker compose run --rm --no-deps -e RMM_LOCAL_ACCOUNT_TOOL=1 api node server/local-accounts.mjs list
+```
+
+Si l'adresse du superadmin dans la liste correspond à `RMM_ADMIN_EMAIL`, mais que le mot de passe ne fonctionne pas, exécutez explicitement :
+
+```sh
+docker compose run --rm --no-deps -e RMM_LOCAL_ACCOUNT_TOOL=1 api node server/local-accounts.mjs reset-superadmin
+```
+
+La commande remplace le mot de passe du superadmin correspondant par celui de `.env` et **expire ses sessions existantes** ; elle ne supprime ni les fiches ni les comptes. Le mot de passe précédent ne peut être récupéré ; la sauvegarde est le moyen de revenir à l'état précédent. Si l'adresse `.env` est différente de celle du compte initial et qu'il existe exactement un superadmin, l'option explicite ci-dessous modifie également son adresse. Si plusieurs superadmins existent, ou si l'adresse est déjà attribuée, elle refuse la modification :
+
+```sh
+docker compose run --rm --no-deps -e RMM_LOCAL_ACCOUNT_TOOL=1 api node server/local-accounts.mjs reset-superadmin --replace-single-superadmin
+```
+
+3. Pour créer **à la demande** trois admins, un présentateur et trois networkers fictifs :
+
+```sh
+docker compose run --rm --no-deps -e RMM_LOCAL_ACCOUNT_TOOL=1 api node server/local-accounts.mjs create-demo
+```
+
+Les adresses sont `admin1@example.test` à `admin3@example.test`, `presentateur1@example.test` et `networker1@example.test` à `networker3@example.test`. Chaque mot de passe aléatoire est affiché **une seule fois dans votre terminal** après création ; conservez-le en lieu sûr, ne le publiez pas et ne le copiez pas dans le dépôt. Les comptes préexistants sont conservés sans changement de mot de passe ; une collision avec un rôle différent bloque l'opération. L'outil ne supprime pas les comptes supplémentaires : s'ils existent déjà, le nombre total peut dépasser le nombre demandé. Le superadmin reste celui de `.env` et n'est pas créé par `create-demo`.
+
+Sans Docker, utilisez la même commande avec Node 22 en chargeant vos variables depuis `.env` et en définissant `DATABASE_URL` vers PostgreSQL local, par exemple `node --env-file=.env server/local-accounts.mjs list` après avoir défini `RMM_LOCAL_ACCOUNT_TOOL=1`. La commande refuse le mode production et les hôtes autres que `localhost`, `127.0.0.1`, `::1` et le service Compose `db`.
 
 ## Parcours manuels
 
@@ -78,7 +119,7 @@ Les anciennes fiches `localStorage` ne sont pas automatiquement transférées da
 
 ## Tester les espaces métiers
 
-1. Connectez-vous avec le superadministrateur configuré dans `.env`. Dans **Utilisateurs**, créez séparément un compte « présentateur » et un compte « networker » avec leurs propres adresses et mots de passe. Aucun compte de démonstration ni mot de passe fixe n'est créé automatiquement.
+1. Connectez-vous avec le superadministrateur configuré dans `.env`. Dans **Utilisateurs**, créez séparément un compte « présentateur » et un compte « networker » avec leurs propres adresses et mots de passe. Aucun compte de démonstration n'est créé automatiquement ; l’outil local ci-dessous peut en créer à la demande.
 2. Connectez-vous en networker : créez un prospect (téléphone et centre d'intérêt obligatoires), puis une demande de rendez-vous avec son sujet et son type. La date saisie est une préférence.
 3. En administrateur, ouvrez le rendez-vous, choisissez l'admin participant et, si nécessaire, affectez un présentateur, puis confirmez-le. Un rendez-vous de prospection est lié à une fiche prospect.
 4. Connectez-vous en présentateur : il voit les rendez-vous qui lui sont affectés et les formations. Un autre présentateur ne voit pas ce rendez-vous.
