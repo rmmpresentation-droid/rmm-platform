@@ -15,6 +15,7 @@ export const businessForms = {
     { key: 'kind', label: 'Type de rendez-vous', type: 'select', options: ['Premier contact', 'Présentation', 'Closing', 'Formation', 'Suivi', 'Demande du networker', 'Réunion avec l’administration'], required: true },
     { key: 'end_date', label: 'Fin du rendez-vous', type: 'text' },
     { key: 'networker_id', label: 'Networker', type: 'text' },
+    { key: 'additional_networker_ids', label: 'Networkers supplémentaires', type: 'text' },
     { key: 'admin_id', label: 'Administrateur participant', type: 'text' },
     { key: 'prospect_id', label: 'Prospect', type: 'text' },
     { key: 'participant', label: 'Prospect ou participant', type: 'text' },

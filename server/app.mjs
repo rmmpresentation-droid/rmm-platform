@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { randomBytes, createHash, randomUUID } from 'node:crypto';
 import { sectionNames, statuses } from '../src/lib/local-workspace.mjs';
 import { validateExtra } from '../src/lib/business-fields.mjs';
+import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
 
 const roles = ['superadmin', 'admin', 'presentateur', 'networker'];
 const availableSections = sectionNames.filter(section => section !== 'ressources');
@@ -148,12 +149,15 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     return null;
   }
   const validLocalDate = value => { if (!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(value || '')) return false; const d = new Date(value + ':00Z'); return !Number.isNaN(d.getTime()) && d.toISOString().slice(0,16) === value; };
-  const meetingTypes = { 'Prospection': ['Premier contact','Présentation','Closing'], 'Networker': ['Formation','Suivi','Demande du networker'] };
-  async function validateMeeting(body, user, legacy = false) {
+  const meetingTypes = { 'Prospection': ['Premier contact','Présentation','Closing'], 'Networker': ['Suivi','Demande du networker'] };
+  async function validateMeeting(body, user, legacy = false, existingKind = "") {
     const x = body.extra;
+    const additional = parseAdditionalNetworkers(x.additional_networker_ids);
+    if (!additional || additional.some(id => id.toLowerCase() === (x.networker_id || '').toLowerCase())) return 'Liste des networkers supplémentaires invalide.';
+    for (const id of additional) if (!(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[id])).rows[0]) return 'Networker supplémentaire invalide.';
     if (!x.category && legacy) return null;
     if (x.source === 'site' && x.category !== 'Prospection') return 'Une demande du site est une demande de prospection.';
-    if (!meetingTypes[x.category]?.includes(x.kind)) return 'Choisissez une catégorie et un type de rendez-vous valides.';
+    if (!(meetingTypes[x.category]?.includes(x.kind) || (x.category === 'Networker' && x.kind === 'Formation' && existingKind === 'Formation'))) return 'Choisissez une catégorie et un type de rendez-vous valides.';
     if (!validLocalDate(body.date) || !validLocalDate(x.end_date) || x.end_date <= body.date || x.end_date.slice(0,10) !== body.date.slice(0,10)) return 'Indiquez une heure de début et de fin le même jour, la fin après le début.';
     if (x.networker_id || x.source !== 'site') {
       if (!/^[0-9a-f-]{36}$/i.test(x.networker_id || '')) return 'Sélectionnez un networker.';
@@ -196,7 +200,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const rows=(await pool.query("SELECT id,date,extra FROM entries WHERE section='rendezvous' AND status='Confirmé'")).rows;
     return rows.some(row=>row.id !== excludeId && row.date && JSON.parse(row.extra || '{}').end_date && row.date < body.extra.end_date && JSON.parse(row.extra).end_date > body.date);
   }
-  const meetingVisible = (row, user) => admin(user.role) || (user.role === 'presentateur' && row.assigned_to === user.id) || (user.role === 'networker' && (row.extra.networker_id === user.id || (!row.extra.networker_id && row.created_by === user.id)));
+  const meetingVisible = (row, user) => admin(user.role) || (user.role === 'presentateur' && row.assigned_to === user.id) || (user.role === 'networker' && (row.extra.networker_id === user.id || (parseAdditionalNetworkers(row.extra.additional_networker_ids) || []).includes(user.id) || (!row.extra.networker_id && row.created_by === user.id)));
   app.get('/api/appointments/busy',auth,async(req,res,next)=>{try{
     if (req.user.role !== 'networker') return res.status(403).json({error:'Accès interdit'});
     const result=await pool.query("SELECT id,date,extra,created_by,assigned_to FROM entries WHERE section='rendezvous' AND status='Confirmé'");
@@ -212,7 +216,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const report=req.body.report;
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof report!=='string' || !report.trim() || report.length>3000) return res.status(400).json({error:'Compte rendu requis (3000 caractères maximum).'});
     const result=await pool.query("SELECT * FROM entries WHERE id=$1 AND section='rendezvous'",[req.params.id]); const row=result.rows[0] && unpack(result.rows[0]);
-    if (!row || row.status!=='Réalisé' || ![row.extra.networker_id,row.extra.admin_id,row.assigned_to].includes(req.user.id)) return res.status(403).json({error:'Seuls les participants affectés peuvent remplir un compte rendu après la séance.'});
+    if (!row || row.status!=='Réalisé' || ![row.extra.networker_id,row.extra.admin_id,row.assigned_to,...(parseAdditionalNetworkers(row.extra.additional_networker_ids) || [])].includes(req.user.id)) return res.status(403).json({error:'Seuls les participants affectés peuvent remplir un compte rendu après la séance.'});
     const updated=await pool.query('UPDATE appointment_reports SET report=$1 WHERE appointment_id=$2 AND user_id=$3 RETURNING appointment_id',[report.trim(),row.id,req.user.id]);
     if (!updated.rows.length) await pool.query('INSERT INTO appointment_reports (appointment_id,user_id,report) VALUES ($1,$2,$3)',[row.id,req.user.id,report.trim()]);
     res.json({ok:true});
@@ -245,9 +249,16 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
   }catch(e){next(e);}});
   function sectionAccess(req,res,next) { if (!allowed[req.user.role]?.includes(req.params.section)) return res.status(403).json({error:'Accès interdit'}); next(); }
   app.get('/api/entries/:section',auth,sectionAccess,async(req,res,next)=>{try{
-    if (req.params.section === 'rendezvous' && !admin(req.user.role)) {
+    if (req.params.section === 'rendezvous') {
       const result = await pool.query("SELECT id,title,detail,status,owner,date,created_by,extra,assigned_to FROM entries WHERE section='rendezvous' ORDER BY created_at DESC");
-      return res.json(result.rows.map(unpack).filter(row=>meetingVisible(row,req.user)));
+      const visible=result.rows.map(unpack).filter(row=>meetingVisible(row,req.user));
+      const rows=await Promise.all(visible.map(async row=>{
+        const id=row.extra.prospect_id;
+        if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return row;
+        const prospect=(await pool.query("SELECT title FROM entries WHERE id=$1 AND section='prospects'",[id])).rows[0];
+        return {...row,prospect_name:prospect?.title || null};
+      }));
+      return res.json(rows);
     }
     if (req.params.section === 'taches') {
       const result = await pool.query("SELECT id,title,detail,status,owner,date,created_by,extra,assigned_to FROM entries WHERE section='taches' ORDER BY created_at DESC");
@@ -276,7 +287,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const presenterError=await validatePresenter(section,req.body.extra); if(presenterError) return res.status(400).json({error:presenterError});
     if (section === 'taches') {const problem = await taskValidation(req.body.extra); if (problem) return res.status(400).json({error:problem});}
     if (section === 'rendezvous' && !admin(req.user.role) && req.body.status !== 'Demandé') return res.status(403).json({error:'Un rendez-vous doit être demandé à l’administration.'});
-    if (section === 'rendezvous') {if(req.user.role==='networker') {req.body.extra.networker_id=req.user.id; req.body.extra.admin_id='';} const problem=await validateMeeting(req.body,req.user); if(problem) return res.status(400).json({error:problem});}
+    if (section === 'rendezvous') {if(req.user.role==='networker') {req.body.extra.networker_id=req.user.id;} const problem=await validateMeeting(req.body,req.user); if(problem) return res.status(400).json({error:problem});}
     const assigned = section === 'prospects' && req.user.role === 'networker' ? req.user.id : (req.body.assigned_to || null);
     if (section === 'prospects' && !assigned) return res.status(400).json({error:'Sélectionnez le membre ayant contacté le prospect.'});
     if (assigned && (!/^[0-9a-f-]{36}$/i.test(assigned) || !['prospects','rendezvous'].includes(section) || (section === 'rendezvous' && !admin(req.user.role)) || !(await pool.query(section === 'prospects' ? 'SELECT id FROM users WHERE id=$1' : "SELECT id FROM users WHERE id=$1 AND role='presentateur'", [assigned])).rows[0])) return res.status(400).json({error:'Compte affecté invalide'});
@@ -303,8 +314,8 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (section==='stock' && JSON.parse(previous.extra || '{}').item_type==='Pack' && extra.item_type!=='Pack') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===previous.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const presenterError=await validatePresenter(section,extra); if(presenterError) return res.status(400).json({error:presenterError});
     if (section === 'formations' && JSON.parse(previous.extra || '{}').presenter_id && !extra.presenter_id) return res.status(400).json({error:'Présentateur requis'});
-    if (section === 'rendezvous' && !admin(req.user.role)) { extra.networker_id=previous.extra ? JSON.parse(previous.extra).networker_id : req.user.id; extra.admin_id=JSON.parse(previous.extra || '{}').admin_id || ''; }
-    if (section === 'rendezvous') {const problem=await validateMeeting({...req.body,extra},req.user,!JSON.parse(previous.extra || '{}').category && !extra.category); if(problem) return res.status(400).json({error:problem});}
+    if (section === 'rendezvous' && !admin(req.user.role)) { extra.networker_id=previous.extra ? JSON.parse(previous.extra).networker_id : req.user.id;  }
+    if (section === 'rendezvous') {const problem=await validateMeeting({...req.body,extra},req.user,!JSON.parse(previous.extra || '{}').category && !extra.category,JSON.parse(previous.extra || '{}').kind || ''); if(problem) return res.status(400).json({error:problem});}
     if (section === 'taches' && JSON.parse(previous.extra || '{}').audience && (extra.audience !== JSON.parse(previous.extra).audience || extra.target !== JSON.parse(previous.extra).target)) return res.status(400).json({error:'Les destinataires ne peuvent pas être modifiés ; créez une nouvelle tâche.'});
     if (section === 'taches' && extra.audience) {const problem = await taskValidation(extra); if (problem) return res.status(400).json({error:problem});}
     if (section === 'rendezvous' && await meetingConflict({...req.body,extra},req.params.id)) return res.status(409).json({error:'Ce créneau est déjà réservé.'});

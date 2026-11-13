@@ -162,7 +162,7 @@ Les sections accessibles selon le rôle sont dans la barre latérale gauche. Sur
 
 ### Demandes de rendez-vous (préproduction locale)
 
-L'espace **Rendez-vous** comporte deux vues : « Demandes » (statuts Demandé et Proposé) et « Planning et rendez-vous » (autres statuts et agenda). Un networker peut créer une demande interne de type **Prospection** (Premier contact, Présentation, Closing) ou **Réseau** (Suivi, Formation, Demande du networker). Pour une prospection interne, il choisit un prospect auquel il a accès. L'administration traite la demande, ajuste le créneau, affecte l'administrateur participant et confirme ; le présentateur peut être affecté si nécessaire. Les préférences ne constituent pas une réservation.
+L'espace **Rendez-vous** comporte deux vues : « Demandes » (statuts Demandé et Proposé) et « Planning et rendez-vous » (autres statuts et agenda). Un networker peut créer une demande interne de type **Prospection** (Premier contact, Présentation, Closing) ou **Réseau** (Suivi, Demande du networker). Pour une prospection interne, il choisit un prospect auquel il a accès. L'administration traite la demande, ajuste le créneau, affecte l'administrateur participant et confirme ; le présentateur peut être affecté si nécessaire. Les préférences ne constituent pas une réservation.
 
 Le formulaire `/demande-rendez-vous` est **désactivé par défaut** et n’accepte les envois que si `NODE_ENV` vaut explicitement `development` ou `test` ; il reste interdit en production. Pour un lancement de l’API hors Docker, définir `NODE_ENV=development` localement avant son démarrage. Pour un test local avec données fictives uniquement :
 

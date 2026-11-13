@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { newDb } from 'pg-mem';
+import request from 'supertest';
+import { initialize, createApp } from '../server/app.mjs';
+import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
+
+test('rendez-vous : participants, droits, compte rendu et anciens types', async () => {
+  const {Pool}=newDb().adapters.createPg(); const pool=new Pool();
+  await initialize(pool,'root@example.test','password12345'); const app=createApp(pool); const admin=request.agent(app);
+  await admin.post('/api/login').send({email:'root@example.test',password:'password12345'}); const adminId=(await admin.get('/api/me')).body.id;
+  async function networker(name){const created=await admin.post('/api/users').send({name,email:`${name}@example.test`,password:'password12345',role:'networker'});const agent=request.agent(app);await agent.post('/api/login').send({email:`${name}@example.test`,password:'password12345'});return {id:created.body.id,agent};}
+  const owner=await networker('owner'), guest=await networker('guest'), stranger=await networker('stranger');
+  const base={title:'Suivi',detail:'Notes de test',owner:'',date:'2026-12-01T10:00',status:'Demandé',extra:{category:'Networker',kind:'Suivi',end_date:'2026-12-01T11:00',admin_id:adminId,additional_networker_ids:JSON.stringify([guest.id]),location:'Salle de test'}};
+  assert.equal((await owner.agent.post('/api/entries/rendezvous').send({...base,extra:{...base.extra,additional_networker_ids:JSON.stringify([guest.id,guest.id])}})).status,400);
+  assert.equal((await owner.agent.post('/api/entries/rendezvous').send({...base,extra:{...base.extra,additional_networker_ids:JSON.stringify([adminId])}})).status,400);
+  assert.equal((await owner.agent.post('/api/entries/rendezvous').send({...base,extra:{...base.extra,additional_networker_ids:JSON.stringify([owner.id])}})).status,400);
+  assert.equal((await owner.agent.post('/api/entries/rendezvous').send({...base,extra:{...base.extra,kind:'Formation'}})).status,400);
+  const created=await owner.agent.post('/api/entries/rendezvous').send(base);assert.equal(created.status,201);assert.equal(created.body.extra.admin_id,adminId);
+  assert.equal((await guest.agent.get('/api/entries/rendezvous')).body[0].id,created.body.id);
+  assert.equal((await stranger.agent.get('/api/entries/rendezvous')).body.length,0);
+  assert.equal((await guest.agent.put(`/api/entries/rendezvous/${created.body.id}`).send({...created.body,status:'Confirmé'})).status,404);
+  const confirmed={...created.body,status:'Confirmé'};
+  assert.equal((await admin.put(`/api/entries/rendezvous/${created.body.id}`).send(confirmed)).status,200);
+  assert.deepEqual((await guest.agent.get('/api/appointments/busy')).body,[]);
+  assert.equal((await admin.put(`/api/entries/rendezvous/${created.body.id}`).send({...confirmed,status:'Réalisé'})).status,200);
+  assert.equal((await guest.agent.put(`/api/appointments/${created.body.id}/report`).send({report:'Présent'})).status,200);
+  assert.equal((await guest.agent.get(`/api/appointments/${created.body.id}/reports`)).status,200);
+  assert.equal((await stranger.agent.get(`/api/appointments/${created.body.id}/reports`)).status,404);
+  const removed={...confirmed,status:'Réalisé',extra:{...confirmed.extra,additional_networker_ids:'[]'}};
+  assert.equal((await admin.put(`/api/entries/rendezvous/${created.body.id}`).send(removed)).status,200);
+  assert.equal((await guest.agent.get('/api/entries/rendezvous')).body.length,0);
+  assert.equal((await guest.agent.put(`/api/appointments/${created.body.id}/report`).send({report:'Autre'})).status,403);
+  const legacyExtra={...base.extra,kind:'Formation',networker_id:owner.id};
+  await pool.query('UPDATE entries SET extra=$1 WHERE id=$2',[JSON.stringify(legacyExtra),created.body.id]);
+  assert.equal((await admin.put(`/api/entries/rendezvous/${created.body.id}`).send({...removed,extra:legacyExtra})).status,200);
+  const prospect=await owner.agent.post('/api/entries/prospects').send({title:'Prospect fictif',detail:'',owner:'',date:'',status:'',extra:{phone:'123',interest:'À préciser'}});assert.equal(prospect.status,201);
+  const prospectMeeting=await owner.agent.post('/api/entries/rendezvous').send({...base,extra:{...base.extra,category:'Prospection',kind:'Premier contact',prospect_id:prospect.body.id}});
+  assert.equal(prospectMeeting.status,201);
+  const guestMeetings=(await guest.agent.get('/api/entries/rendezvous')).body;
+  assert.equal(guestMeetings.find(x=>x.id===prospectMeeting.body.id).prospect_name,'Prospect fictif');
+  assert.equal((await stranger.agent.get('/api/entries/rendezvous')).body.length,0);
+  assert.equal(parseAdditionalNetworkers('["nope"]'),null);
+  assert.deepEqual(parseAdditionalNetworkers(undefined),[]);
+  await pool.end();
+});
