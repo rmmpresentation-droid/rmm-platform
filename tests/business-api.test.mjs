@@ -74,5 +74,12 @@ test('parcours métier, droits, affectations, confidentialité et données liée
   const pack=await root.post('/api/entries/stock').send({...base,status:'Disponible',extra:{item_type:'Pack'}});assert.equal(pack.status,201);
   const order=await root.post('/api/entries/commandes').send({...base,status:'À traiter',extra:{pack_id:pack.body.id,buyer:'Client',payment_method:'Espèces',ordered_by:rootId}});assert.equal(order.status,201);
   assert.equal((await root.delete(`/api/entries/stock/${pack.body.id}`)).status,409);
+  const fresh=await n.agent.post('/api/entries/prospects').send({...base,title:'Nouveau prospect',status:'',extra:{phone:'123',interest:'Produits'}});
+  assert.equal(fresh.status,201);assert.equal(fresh.body.status,'');
+  const updated=await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...fresh.body,detail:'Note modifiée'});
+  assert.equal(updated.status,200);assert.equal(updated.body.status,'');
+  assert.equal((await n.agent.get('/api/entries/prospects')).body.find(x=>x.id===fresh.body.id).status,'');
+  assert.equal((await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...updated.body,status:'Premier contact'})).body.status,'Premier contact');
+  assert.equal((await n.agent.get('/api/entries/prospects')).body.find(x=>x.id===prospect.body.id).status,'Premier contact');
   await pool.end();
 });

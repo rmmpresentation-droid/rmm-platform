@@ -147,3 +147,5 @@ Sauvegardez le volume PostgreSQL avant la mise à jour : le démarrage applique 
 Chaque fiche prospect permet d'ajouter des notes de suivi datées avec leur auteur. Elles sont enregistrées dans la table PostgreSQL `prospect_notes`, créée automatiquement au démarrage de l'API. Les administrateurs et le networker ayant accès à la fiche peuvent les consulter et en ajouter. Les notes existantes du champ « Notes et résultat de prospection » restent inchangées ; elles ne sont pas transférées automatiquement dans l'historique.
 
 Par précaution, un prospect possédant des notes ne peut pas être supprimé depuis l'application. Il n'existe pas encore d'interface de modification ou de suppression des notes. Inclure la table `prospect_notes` dans les sauvegardes de la base, en plus des autres tables. Redémarrer l'API après mise à jour pour créer la table ; aucune donnée existante n'est effacée.
+
+Les nouveaux prospects sont créés sans étape de prospection (« Non commencé »). Le statut peut ensuite être choisi dans la liste. Les statuts des prospects déjà enregistrés ne sont pas modifiés.

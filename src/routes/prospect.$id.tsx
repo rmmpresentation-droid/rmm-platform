@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { prospectStep } from "@/lib/local-workspace.mjs";
 
 type Prospect = {
   id: string;
@@ -83,8 +84,7 @@ function ProspectPage() {
   }, [id]);
 
   const steps = ["Premier contact", "Présentation", "Closing"];
-  const currentStep =
-    prospect?.status === "Premier contact" ? 0 : prospect?.status === "Présentation" ? 1 : 2;
+  const currentStep = prospectStep(prospect?.status ?? "");
   const contact = directory.find((person) => person.id === prospect?.assigned_to)?.name;
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -148,7 +148,7 @@ function ProspectPage() {
                   </p>
                 </div>
                 <span className="rounded-full bg-[var(--gold)]/15 px-4 py-2 text-sm text-[var(--gold)]">
-                  {prospect.status}
+                  {prospect.status || "Non commencé"}
                 </span>
               </div>
               <div className="mt-7 flex flex-wrap gap-2">

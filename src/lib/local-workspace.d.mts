@@ -3,5 +3,6 @@ export type Section = 'prospects' | 'taches' | 'rendezvous' | 'networkers' | 'fo
 export type Store = Record<Section, Item[]>;
 export const sectionNames: Section[];
 export const statuses: Record<Section, string[]>;
+export function prospectStep(status: string): number;
 export function emptyStore(): Store;
 export function parseBackup(json: string): Store;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyStore, parseBackup, sectionNames, statuses } from '../src/lib/local-workspace.mjs';
+import { emptyStore, parseBackup, prospectStep, sectionNames, statuses } from '../src/lib/local-workspace.mjs';
 
 test('sauvegarde vide et complète restaurable', () => {
   const data = emptyStore();
@@ -24,4 +24,12 @@ test('les identifiants dupliqués sont refusés', () => {
   const item = { id: '1', title: 'Tâche', detail: '', status: statuses.taches[0], owner: '', date: '' };
   data.taches.push(item, item);
   assert.throws(() => parseBackup(JSON.stringify(data)));
+});
+
+test('un prospect sans statut ne correspond à aucune étape', () => {
+  assert.equal(statuses.prospects[0], '');
+  assert.equal(prospectStep(''), -1);
+  assert.equal(prospectStep('Premier contact'), 0);
+  assert.equal(prospectStep('Présentation'), 1);
+  for (const value of ['Closing', 'Consommateur', 'Candidat networker', 'Sans commande']) assert.equal(prospectStep(value), 2);
 });
