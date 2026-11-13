@@ -1,9 +1,14 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { randomBytes, createHash, randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { sectionNames, statuses } from '../src/lib/local-workspace.mjs';
 import { validateExtra } from '../src/lib/business-fields.mjs';
 import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
+
+const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
+// Stable namespaced IDs preserve edited imported entries and make repeated imports safe.
+const catalogueEntryId = (id) => {const h = createHash('sha256').update(`rmm-product-catalogue-v1:${id}`).digest('hex'); return `${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;};
 
 const roles = ['superadmin', 'admin', 'presentateur', 'networker'];
 const availableSections = sectionNames.filter(section => section !== 'ressources');
@@ -247,6 +252,23 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const result=await pool.query('INSERT INTO prospect_notes (id,prospect_id,author_id,content) VALUES ($1,$2,$3,$4) RETURNING id,content,created_at',[randomUUID(),req.params.id,req.user.id,content.trim()]);
     res.status(201).json({...result.rows[0],author:req.user.name});
   }catch(e){next(e);}});
+  app.post('/api/catalogue/import',auth,async(req,res,next)=>{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Seule l’administration peut importer le catalogue.'});
+    const client=await pool.connect();
+    try {
+      await client.query('BEGIN');
+      let created=0;
+      for(const product of productCatalogue) {
+        const id=catalogueEntryId(product.id);
+        if ((await client.query('SELECT id FROM entries WHERE id=$1',[id])).rows.length) continue;
+        const extra={item_type:'Produit',image:`/products/${product.id}.jpg`,contents:`Source : ${product.sourceFile}${product.ingredients ? ` — ${product.ingredients}` : ''}`};
+        const result=await client.query("INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING RETURNING id",[id,'stock',product.name,product.description,'Inactif','','',req.user.id,JSON.stringify(extra),null]);
+        created+=result.rows.length;
+      }
+      await client.query('COMMIT');
+      res.json({created,existing:productCatalogue.length-created});
+    } catch(error) {try {await client.query('ROLLBACK');} catch {} next(error);} finally {client.release();}
+  });
   function sectionAccess(req,res,next) { if (!allowed[req.user.role]?.includes(req.params.section)) return res.status(403).json({error:'Accès interdit'}); next(); }
   app.get('/api/entries/:section',auth,sectionAccess,async(req,res,next)=>{try{
     if (req.params.section === 'rendezvous') {

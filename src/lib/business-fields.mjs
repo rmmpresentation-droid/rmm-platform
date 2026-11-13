@@ -63,7 +63,7 @@ export function validateExtra(section, extra, { required = true } = {}) {
     if (required && field.required && !value.trim()) return `${field.label} requis`;
     if (value && field.type === 'select' && !field.options.includes(value)) return `${field.label} invalide`;
     if (value && field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'E-mail invalide';
-    if (value && field.type === 'url') { try { if (!['https:', 'http:'].includes(new URL(value).protocol)) return 'Lien invalide'; } catch { return 'Lien invalide'; } }
+    if (value && field.type === 'url' && !(section === 'stock' && field.key === 'image' && /^\/products\/[a-z0-9-]+\.jpg$/.test(value))) { try { if (!['https:', 'http:'].includes(new URL(value).protocol)) return 'Lien invalide'; } catch { return 'Lien invalide'; } }
     if (value && field.type === 'number' && (!/^\d+(\.\d{1,3})?$/.test(value) || Number(value) > 100000000)) return `${field.label} invalide`;
   }
   return null;

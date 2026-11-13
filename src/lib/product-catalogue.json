@@ -1,0 +1,78 @@
+[
+  {
+    "id": "3s-capsule",
+    "name": "3S",
+    "sourceFile": "3S.pdf",
+    "description": "Capsules de soin présentées par Swisderm.",
+    "ingredients": "La brochure mentionne des cellules végétales de pomme, de rose et d’orange, ainsi que l’huile de jojoba."
+  },
+  {
+    "id": "bio-white-cream",
+    "name": "Bio White",
+    "sourceFile": "Bio White.pdf",
+    "description": "Crème de soin présentée dans la brochure sous le nom Bio White Cream.",
+    "ingredients": "La brochure cite notamment le citron, les vitamines C et E, le colza et les feuilles de myrtille."
+  },
+  {
+    "id": "b-cream",
+    "name": "Btox",
+    "sourceFile": "Btox.pdf",
+    "description": "Crème de soin présentée dans la brochure sous le nom B Cream.",
+    "ingredients": "La brochure cite notamment l’huile de tournesol, l’acétate de tocophérol, le triglycéride caprylique et l’extrait de lierre."
+  },
+  {
+    "id": "hydrating-toning-lotion",
+    "name": "HTL",
+    "sourceFile": "HTL.pdf",
+    "description": "Lotion présentée dans la brochure sous le nom Hydrating Toning Lotion.",
+    "ingredients": "La brochure mentionne notamment le sodium PCA, l’allantoïne, l’hamamélis, le collagène hydrolysé, l’acide citrique et le sorbitol."
+  },
+  {
+    "id": "s-fem-serum",
+    "name": "S FEM SERUM-EN",
+    "sourceFile": "S FEM SERUM-EN.pdf",
+    "description": "Sérum présenté par Swisderm.",
+    "ingredients": "La brochure mentionne notamment des extraits de guarana et de lierre, de l’huile de tournesol et du colza."
+  },
+  {
+    "id": "s-hydro",
+    "name": "S Hydro Leaflet-EN",
+    "sourceFile": "S Hydro Leaflet-EN.pdf",
+    "description": "Appareil présenté dans la brochure sous le nom S Hydro."
+  },
+  {
+    "id": "s-xtra-caffe",
+    "name": "S Xtra Caffe-EN",
+    "sourceFile": "S Xtra Caffe-EN.pdf",
+    "description": "Café en sachets présenté par Swisderm.",
+    "ingredients": "La brochure mentionne des cafés arabica et robusta, ainsi que des extraits d’Alpinia galanga et de Tongkat Ali."
+  },
+  {
+    "id": "s-factor",
+    "name": "S-Factor-EN",
+    "sourceFile": "S-Factor-EN.pdf",
+    "description": "Produit en sachets présenté par Swisderm.",
+    "ingredients": "La brochure mentionne notamment du cassis, du mangoustan, du curcuma blanc, de l’açaï, de la canneberge, du collagène de poisson et de la vitamine C."
+  },
+  {
+    "id": "sun-protector",
+    "name": "Sun Protector",
+    "sourceFile": "Sun Protector.pdf",
+    "description": "Produit solaire présenté par Swisderm.",
+    "ingredients": "La brochure cite notamment l’arbutine, l’huile d’olive, la cire d’abeille et l’huile d’argan."
+  },
+  {
+    "id": "gentle-cleansing-cream",
+    "name": "Swisderm Gentle Cleansing Cream EN",
+    "sourceFile": "Swisderm Gentle Cleansing Cream EN.pdf",
+    "description": "Crème nettoyante présentée par Swisderm.",
+    "ingredients": "La brochure mentionne notamment des extraits de fleur de matricaire, de thé vert, d’aloe vera et de papaye, ainsi que de la glycérine."
+  },
+  {
+    "id": "revitalizing-foundation",
+    "name": "Swisderm Revitalizing Foundation EN",
+    "sourceFile": "Swisderm Revitalizing Foundation EN.pdf",
+    "description": "Fond de teint présenté par Swisderm.",
+    "ingredients": "La brochure mentionne notamment l’huile de jojoba, l’huile d’amande douce, la cire d’abeille et les vitamines C et E."
+  }
+]
