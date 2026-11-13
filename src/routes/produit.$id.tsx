@@ -35,11 +35,11 @@ function ProductPage() {
         <ArrowLeft size={16} /> Retour au catalogue
       </Link>
       <div className="mt-8 grid items-center gap-10 lg:grid-cols-2">
-        <div className="grid aspect-[4/3] place-items-center rounded-xl border border-border bg-gradient-to-br from-[var(--gold)]/10 via-card to-card">
+        <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-border bg-[#faf9f6]">
           <img
             src={`/products/${product.id}.jpg`}
-            alt={`Visuel de ${product.name}, extrait de la brochure`}
-            className="h-full max-h-96 w-full object-contain p-6"
+            alt={`Visuel de ${product.name}, retouché à partir de la brochure`}
+            className="h-full w-full object-contain"
           />
         </div>
         <div>
