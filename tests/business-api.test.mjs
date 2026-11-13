@@ -81,5 +81,21 @@ test('parcours métier, droits, affectations, confidentialité et données liée
   assert.equal((await n.agent.get('/api/entries/prospects')).body.find(x=>x.id===fresh.body.id).status,'');
   assert.equal((await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...updated.body,status:'Premier contact'})).body.status,'Premier contact');
   assert.equal((await n.agent.get('/api/entries/prospects')).body.find(x=>x.id===prospect.body.id).status,'Premier contact');
+  for (const status of ['Prise de rendez-vous','Présentation (nouvelle phase)','Closing','Candidat networker','Consommateur']) {
+    const r=await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...updated.body,status});
+    assert.equal(r.status,200);assert.equal(r.body.status,status);
+  }
+  assert.equal((await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...updated.body,status:'Sans commande',extra:{...updated.body.extra,refusal_reason:'   '}})).status,400);
+  const refused=await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...updated.body,status:'Sans commande',extra:{...updated.body.extra,refusal_reason:'Pas intéressé'}});
+  assert.equal(refused.status,200);assert.equal(refused.body.extra.refusal_reason,'Pas intéressé');
+  assert.equal((await n.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...refused.body,extra:{...refused.body.extra,refusal_reason:''}})).status,400);
+  assert.equal((await n2.agent.put(`/api/entries/prospects/${fresh.body.id}`).send({...refused.body,status:'Closing'})).status,404);
+  const old=await n.agent.post('/api/entries/prospects').send({...base,title:'Ancienne fiche',status:'Présentation',extra:{phone:'123',interest:'Produits'}});
+  assert.equal(old.status,201);assert.equal((await n.agent.get('/api/entries/prospects')).body.find(x=>x.id===old.body.id).status,'Présentation');
+  await pool.query("UPDATE entries SET status='Sans commande' WHERE id=$1",[old.body.id]);
+  const oldRefusal={...old.body,status:'Sans commande'};
+  assert.equal((await n.agent.put(`/api/entries/prospects/${old.body.id}`).send({...oldRefusal,detail:'Modification historique'})).status,200);
+  assert.equal((await n.agent.put(`/api/entries/prospects/${old.body.id}`).send({...oldRefusal,status:'Closing'})).status,200);
+  assert.equal((await n.agent.put(`/api/entries/prospects/${old.body.id}`).send(oldRefusal)).status,400);
   await pool.end();
 });

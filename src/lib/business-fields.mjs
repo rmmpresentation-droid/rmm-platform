@@ -6,6 +6,7 @@ export const businessForms = {
     { key: 'interest', label: 'Centre d’intérêt', type: 'select', options: ['Produits', 'Opportunité network marketing', 'Les deux', 'À préciser'], required: true },
     { key: 'location', label: 'Emplacement du prospect', type: 'text' },
     { key: 'next_action', label: 'Prochaine action', type: 'text' },
+    { key: 'refusal_reason', label: 'Motif du refus', type: 'text' },
   ] },
   rendezvous: { title: 'Sujet du rendez-vous', detail: 'Objectif et informations utiles', date: 'Date et heure souhaitées (heure de Tunis)', fields: [
     { key: 'category', label: 'Catégorie', type: 'select', options: ['Prospection', 'Networker'] },

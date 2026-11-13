@@ -148,4 +148,10 @@ Chaque fiche prospect permet d'ajouter des notes de suivi datées avec leur aute
 
 Par précaution, un prospect possédant des notes ne peut pas être supprimé depuis l'application. Il n'existe pas encore d'interface de modification ou de suppression des notes. Inclure la table `prospect_notes` dans les sauvegardes de la base, en plus des autres tables. Redémarrer l'API après mise à jour pour créer la table ; aucune donnée existante n'est effacée.
 
-Les nouveaux prospects sont créés sans étape de prospection (« Non commencé »). Le statut, les modifications et la suppression autorisée sont accessibles dans la fiche individuelle, via « Voir la fiche » dans la liste. Les statuts des prospects déjà enregistrés ne sont pas modifiés.
+Les nouveaux prospects sont créés sans étape de prospection (« Non commencé »). Le Kanban permet de changer de phase depuis la vue Prospects ou la fiche individuelle ; les modifications et la suppression autorisée restent dans la fiche, accessible via « Voir la fiche ». Les statuts des prospects déjà enregistrés ne sont pas modifiés.
+
+### Kanban de prospection
+
+Dans Prospects et dans chaque fiche, le Kanban présente les phases « Non commencé », « Premier contact », « Prise de rendez-vous », « Présentation », « Closing », « Rejoint » et « Ne rejoint pas ». Déplacez la fiche par glisser-déposer ou avec le sélecteur « Déplacer vers » et le bouton « Déplacer ». Les deux issues demandent respectivement le type de participation ou un motif de refus. Les phases restent modifiables librement ; elles ne créent pas automatiquement de compte networker ou de rendez-vous.
+
+L'ancien statut « Présentation », qui regroupait deux phases, reste inchangé et apparaît dans « Présentation historique » jusqu'à repositionnement manuel. Les anciennes fiches « Sans commande » sans motif restent consultables et modifiables ; un nouveau refus exige un motif. Aucun historique automatique des changements de phase n'est encore enregistré.

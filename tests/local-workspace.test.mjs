@@ -30,6 +30,8 @@ test('un prospect sans statut ne correspond à aucune étape', () => {
   assert.equal(statuses.prospects[0], '');
   assert.equal(prospectStep(''), -1);
   assert.equal(prospectStep('Premier contact'), 0);
-  assert.equal(prospectStep('Présentation'), 1);
-  for (const value of ['Closing', 'Consommateur', 'Candidat networker', 'Sans commande']) assert.equal(prospectStep(value), 2);
+  assert.equal(prospectStep('Présentation'), -1);
+  assert.equal(prospectStep('Prise de rendez-vous'), 1);
+  assert.equal(prospectStep('Présentation (nouvelle phase)'), 2);
+  for (const value of ['Closing', 'Consommateur', 'Candidat networker', 'Sans commande']) assert.equal(prospectStep(value), 3);
 });

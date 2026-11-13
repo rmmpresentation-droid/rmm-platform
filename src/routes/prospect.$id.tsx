@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { prospectStep, statuses } from "@/lib/local-workspace.mjs";
+import { ProspectKanban, prospectStatusLabel } from "@/components/workspace/ProspectKanban";
 import { businessForms } from "@/lib/business-fields.mjs";
 
 type Prospect = {
@@ -144,8 +144,6 @@ function ProspectPage() {
     }
   }
   const canAdmin = user?.role === "admin" || user?.role === "superadmin";
-  const steps = ["Premier contact", "Présentation", "Closing"];
-  const currentStep = prospectStep(prospect?.status ?? "");
   const contact = directory.find((person) => person.id === prospect?.assigned_to)?.name;
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -209,28 +207,10 @@ function ProspectPage() {
                   </p>
                 </div>
                 <span className="rounded-full bg-[var(--gold)]/15 px-4 py-2 text-sm text-[var(--gold)]">
-                  {prospect.status || "Non commencé"}
+                  {prospectStatusLabel(prospect.status)}
                 </span>
               </div>
               <div className="mt-6 flex flex-wrap items-end gap-3">
-                <label className="text-sm">
-                  Statut de prospection
-                  <select
-                    aria-label="Statut de prospection"
-                    className="mt-2 block rounded-md border border-border bg-background px-3 py-2 text-sm"
-                    value={prospect.status}
-                    disabled={busy}
-                    onChange={(event) =>
-                      void updateProspect({ ...prospect, status: event.target.value })
-                    }
-                  >
-                    {statuses.prospects.map((status) => (
-                      <option key={status} value={status}>
-                        {statusLabels[status] || status}
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <button
                   type="button"
                   disabled={busy}
@@ -272,18 +252,17 @@ function ProspectPage() {
                   onSave={updateProspect}
                 />
               )}
-              <div className="mt-7 flex flex-wrap gap-2">
-                {steps.map((step, index) => (
-                  <span
-                    key={step}
-                    className={`rounded-full px-3 py-1.5 text-xs ${index <= currentStep ? "bg-[var(--gold)]/20 text-[var(--gold)]" : "bg-muted text-muted-foreground"}`}
-                  >
-                    {index + 1}.{" "}
-                    {step === "Présentation" ? "Présentation et prise de rendez-vous" : step}
-                  </span>
-                ))}
-              </div>
             </section>
+            <ProspectKanban
+              single
+              prospects={[prospect]}
+              onUpdate={async (updated) => {
+                if (!(await updateProspect({ ...prospect, ...updated })))
+                  throw new Error(
+                    "La phase n’a pas pu être enregistrée. Vérifiez vos droits et réessayez.",
+                  );
+              }}
+            />
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <section className="rounded-xl bg-card hairline p-6">
                 <h2 className="font-serif text-2xl">Coordonnées et profil</h2>
@@ -329,6 +308,12 @@ function ProspectPage() {
                     value={prospect.extra?.next_action}
                   />
                 </dl>
+                {prospect.status === "Sans commande" && (
+                  <p className="mt-6 text-sm">
+                    <strong>Motif du refus :</strong>{" "}
+                    {prospect.extra?.refusal_reason || "Non renseigné (historique)"}
+                  </p>
+                )}
                 <h3 className="mt-6 text-sm font-semibold">Notes et résultat de prospection</h3>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                   {prospect.detail || "Non renseigné"}
@@ -342,15 +327,6 @@ function ProspectPage() {
     </div>
   );
 }
-
-const statusLabels: Record<string, string> = {
-  "": "Non commencé",
-  Présentation: "Présentation et prise de rendez-vous",
-  Closing: "Closing · en cours",
-  Consommateur: "Closing · consommateur",
-  "Candidat networker": "Closing · networker",
-  "Sans commande": "Closing · ne rejoint pas",
-};
 
 function ProspectEditDialog({
   prospect,
@@ -440,34 +416,36 @@ function ProspectEditDialog({
             onChange={(event) => setDraft({ ...draft, title: event.target.value })}
           />
         </label>
-        {businessForms.prospects.fields.map((f) => (
-          <label key={f.key} className="block text-sm">
-            {f.label}
-            {f.required && " *"}
-            {f.type === "select" ? (
-              <select
-                required={f.required}
-                className={field}
-                value={draft.extra[f.key] || ""}
-                onChange={(event) => setExtra(f.key, event.target.value)}
-              >
-                <option value="">Sélectionner</option>
-                {f.options?.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type={f.type}
-                required={f.required}
-                maxLength={500}
-                className={field}
-                value={draft.extra[f.key] || ""}
-                onChange={(event) => setExtra(f.key, event.target.value)}
-              />
-            )}
-          </label>
-        ))}
+        {businessForms.prospects.fields
+          .filter((f) => f.key !== "refusal_reason")
+          .map((f) => (
+            <label key={f.key} className="block text-sm">
+              {f.label}
+              {f.required && " *"}
+              {f.type === "select" ? (
+                <select
+                  required={f.required}
+                  className={field}
+                  value={draft.extra[f.key] || ""}
+                  onChange={(event) => setExtra(f.key, event.target.value)}
+                >
+                  <option value="">Sélectionner</option>
+                  {f.options?.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={f.type}
+                  required={f.required}
+                  maxLength={500}
+                  className={field}
+                  value={draft.extra[f.key] || ""}
+                  onChange={(event) => setExtra(f.key, event.target.value)}
+                />
+              )}
+            </label>
+          ))}
         {isAdmin ? (
           <label className="block text-sm">
             Membre ayant contacté le prospect *

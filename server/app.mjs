@@ -244,6 +244,7 @@ export function createApp(pool) {
     if (!admin(req.user.role) && ['formations','ressources'].includes(section)) return res.status(403).json({error:'Accès en lecture seule'});
     if (!validate(section,req.body)) return res.status(400).json({error:'Données invalides'});
     const extraError = validateExtra(section, req.body.extra); if (extraError) return res.status(400).json({error:extraError});
+    if (section === 'prospects' && req.body.status === 'Sans commande' && !req.body.extra.refusal_reason?.trim()) return res.status(400).json({error:'Indiquez le motif du refus.'});
     if (section === 'formations' && !req.body.extra.presenter_id) return res.status(400).json({error:'Sélectionnez un présentateur.'});
     const commerceError=await validateCommerce(section,req.body.extra); if(commerceError) return res.status(400).json({error:commerceError});
     const presenterError=await validatePresenter(section,req.body.extra); if(presenterError) return res.status(400).json({error:presenterError});
@@ -270,6 +271,7 @@ export function createApp(pool) {
     // Legacy entries remain editable; structured entries are fully validated.
     const extraError = validateExtra(section,extra,{required:Object.keys(JSON.parse(previous.extra || '{}')).length > 0 || Object.keys(extra).length > 0});
     if (extraError) return res.status(400).json({error:extraError});
+    if (section === 'prospects' && req.body.status === 'Sans commande' && !extra.refusal_reason?.trim() && (previous.status !== 'Sans commande' || JSON.parse(previous.extra || '{}').refusal_reason?.trim())) return res.status(400).json({error:'Indiquez le motif du refus.'});
     const commerceError=await validateCommerce(section,extra,!JSON.parse(previous.extra || '{}').item_type && !JSON.parse(previous.extra || '{}').pack_id && !extra.item_type && !extra.pack_id); if(commerceError) return res.status(400).json({error:commerceError});
     if (section==='stock' && JSON.parse(previous.extra || '{}').item_type==='Pack' && extra.item_type!=='Pack') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===previous.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const presenterError=await validatePresenter(section,extra); if(presenterError) return res.status(400).json({error:presenterError});
