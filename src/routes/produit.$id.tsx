@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check, ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/product/ProductCard";
-import { catalogue } from "@/lib/product-catalogue";
+import { catalogue, catalogueImage } from "@/lib/product-catalogue";
 
 export const Route = createFileRoute("/produit/$id")({
   loader: ({ params }) => {
@@ -50,9 +50,11 @@ function ProductPage() {
         <span className="text-foreground">{product.name}</span>
       </div>
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-12 lg:grid-cols-2">
-        <div className="relative grid aspect-[4/5] place-items-center overflow-hidden rounded-xl bg-[#faf9f6] hairline">
+        <div
+          className={`relative grid aspect-[4/5] place-items-center overflow-hidden rounded-xl hairline ${is3s ? "bg-black" : "bg-[#faf9f6]"}`}
+        >
           <img
-            src={`/products/${product.id}.jpg`}
+            src={catalogueImage(product.id)}
             alt={`Visuel de ${product.name}`}
             className="h-full w-full object-contain"
           />

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
-import type { CatalogueProduct } from "@/lib/product-catalogue";
+import { catalogueImage, type CatalogueProduct } from "@/lib/product-catalogue";
 
 export function ProductCard({ product }: { product: CatalogueProduct }) {
   return (
@@ -9,13 +9,15 @@ export function ProductCard({ product }: { product: CatalogueProduct }) {
       params={{ id: product.id }}
       className="group block overflow-hidden rounded-xl border border-border bg-card transition hover:border-[var(--gold)]/50"
     >
-      <div className="relative grid aspect-square place-items-center overflow-hidden bg-[#faf9f6]">
-        <span className="absolute left-4 top-4 text-[10px] uppercase tracking-[.2em] text-muted-foreground">
+      <div
+        className={`relative grid aspect-square place-items-center overflow-hidden ${product.id === "3s-capsule" ? "bg-black" : "bg-[#faf9f6]"}`}
+      >
+        <span className="absolute left-4 top-4 z-10 text-[10px] uppercase tracking-[.2em] text-muted-foreground">
           Référence RMM
         </span>
         <img
-          src={`/products/${product.id}.jpg`}
-          alt={`Visuel de ${product.name}, retouché à partir de la brochure`}
+          src={catalogueImage(product.id)}
+          alt={`Visuel de ${product.name}`}
           className="h-full w-full object-contain"
           loading="lazy"
         />

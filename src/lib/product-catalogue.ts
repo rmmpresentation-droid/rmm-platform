@@ -9,3 +9,6 @@ export type CatalogueProduct = {
   ingredients?: string;
 };
 export const catalogue: CatalogueProduct[] = products;
+
+export const catalogueImage = (id: string) =>
+  `/products/${id}.${id === "3s-capsule" ? "png" : "jpg"}`;

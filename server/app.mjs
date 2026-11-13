@@ -263,7 +263,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
       for(const product of productCatalogue) {
         const id=catalogueEntryId(product.id);
         if ((await client.query('SELECT id FROM entries WHERE id=$1',[id])).rows.length) continue;
-        const extra={item_type:'Produit',image:`/products/${product.id}.jpg`,contents:`Source : ${product.sourceFile}${product.ingredients ? ` — ${product.ingredients}` : ''}`};
+        const extra={item_type:'Produit',image:`/products/${product.id}.${product.id === "3s-capsule" ? "png" : "jpg"}`,contents:`Source : ${product.sourceFile}${product.ingredients ? ` — ${product.ingredients}` : ''}`};
         const result=await client.query("INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING RETURNING id",[id,'stock',product.name,product.description,'Inactif','','',req.user.id,JSON.stringify(extra),null]);
         created+=result.rows.length;
       }
