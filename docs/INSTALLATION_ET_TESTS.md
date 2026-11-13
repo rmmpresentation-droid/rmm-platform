@@ -175,3 +175,11 @@ Le formulaire `/demande-rendez-vous` est **désactivé par défaut** et n’acce
 4. En administrateur, ouvrir Rendez-vous → Demandes → Traiter, ajuster si nécessaire, affecter l'administrateur participant puis confirmer. Les demandes du site sont identifiées et liées à la fiche prospect.
 
 Chaque envoi crée un nouveau prospect, sans détection des doublons. Le formulaire est limité en mémoire à cinq tentatives par minute et par adresse IP ; ce dispositif local ne suffit pas pour une exposition publique. Aucun historique de consentement complet, politique de confidentialité, procédure de conservation/suppression ou protection anti-abus de production n'est en place : validation juridique et sécurité indispensables avant toute mise en ligne. Les données de test ne doivent pas être des données réelles. Le contrôle actuel de conflit reste global et applicatif, non transactionnel, et ne démontre pas l'exclusion par ressource prévue dans la cible Supabase. Les tests utilisent pg-mem ; le comportement transactionnel PostgreSQL réel reste à vérifier.
+
+### Catalogue issu des documents produits
+
+La boutique locale et la rubrique administrative « Produits et stock » affichent 11 références dans `src/lib/product-catalogue.ts`. Le nom de chaque référence correspond au nom du fichier PDF sans son extension, selon la consigne. Les visuels sont des recadrages de ces brochures dans `public/products/`. Les descriptions factuelles et quelques ingrédients mentionnés proviennent des brochures ; ils ne remplacent pas les étiquettes ou les compositions complètes validées. Aucun prix, quantité de stock ou bénéfice non validé n'a été importé.
+
+La liste administrative est en lecture seule et distincte des fiches de stock persistées ; elle ne crée ni inventaire ni articles de commande. Les données existantes ne sont pas modifiées. Les brochures contiennent des allégations non validées ; elles ne sont pas publiées. Les autres pages de la vitrine contiennent encore des informations anciennes non validées : ne pas publier en production.
+
+Démonstration locale : ouvrir `/boutique`, une fiche produit puis l'espace administrateur, rubrique « Produits et stock ». Vérifier les visuels, descriptions et l’absence de prix. Les caractéristiques, images et usages doivent être vérifiés avant publication.

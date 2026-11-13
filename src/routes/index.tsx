@@ -3,7 +3,8 @@ import { ArrowRight, Sparkles, Crown, Eye, Zap, Star, BadgeCheck } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/layout/Section";
 import { ProductCard } from "@/components/product/ProductCard";
-import { products, expertReviews, networkerTestimonials } from "@/lib/data";
+import { expertReviews, networkerTestimonials } from "@/lib/data";
+import { catalogue } from "@/lib/product-catalogue";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,7 +24,7 @@ const pillars = [
 ];
 
 function Home() {
-  const bestSellers = products.filter((p) => p.bestSeller).slice(0, 4);
+  const productSelection = catalogue.slice(0, 4);
 
   return (
     <div>
@@ -57,9 +58,9 @@ function Home() {
       </section>
 
       {/* BEST SELLERS */}
-      <Section eyebrow="Sélection signature" title={<>Nos <span className="text-gradient-gold">Best-Sellers</span></>} subtitle="Les soins les plus plébiscités par notre communauté tunisienne et nos experts médicaux.">
+      <Section eyebrow="Sélection signature" title={<>Nos <span className="text-gradient-gold">références</span></>} subtitle="Une sélection issue des documents transmis, dont les informations restent à valider.">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestSellers.map((p) => <ProductCard key={p.id} product={p} />)}
+          {productSelection.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       </Section>
 

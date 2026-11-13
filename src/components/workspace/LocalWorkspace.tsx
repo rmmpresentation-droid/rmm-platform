@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from '@tanstack/react-router';
 import { LayoutDashboard, UsersRound, ListChecks, CalendarDays, Network, GraduationCap, BookOpen, ShoppingBag, Package, ChartNoAxesCombined, Users, Menu, X } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
+import { catalogue } from '@/lib/product-catalogue';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { ProspectKanban, prospectStatusLabel } from '@/components/workspace/ProspectKanban';
 import { businessForms } from '@/lib/business-fields.mjs';
@@ -130,6 +131,7 @@ export function LocalWorkspace() {
 
 
   {view==='networkers' && <NetworkerProfiles user={user} directory={directory}/>}
+  {view==='stock' && canAdmin && <section className="mt-8 rounded-xl border border-border bg-card p-6"><h2 className="font-serif text-2xl">Références des documents produits</h2><p className="mt-2 text-sm text-muted-foreground">Références issues des fichiers et brochures transmis. Cette liste ne crée pas de fiches de stock enregistrées ; les caractéristiques restent à valider.</p><ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{catalogue.map(product=><li key={product.id} className="rounded-md border border-border p-3 text-sm"><img src={`/products/${product.id}.jpg`} alt={`Visuel de ${product.name}`} className="mb-3 h-32 w-full object-contain"/><strong>{product.name}</strong><span className="mt-1 block text-xs text-muted-foreground">{product.description}</span>{product.ingredients && <span className="mt-1 block text-xs text-muted-foreground">{product.ingredients} Liste non exhaustive.</span>}<span className="mt-1 block text-xs text-muted-foreground">Source : {product.sourceFile}</span></li>)}</ul></section>}
   {view in labels && view!=='networkers' && (view!=='prospects' || prospectView==='list') && (() => {
     const section = view as Section;
     const config = businessForms[section];

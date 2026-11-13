@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -40,10 +40,6 @@ export function Navbar() {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <button className="relative p-2 text-foreground/80 hover:text-[var(--gold)] transition" aria-label="Panier">
-            <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-gradient-gold text-[10px] font-semibold text-background grid place-items-center">2</span>
-          </button>
           <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex border-[var(--gold)]/40 text-[var(--gold)] hover:bg-[var(--gold)]/10 hover:text-[var(--gold-light)]"><Link to="/dashboard">
             <User className="h-3.5 w-3.5 mr-1.5" /> Connexion</Link>
           </Button>
