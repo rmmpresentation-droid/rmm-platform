@@ -19,6 +19,7 @@ services:
       DATABASE_URL: postgres://rmm:rmm_local@db:5432/rmm
       RMM_ADMIN_EMAIL: ${RMM_ADMIN_EMAIL:?Définissez RMM_ADMIN_EMAIL dans .env}
       RMM_ADMIN_PASSWORD: ${RMM_ADMIN_PASSWORD:?Définissez RMM_ADMIN_PASSWORD dans .env}
+      RMM_PUBLIC_REQUEST_ADMIN_ID: ${RMM_PUBLIC_REQUEST_ADMIN_ID:-}
     depends_on:
       db:
         condition: service_healthy

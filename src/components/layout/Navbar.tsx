@@ -9,6 +9,7 @@ const links = [
   { to: "/", label: "Accueil" },
   { to: "/boutique", label: "Boutique" },
   { to: "/networker", label: "Devenir Networker" },
+  { to: "/demande-rendez-vous", label: "Demander un rendez-vous" },
   { to: "/dashboard", label: "Espace Membre" },
   { to: "/admin", label: "Admin" },
 ];

@@ -9,6 +9,8 @@ export const businessForms = {
     { key: 'refusal_reason', label: 'Motif du refus', type: 'text' },
   ] },
   rendezvous: { title: 'Sujet du rendez-vous', detail: 'Objectif et informations utiles', date: 'Date et heure souhaitées (heure de Tunis)', fields: [
+    { key: 'source', label: 'Origine', type: 'text' },
+    { key: 'consent', label: 'Accord de traitement', type: 'text' },
     { key: 'category', label: 'Catégorie', type: 'select', options: ['Prospection', 'Networker'] },
     { key: 'kind', label: 'Type de rendez-vous', type: 'select', options: ['Premier contact', 'Présentation', 'Closing', 'Formation', 'Suivi', 'Demande du networker', 'Réunion avec l’administration'], required: true },
     { key: 'end_date', label: 'Fin du rendez-vous', type: 'text' },

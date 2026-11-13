@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { newDb } from 'pg-mem';
+import request from 'supertest';
+import { initialize, createApp } from '../server/app.mjs';
+
+process.env.NODE_ENV = 'test';
+
+test('demandes publiques et demandes internes restent distinctes et contrôlées', async () => {
+  const { Pool }=newDb().adapters.createPg(); const pool=new Pool();
+  await initialize(pool,'root@example.test','password12345');
+  const rootId=(await pool.query('SELECT id FROM users WHERE email=$1',['root@example.test'])).rows[0].id;
+  const app=createApp(pool,{publicRequestAdminId:rootId}); const root=request.agent(app);
+  await root.post('/api/login').send({email:'root@example.test',password:'password12345'});
+  const sample={name:'Prospect Démo',phone:'12345678',email:'demo@example.test',kind:'Présentation',date:'2026-12-01T10:00',end_date:'2026-12-01T11:00',detail:'Demande fictive',consent:true};
+  assert.equal((await request(createApp(pool)).post('/api/public/appointment-requests').send(sample)).status,503);
+  assert.equal((await request(app).post('/api/public/appointment-requests').send({...sample,consent:false})).status,400);
+  assert.equal((await request(app).post('/api/public/appointment-requests').send({...sample,kind:'Suivi'})).status,400);
+  assert.equal((await request(app).post('/api/public/appointment-requests').send({...sample,end_date:'2026-12-01T09:00'})).status,400);
+  process.env.NODE_ENV='production';
+  assert.equal((await request(app).post('/api/public/appointment-requests').send(sample)).status,503);
+  process.env.NODE_ENV='test';
+  const submitted=await request(app).post('/api/public/appointment-requests').send(sample); assert.equal(submitted.status,201);assert.deepEqual(submitted.body,{ok:true});
+  const prospects=(await root.get('/api/entries/prospects')).body;
+  assert.equal(prospects.length,1);assert.equal(prospects[0].assigned_to,rootId);assert.equal(prospects[0].extra.email,sample.email);
+  const meeting=(await root.get('/api/entries/rendezvous')).body[0];
+  assert.equal(meeting.status,'Demandé');assert.equal(meeting.extra.source,'site');assert.equal(meeting.extra.consent,'oui');assert.equal(meeting.extra.category,'Prospection');assert.equal(meeting.extra.prospect_id,prospects[0].id);
+  assert.equal((await root.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,extra:{...meeting.extra,consent:''}})).status,400);
+  assert.equal((await root.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,extra:{...meeting.extra,category:'Networker',kind:'Suivi',prospect_id:''}})).status,400);
+  assert.equal((await root.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,status:'Confirmé'})).status,400);
+  assert.equal((await root.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,status:'Confirmé',extra:{...meeting.extra,admin_id:rootId}})).status,200);
+  const networker=await root.post('/api/users').send({name:'Networker',email:'member@example.test',password:'password12345',role:'networker'});assert.equal(networker.status,201);
+  const member=request.agent(app);await member.post('/api/login').send({email:'member@example.test',password:'password12345'});
+  assert.equal((await member.get('/api/entries/rendezvous')).body.length,0);
+  assert.equal((await member.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,status:'Confirmé'})).status,404);
+  const networkRequest=await member.post('/api/entries/rendezvous').send({title:'Suivi',detail:'',owner:'',date:'2026-12-02T10:00',status:'Demandé',extra:{category:'Networker',kind:'Suivi',end_date:'2026-12-02T11:00'}});
+  assert.equal(networkRequest.status,201);assert.equal(networkRequest.body.extra.networker_id,networker.body.id);
+  assert.equal((await member.put(`/api/entries/rendezvous/${networkRequest.body.id}`).send({...networkRequest.body,status:'Confirmé'})).status,403);
+  assert.equal((await request(app).post('/api/public/appointment-requests').send(sample)).status,201);
+  assert.equal((await request(app).post('/api/public/appointment-requests').send(sample)).status,429);
+  const fake={...meeting,status:'Demandé'};
+  assert.equal((await root.post('/api/entries/rendezvous').send(fake)).status,400);
+  await pool.end();
+});

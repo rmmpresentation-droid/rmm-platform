@@ -159,3 +159,19 @@ L'ancien statut « Présentation », qui regroupait deux phases, reste inchangé
 ### Navigation de l’espace de travail
 
 Les sections accessibles selon le rôle sont dans la barre latérale gauche. Sur petit écran, ouvrez ou fermez la navigation avec le bouton menu dans l’en-tête ; choisir une section referme le menu.
+
+### Demandes de rendez-vous (préproduction locale)
+
+L'espace **Rendez-vous** comporte deux vues : « Demandes » (statuts Demandé et Proposé) et « Planning et rendez-vous » (autres statuts et agenda). Un networker peut créer une demande interne de type **Prospection** (Premier contact, Présentation, Closing) ou **Réseau** (Suivi, Formation, Demande du networker). Pour une prospection interne, il choisit un prospect auquel il a accès. L'administration traite la demande, ajuste le créneau, affecte l'administrateur participant et confirme ; le présentateur peut être affecté si nécessaire. Les préférences ne constituent pas une réservation.
+
+Le formulaire `/demande-rendez-vous` est **désactivé par défaut** et n’accepte les envois que si `NODE_ENV` vaut explicitement `development` ou `test` ; il reste interdit en production. Pour un lancement de l’API hors Docker, définir `NODE_ENV=development` localement avant son démarrage. Pour un test local avec données fictives uniquement :
+
+1. Démarrer l'application et créer ou identifier l'administrateur local responsable. Pour afficher les identifiants des comptes locaux avec Docker :
+   ```bash
+   docker compose exec db psql -U rmm -d rmm -c "SELECT id, name, role FROM users WHERE role IN ('admin','superadmin');"
+   ```
+2. Ajouter dans le fichier local ignoré `.env` `RMM_PUBLIC_REQUEST_ADMIN_ID=<UUID de l'administrateur local choisi>` puis redémarrer/recréer le service API (`docker compose up -d --build`). Ne pas committer `.env`.
+3. Sur `/demande-rendez-vous`, saisir un nom, téléphone et e-mail fictifs, choisir un type de prospection et un début et une fin souhaités. Un prospect et une demande sont créés ensemble, affectés à l'administrateur désigné. Aucun compte ou rendez-vous confirmé n'est créé. Aucun e-mail ni notification n'est envoyé.
+4. En administrateur, ouvrir Rendez-vous → Demandes → Traiter, ajuster si nécessaire, affecter l'administrateur participant puis confirmer. Les demandes du site sont identifiées et liées à la fiche prospect.
+
+Chaque envoi crée un nouveau prospect, sans détection des doublons. Le formulaire est limité en mémoire à cinq tentatives par minute et par adresse IP ; ce dispositif local ne suffit pas pour une exposition publique. Aucun historique de consentement complet, politique de confidentialité, procédure de conservation/suppression ou protection anti-abus de production n'est en place : validation juridique et sécurité indispensables avant toute mise en ligne. Les données de test ne doivent pas être des données réelles. Le contrôle actuel de conflit reste global et applicatif, non transactionnel, et ne démontre pas l'exclusion par ressource prévue dans la cible Supabase. Les tests utilisent pg-mem ; le comportement transactionnel PostgreSQL réel reste à vérifier.
