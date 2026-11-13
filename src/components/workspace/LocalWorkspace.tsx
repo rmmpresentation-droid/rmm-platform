@@ -72,7 +72,14 @@ export function LocalWorkspace() {
   const [title,setTitle]=useState('');const [detail,setDetail]=useState('');const [owner,setOwner]=useState('');const [date,setDate]=useState('');const [editing,setEditing]=useState<Entry|null>(null);const [query,setQuery]=useState('');
   const [formOpen,setFormOpen]=useState(false);
   const formHeadingRef=useRef<HTMLHeadingElement>(null);
-  useEffect(()=>{if(formOpen) formHeadingRef.current?.focus();},[formOpen,editing]);
+  const dialogRef=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{
+    const dialog=dialogRef.current;
+    if(!formOpen || !dialog) return;
+    dialog.showModal();
+    formHeadingRef.current?.focus();
+    return ()=>{if(dialog.open) dialog.close();};
+  },[formOpen]);
   const [busy,setBusy]=useState<BusySlot[]>([]);
   const [directory,setDirectory]=useState<Pick<User,'id'|'name'|'role'>[]>([]);
   const [presenters,setPresenters] = useState<{id:string;name:string}[]>([]); const [assigned,setAssigned]=useState('');
@@ -93,7 +100,7 @@ export function LocalWorkspace() {
   const canAdmin=user?.role==='admin'||user?.role==='superadmin';
   const list = view in labels ? (data[view as Section] || []).filter(item=>`${item.title} ${item.detail} ${item.owner} ${item.status} ${Object.values(item.extra || {}).join(" ")}`.toLowerCase().includes(query.toLowerCase())) : [];
   return <div className="min-h-screen bg-background text-foreground"><header className="border-b border-border px-5 py-4"><div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-4"><Link to="/"><Logo compact /></Link><div className="flex items-center gap-3"><ThemeToggle />{user && <><span className="text-sm text-muted-foreground">{user.name} · {roles[user.role]}</span><button className="border border-border rounded-md px-3 py-2 text-sm" onClick={logout}>Déconnexion</button></>}</div></div></header>
-  <main className="mx-auto max-w-7xl px-5 py-8">{error && <p role="alert" className="mb-5 rounded-md border border-red-400/40 p-3 text-red-500">{error}</p>}
+  <main className="mx-auto max-w-7xl px-5 py-8">{error && !formOpen && <p role="alert" className="mb-5 rounded-md border border-red-400/40 p-3 text-red-500">{error}</p>}
   {loading ? <p>Chargement…</p> : !user ? <form onSubmit={login} className="mx-auto max-w-md rounded-xl bg-card hairline p-8 space-y-5"><p className="text-xs uppercase tracking-widest text-[var(--gold)]">RMM · Accès local</p><h1 className="font-serif text-3xl">Connexion</h1><p className="text-sm text-muted-foreground">Connectez-vous avec votre compte. Les identifiants du fichier .env ne créent le premier superadmin qu’à l’initialisation d’une base vide ; ils ne modifient pas un compte existant.</p><label className="block text-sm">Adresse e-mail<input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className={`${field} mt-2`} autoComplete="username" /></label><label className="block text-sm">Mot de passe<input required type="password" value={password} onChange={e=>setPassword(e.target.value)} className={`${field} mt-2`} autoComplete="current-password" /></label><button className={action}>Se connecter</button></form> : <>
   <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Version locale : les fiches sont enregistrées dans PostgreSQL. Les processus avancés (paiement, PP, quiz et notifications) ne sont pas encore implémentés.</div>
   <div className="mt-7"><p className="text-xs uppercase tracking-[.25em] text-[var(--gold)]">RMM · {roles[user.role]}</p><h1 className="mt-2 font-serif text-4xl">{view==='dashboard'?'Tableau de bord':view==='analytics'?'Analytique':view==='users'?'Utilisateurs':labels[view]}</h1></div>
@@ -109,9 +116,11 @@ export function LocalWorkspace() {
     const section = view as Section;
     const config = businessForms[section];
     const readonly = !canAdmin && (section === 'formations' || section === 'ressources' || section === 'taches' || (section === 'rendezvous' && user.role === 'presentateur'));
-    return <div className="mt-8 space-y-6">{!readonly && <div className="flex justify-end"><button type="button" className={action} aria-expanded={formOpen} aria-controls="entry-form" onClick={()=>{if(formOpen && !editing) resetForm(); else {resetForm();setFormOpen(true);}}}>{formOpen && !editing ? "Fermer le formulaire" : section === "rendezvous" && user.role === "networker" ? "+ Demander un rendez-vous" : "+ Ajouter"}</button></div>}
-    {!readonly && formOpen && <form id="entry-form" onSubmit={save} className="rounded-xl bg-card hairline p-6 space-y-4">
-      <h2 ref={formHeadingRef} tabIndex={-1} className="font-serif text-2xl outline-none">{editing ? 'Modifier' : section === 'rendezvous' && user.role === 'networker' ? 'Demander un rendez-vous' : `Ajouter · ${labels[section]}`}</h2>
+    return <div className="mt-8 space-y-6">{!readonly && <div className="flex justify-end"><button type="button" className={action} aria-expanded={formOpen} aria-controls="entry-dialog" aria-haspopup="dialog" onClick={()=>{if(formOpen && !editing) resetForm(); else {resetForm();setFormOpen(true);}}}>{formOpen && !editing ? "Fermer le formulaire" : section === "rendezvous" && user.role === "networker" ? "+ Demander un rendez-vous" : "+ Ajouter"}</button></div>}
+    {!readonly && formOpen && <dialog id="entry-dialog" ref={dialogRef} aria-labelledby="entry-dialog-title" onCancel={e=>{e.preventDefault();resetForm();}} className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-border bg-card text-foreground shadow-2xl backdrop:bg-black/70">
+    <form id="entry-form" onSubmit={save} className="p-6 space-y-4 sm:p-8">
+      <div className="flex items-start justify-between gap-4"><h2 id="entry-dialog-title" ref={formHeadingRef} tabIndex={-1} className="font-serif text-2xl outline-none">{editing ? 'Modifier' : section === 'rendezvous' && user.role === 'networker' ? 'Demander un rendez-vous' : `Ajouter · ${labels[section]}`}</h2><button type="button" onClick={resetForm} aria-label="Fermer le formulaire" className="rounded-md border border-border px-3 py-1 text-xl leading-none">×</button></div>
+      {error && <p role="alert" className="rounded-md border border-red-400/40 p-3 text-sm text-red-500">{error}</p>}
       {section === 'rendezvous' && user.role === 'networker' && <p className="text-xs text-muted-foreground">L’administration fixera et confirmera le rendez-vous. La date saisie est une préférence.</p>}
       <label className="block text-sm">{config.title}<input required maxLength={160} className={`${field} mt-2`} value={title} onChange={e=>setTitle(e.target.value)}/></label>
       {config.fields.filter(f=>!(section==='taches' && f.key==='target') && !(section==='rendezvous' && ['category','kind','end_date','networker_id','admin_id','prospect_id'].includes(f.key)) && !(section==='formations' && f.key==='presenter_id') && !(section==='commandes' && ['customer','pack_id','ordered_by'].includes(f.key))).map(f => <label key={f.key} className="block text-sm">{f.label}{f.required && ' *'}{f.type === 'select' ? <select required={f.required || (section==='stock' && f.key==='item_type')} disabled={section==='taches' && f.key==='audience' && !!editing?.extra?.audience} className={`${field} mt-2`} value={extra[f.key] || ''} onChange={e=>setExtra({...extra,[f.key]:e.target.value,...(f.key==='audience'?{target:''}:{})})}><option value="">Sélectionner</option>{f.options?.map(option=><option key={option}>{option}</option>)}</select> : <input type={f.type} required={f.required || (section==='commandes' && ['buyer','payment_method'].includes(f.key))} min={f.type === 'number' ? 0 : undefined} step={f.type === 'number' ? 'any' : undefined} maxLength={f.type === 'number' ? undefined : 500} className={`${field} mt-2`} value={extra[f.key] || ''} onChange={e=>setExtra({...extra,[f.key]:e.target.value})}/>}</label>)}
@@ -129,7 +138,7 @@ export function LocalWorkspace() {
       <label className="block text-sm">Responsable (nom indicatif, non affecté)<input maxLength={160} className={`${field} mt-2`} value={owner} onChange={e=>setOwner(e.target.value)}/></label>
       <label className="block text-sm">{config.date}<input type="datetime-local" required={section==='rendezvous'} className={`${field} mt-2`} value={date} onChange={e=>setDate(e.target.value)}/></label>
       <button className={action}>Enregistrer</button><button type="button" onClick={resetForm} className="ml-4 text-sm">Annuler</button>
-    </form>}
+    </form></dialog>}
     <section className="rounded-xl bg-card hairline p-6"><div className="flex flex-wrap items-center justify-between gap-4"><h2 className="font-serif text-2xl">Liste ({list.length})</h2><input aria-label="Rechercher" placeholder="Rechercher…" className={`${field} max-w-64`} value={query} onChange={e=>setQuery(e.target.value)}/></div>
     {!list.length?<p className="mt-6 text-sm text-muted-foreground">Aucune fiche.</p>:<div className="mt-5 space-y-3">{list.map(item=>{
       const canEdit = !readonly && (canAdmin || section !== 'rendezvous' || (item.created_by===user.id && ['Demandé','Annulé'].includes(item.status)));
