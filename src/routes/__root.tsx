@@ -120,7 +120,7 @@ import { Footer } from "../components/layout/Footer";
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouter().state.location.pathname;
-  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/dashboard");
+  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/prospect/");
 
   return (
     <QueryClientProvider client={queryClient}>

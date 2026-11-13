@@ -25,6 +25,11 @@ test('parcours métier, droits, affectations, confidentialité et données liée
   assert.equal((await a.agent.put(`/api/tasks/${specific.body.id}/progress`).send({status:'En cours'})).status,200);
   assert.equal((await n.agent.get('/api/entries/taches')).body.length,1);
   const prospect=await n.agent.post('/api/entries/prospects').send({...base,status:'Premier contact',extra:{phone:'123',interest:'Produits',location:'Tunis'}});assert.equal(prospect.status,201);assert.equal(prospect.body.assigned_to,n.id);
+  assert.equal((await request(app).get('/api/entries/prospects')).status,401);
+  assert.equal((await p.agent.get('/api/entries/prospects')).status,403);
+  assert.equal((await n2.agent.get('/api/entries/prospects')).body.length,0);
+  assert.equal((await n.agent.get('/api/entries/prospects')).body[0].id,prospect.body.id);
+  assert.equal((await root.get('/api/entries/prospects')).body[0].id,prospect.body.id);
   const meeting={...base,title:'Données privées',date:'2026-12-01T10:00',status:'Demandé',extra:{category:'Prospection',kind:'Closing',end_date:'2026-12-01T11:00',prospect_id:prospect.body.id}};
   const rdv=await n.agent.post('/api/entries/rendezvous').send(meeting);assert.equal(rdv.status,201);
   const confirmed={...rdv.body,status:'Confirmé',extra:{...rdv.body.extra,admin_id:a.id},assigned_to:p.id};
