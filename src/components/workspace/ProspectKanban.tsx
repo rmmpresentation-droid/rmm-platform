@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, GripVertical } from "lucide-react";
 
 export type KanbanProspect = {
   id: string;
@@ -119,7 +120,7 @@ export function ProspectKanban({
   }
   return (
     <section
-      className="mt-8 rounded-2xl bg-card hairline p-5 sm:p-6"
+      className="mt-6 min-w-0 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7"
       aria-label="Kanban de prospection"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -127,24 +128,27 @@ export function ProspectKanban({
           <p className="text-xs uppercase tracking-widest text-[var(--gold)]">
             Suivi de prospection
           </p>
-          <h2 className="mt-2 font-serif text-2xl">Tableau Kanban</h2>
+          <h2 className="mt-2 font-serif text-2xl sm:text-3xl">Suivez chaque étape</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Une vue claire de vos prospects, du premier échange à leur décision.
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Glissez une fiche ou utilisez « Déplacer » · défilement horizontal →
-        </p>
+        <span className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
+          {prospects.length} prospect{prospects.length !== 1 ? "s" : ""}
+        </span>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        Les phases historiques ne sont pas modifiées automatiquement. Le changement de phase ne crée
-        pas de compte ni de rendez-vous.
+        Glissez une fiche vers une phase ou utilisez le bouton « Déplacer ». Les changements de
+        phase ne créent pas de compte ni de rendez-vous.
       </p>
       {error && !decision && (
         <p role="alert" className="mt-3 text-sm text-red-500">
           {error}
         </p>
       )}
-      <div className="mt-5 overflow-x-auto pb-2">
-        <div className="flex min-w-max items-stretch gap-3">
-          {shownColumns.map((column) => {
+      <div className="mt-6">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {shownColumns.map((column, index) => {
             const cards = prospects.filter((item) =>
               column.statuses.some((status) => status === item.status),
             );
@@ -160,18 +164,35 @@ export function ProspectKanban({
                   setDragging(null);
                   if (item) move(item, column.key);
                 }}
-                className="w-56 shrink-0 rounded-xl border border-border bg-background/60 p-3"
+                className={`min-w-0 rounded-xl border bg-background/60 p-4 transition-colors ${dragging && column.key !== "legacy" ? "border-dashed border-[var(--gold)]/60" : "border-border"}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold">{column.label}</h3>
-                  <span className="rounded-full bg-muted px-2 text-xs">{cards.length}</span>
+                <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+                  <div className="flex min-w-0 items-start gap-2.5">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[var(--gold)]/10 text-[10px] font-semibold text-[var(--gold)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="min-w-0 pt-0.5 text-sm font-semibold leading-snug">
+                      {column.label}
+                    </h3>
+                  </div>
+                  <span
+                    aria-label={`${cards.length} prospect${cards.length !== 1 ? "s" : ""}`}
+                    className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                  >
+                    {cards.length}
+                  </span>
                 </div>
                 {column.key === "legacy" && (
                   <p className="mt-2 text-xs text-muted-foreground">
                     Ancienne étape combinée, à repositionner manuellement.
                   </p>
                 )}
-                <div className="mt-3 space-y-3">
+                <div className="mt-3 min-h-20 space-y-3">
+                  {cards.length === 0 && (
+                    <div className="flex min-h-20 items-center justify-center rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Aucun prospect à cette étape
+                    </div>
+                  )}
                   {cards.map((item) => (
                     <article
                       key={item.id}
@@ -182,19 +203,29 @@ export function ProspectKanban({
                         event.dataTransfer.setData("text/plain", item.id);
                       }}
                       onDragEnd={() => setDragging(null)}
-                      className="rounded-lg border border-border bg-card p-3 shadow-sm"
+                      className="min-w-0 rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md"
                     >
-                      {single ? (
-                        <strong className="break-words text-sm">{item.title}</strong>
-                      ) : (
-                        <Link
-                          to="/prospect/$id"
-                          params={{ id: item.id }}
-                          className="break-words text-sm font-semibold text-[var(--gold)] underline"
-                        >
-                          {item.title}
-                        </Link>
-                      )}
+                      <div className="flex items-start gap-2">
+                        <GripVertical
+                          size={15}
+                          className="mt-0.5 shrink-0 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <div className="min-w-0 flex-1">
+                          {single ? (
+                            <strong className="break-words text-sm">{item.title}</strong>
+                          ) : (
+                            <Link
+                              to="/prospect/$id"
+                              params={{ id: item.id }}
+                              className="break-words text-sm font-semibold text-[var(--gold)] underline"
+                            >
+                              {item.title}{" "}
+                              <ArrowUpRight size={13} className="inline" aria-hidden="true" />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {prospectStatusLabel(item.status)}
                       </p>
@@ -232,7 +263,7 @@ export function ProspectKanban({
                         type="button"
                         disabled={busy || !choice[item.id]}
                         onClick={() => move(item, choice[item.id])}
-                        className="mt-2 rounded-md border border-border px-3 py-1 text-xs disabled:opacity-50"
+                        className="mt-2 w-full rounded-md border border-border px-3 py-2 text-xs font-medium transition-colors enabled:hover:border-[var(--gold)] enabled:hover:text-[var(--gold)] disabled:opacity-50"
                       >
                         Déplacer
                       </button>

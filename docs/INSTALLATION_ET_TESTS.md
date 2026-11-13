@@ -152,6 +152,6 @@ Les nouveaux prospects sont créés sans étape de prospection (« Non commencé
 
 ### Kanban de prospection
 
-Dans Prospects et dans chaque fiche, le Kanban présente les phases « Non commencé », « Premier contact », « Prise de rendez-vous », « Présentation », « Closing », « Rejoint » et « Ne rejoint pas ». Déplacez la fiche par glisser-déposer ou avec le sélecteur « Déplacer vers » et le bouton « Déplacer ». Les deux issues demandent respectivement le type de participation ou un motif de refus. Les phases restent modifiables librement ; elles ne créent pas automatiquement de compte networker ou de rendez-vous.
+Dans Prospects, basculez entre « Liste des prospects » et « Suivi de prospection ». Dans la vue de suivi et dans chaque fiche, le Kanban présente les phases « Non commencé », « Premier contact », « Prise de rendez-vous », « Présentation », « Closing », « Rejoint » et « Ne rejoint pas ». Déplacez la fiche par glisser-déposer ou avec le sélecteur « Déplacer vers » et le bouton « Déplacer ». Les deux issues demandent respectivement le type de participation ou un motif de refus. Les phases restent modifiables librement ; elles ne créent pas automatiquement de compte networker ou de rendez-vous.
 
 L'ancien statut « Présentation », qui regroupait deux phases, reste inchangé et apparaît dans « Présentation historique » jusqu'à repositionnement manuel. Les anciennes fiches « Sans commande » sans motif restent consultables et modifiables ; un nouveau refus exige un motif. Aucun historique automatique des changements de phase n'est encore enregistré.
