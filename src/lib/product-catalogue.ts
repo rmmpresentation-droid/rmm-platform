@@ -1,4 +1,4 @@
-import products from './product-catalogue.json';
+import products from "./product-catalogue.json";
 
 // Noms tirés des fichiers, informations des brochures non exhaustives et à valider.
 export type CatalogueProduct = {

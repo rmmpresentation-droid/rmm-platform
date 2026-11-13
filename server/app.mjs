@@ -6,6 +6,7 @@ import { sectionNames, statuses } from '../src/lib/local-workspace.mjs';
 import { validateExtra } from '../src/lib/business-fields.mjs';
 import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
 
+const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
 const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
 // Stable namespaced IDs preserve edited imported entries and make repeated imports safe.
 const catalogueEntryId = (id) => {const h = createHash('sha256').update(`rmm-product-catalogue-v1:${id}`).digest('hex'); return `${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;};
@@ -252,6 +253,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const result=await pool.query('INSERT INTO prospect_notes (id,prospect_id,author_id,content) VALUES ($1,$2,$3,$4) RETURNING id,content,created_at',[randomUUID(),req.params.id,req.user.id,content.trim()]);
     res.status(201).json({...result.rows[0],author:req.user.name});
   }catch(e){next(e);}});
+  app.get('/api/catalogue/review-notes',auth,(req,res)=>{if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});res.json(productReviewNotes);});
   app.post('/api/catalogue/import',auth,async(req,res,next)=>{
     if(!admin(req.user.role)) return res.status(403).json({error:'Seule l’administration peut importer le catalogue.'});
     const client=await pool.connect();

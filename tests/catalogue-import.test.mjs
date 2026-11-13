@@ -12,6 +12,9 @@ test('import catalogue réservé à l’administration, sans écraser les fiches
   const n=await root.post('/api/users').send({name:'Networker',email:'n@example.test',role:'networker',password:'password12345'});assert.equal(n.status,201);
   const networker=request.agent(app);await networker.post('/api/login').send({email:'n@example.test',password:'password12345'});
   assert.equal((await networker.post('/api/catalogue/import')).status,403);
+  assert.equal((await request(app).get('/api/catalogue/review-notes')).status,401);
+  assert.equal((await networker.get('/api/catalogue/review-notes')).status,403);
+  assert.ok((await root.get('/api/catalogue/review-notes')).body['3s-capsule'].length > 0);
   const imported=await root.post('/api/catalogue/import');assert.equal(imported.status,200);assert.deepEqual(imported.body,{created:11,existing:0});
   const items=(await root.get('/api/entries/stock')).body;assert.equal(items.length,11);
   for(const item of items) {assert.equal(item.status,'Inactif');assert.equal(item.extra.item_type,'Produit');assert.equal(item.extra.quantity,undefined);assert.match(item.extra.image,/^\/products\//);}
