@@ -20,6 +20,7 @@ export async function initialize(pool, email, password) {
   // Additive migration: preserve existing entries and keep their extra fields empty.
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
   await pool.query('ALTER TABLE entries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)');
+  await pool.query('CREATE TABLE IF NOT EXISTS prospect_notes (id UUID PRIMARY KEY, prospect_id UUID NOT NULL REFERENCES entries(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS training_attendance (training_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, attended BOOLEAN NOT NULL, quiz_score TEXT NOT NULL DEFAULT \'\', PRIMARY KEY (training_id,user_id))');
@@ -199,6 +200,24 @@ export function createApp(pool) {
     if (!changed.rows.length) await pool.query('INSERT INTO task_progress (task_id,user_id,status) VALUES ($1,$2,$3)',[task.id,req.user.id,req.body.status]);
     res.json({ok:true});
   }catch(e){next(e);}});
+  async function visibleProspect(id, user) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || !allowed[user.role]?.includes('prospects')) return false;
+    const filter = admin(user.role) ? '' : 'AND (assigned_to=$2 OR (assigned_to IS NULL AND created_by=$2))';
+    const result = await pool.query(`SELECT id FROM entries WHERE id=$1 AND section='prospects' ${filter}`, admin(user.role) ? [id] : [id,user.id]);
+    return !!result.rows[0];
+  }
+  app.get('/api/prospects/:id/notes',auth,async(req,res,next)=>{try{
+    if (!await visibleProspect(req.params.id,req.user)) return res.status(404).json({error:'Prospect introuvable'});
+    const result=await pool.query('SELECT n.id,n.content,n.created_at,u.name AS author FROM prospect_notes n JOIN users u ON u.id=n.author_id WHERE n.prospect_id=$1 ORDER BY n.created_at DESC, n.id DESC',[req.params.id]);
+    res.json(result.rows);
+  }catch(e){next(e);}});
+  app.post('/api/prospects/:id/notes',auth,async(req,res,next)=>{try{
+    if (!await visibleProspect(req.params.id,req.user)) return res.status(404).json({error:'Prospect introuvable'});
+    const content=req.body.content;
+    if (typeof content !== 'string' || !content.trim() || content.length > 3000) return res.status(400).json({error:'Saisissez une note de 1 à 3 000 caractères.'});
+    const result=await pool.query('INSERT INTO prospect_notes (id,prospect_id,author_id,content) VALUES ($1,$2,$3,$4) RETURNING id,content,created_at',[randomUUID(),req.params.id,req.user.id,content.trim()]);
+    res.status(201).json({...result.rows[0],author:req.user.name});
+  }catch(e){next(e);}});
   function sectionAccess(req,res,next) { if (!allowed[req.user.role]?.includes(req.params.section)) return res.status(403).json({error:'Accès interdit'}); next(); }
   app.get('/api/entries/:section',auth,sectionAccess,async(req,res,next)=>{try{
     if (req.params.section === 'rendezvous' && !admin(req.user.role)) {
@@ -271,6 +290,7 @@ export function createApp(pool) {
     if(req.params.section === 'prospects' && !admin(req.user.role)) return res.status(403).json({error:'Seul un administrateur peut supprimer un prospect.'});
     if(req.params.section === 'rendezvous' && !admin(req.user.role)) return res.status(403).json({error:'Seul un administrateur peut supprimer un rendez-vous.'});
     if(!admin(req.user.role) && ['formations','ressources','taches'].includes(req.params.section)) return res.status(403).json({error:'Accès en lecture seule'});
+    if(req.params.section==='prospects' && (await pool.query('SELECT id FROM prospect_notes WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect possède des notes et ne peut pas être supprimé.'});
     if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>JSON.parse(m.extra||'{}').prospect_id===req.params.id)) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}
     if(req.params.section==='stock') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===req.params.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const result=await pool.query(`DELETE FROM entries WHERE id=$1 AND section=$2 ${admin(req.user.role)?'':'AND created_by=$3'} RETURNING id`,[req.params.id,req.params.section,...(admin(req.user.role)?[]:[req.user.id])]); if(!result.rows[0]) return res.status(404).json({error:'Élément introuvable'}); res.json({ok:true});

@@ -214,6 +214,7 @@ function ProspectPage() {
                 </p>
               </section>
             </div>
+            <ProspectNotes key={prospect.id} prospectId={prospect.id} />
             <p className="mt-6 text-sm text-muted-foreground">
               Pour modifier les informations ou le statut, utilisez les actions de la liste des
               prospects.
@@ -234,5 +235,142 @@ function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; 
         <dd className="mt-1 break-words">{value || "Non renseigné"}</dd>
       </div>
     </div>
+  );
+}
+
+type ProspectNote = { id: string; content: string; created_at: string; author: string };
+
+function ProspectNotes({ prospectId }: { prospectId: string }) {
+  const [notes, setNotes] = useState<ProspectNote[]>([]);
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadFailed(false);
+    setError("");
+    fetch(`/api/prospects/${encodeURIComponent(prospectId)}/notes`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error(
+            "Impossible de charger les notes. Vérifiez votre connexion et vos droits d’accès.",
+          );
+        return response.json() as Promise<ProspectNote[]>;
+      })
+      .then(setNotes)
+      .catch((err: Error) => {
+        if (!controller.signal.aborted) {
+          setLoadFailed(true);
+          setError(err.message);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [prospectId, attempt]);
+
+  async function addNote(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving || !content.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/prospects/${encodeURIComponent(prospectId)}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Impossible d’enregistrer la note.");
+      setNotes((previous) => [body as ProspectNote, ...previous]);
+      setContent("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible d’enregistrer la note.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="mt-6 rounded-xl bg-card hairline p-6" aria-labelledby="notes-heading">
+      <h2 id="notes-heading" className="font-serif text-2xl">
+        Notes de suivi
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Ajoutez des observations au fil de la prospection. Les notes sont visibles par les personnes
+        autorisées à consulter cette fiche.
+      </p>
+      <form onSubmit={addNote} className="mt-5 space-y-3">
+        <label htmlFor="prospect-note" className="block text-sm font-medium">
+          Nouvelle note
+        </label>
+        <textarea
+          id="prospect-note"
+          required
+          maxLength={3000}
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+          placeholder="Saisir une note de suivi…"
+        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">{content.length} / 3 000 caractères</span>
+          <button
+            type="submit"
+            disabled={saving || loading || loadFailed || !content.trim()}
+            className="rounded-md bg-gradient-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          >
+            {saving ? "Enregistrement…" : "Ajouter la note"}
+          </button>
+        </div>
+      </form>
+      {error && (
+        <div role="alert" className="mt-4 text-sm text-red-500">
+          {error}{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => setAttempt((value) => value + 1)}
+          >
+            Réessayer le chargement
+          </button>
+        </div>
+      )}
+      <h3 className="mt-7 font-semibold">Historique des notes</h3>
+      {loading ? (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          Chargement des notes…
+        </p>
+      ) : loadFailed ? (
+        <p className="mt-3 text-sm text-muted-foreground">Historique indisponible.</p>
+      ) : !notes.length ? (
+        <p className="mt-3 text-sm text-muted-foreground">Aucune note enregistrée.</p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {notes.map((note) => (
+            <li key={note.id} className="rounded-lg border border-border bg-background p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <strong className="text-foreground">{note.author}</strong>
+                <time dateTime={note.created_at}>
+                  {new Intl.DateTimeFormat("fr-TN", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "Africa/Tunis",
+                  }).format(new Date(note.created_at))}{" "}
+                  · Tunis
+                </time>
+              </div>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm">{note.content}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
