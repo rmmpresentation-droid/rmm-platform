@@ -194,3 +194,21 @@ html.light {
 }
 html.light .glass { background: oklch(0.98 0.01 85 / 0.94); }
 html.light .bg-\[\#080808\] { background-color: var(--card); }
+
+/* Transitions douces du studio, jamais imposées en cas de mouvement réduit. */
+@media (prefers-reduced-motion: no-preference) {
+  .studio-motion .studio-copy { animation: studio-enter .65s cubic-bezier(.2,.7,.2,1) both; }
+  .studio-motion .studio-copy h3 { animation: studio-enter .85s .08s cubic-bezier(.2,.7,.2,1) both; }
+  .studio-motion .studio-copy > p { animation: studio-enter .8s .18s cubic-bezier(.2,.7,.2,1) both; }
+  .studio-motion .studio-question { animation: studio-enter .8s .28s cubic-bezier(.2,.7,.2,1) both; }
+  .studio-motion .studio-visual { animation: studio-visual-in .8s ease both; }
+  .studio-motion .studio-visual > img { animation: studio-drift 18s ease-in-out infinite alternate; }
+  .studio-motion .studio-orbit-ring { animation: studio-spin 26s linear infinite; }
+  .studio-motion .studio-orbit { animation: studio-float 6s ease-in-out infinite; }
+  .studio-motion .studio-reveal { animation: studio-enter .35s ease both; }
+}
+@keyframes studio-enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes studio-visual-in { from { opacity: .3; } to { opacity: 1; } }
+@keyframes studio-drift { from { transform: scale(1); } to { transform: scale(1.07); } }
+@keyframes studio-spin { to { transform: rotate(360deg); } }
+@keyframes studio-float { 50% { transform: translateY(-8px); } }

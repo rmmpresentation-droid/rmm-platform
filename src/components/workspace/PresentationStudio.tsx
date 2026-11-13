@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
+  Building2,
+  HeartPulse,
+  Layers3,
+  Orbit,
+  Sparkles,
   ChevronLeft,
   ChevronRight,
   Expand,
@@ -69,11 +74,16 @@ const chapters = [
     tag: "PERSPECTIVES",
   },
 ] as const;
+const chapterIcons = [Sparkles, HeartPulse, Building2, Layers3, Orbit];
+
 type Medium = { url: string; type: "image" | "video"; name: string };
 
 export function PresentationStudio() {
   const [index, setIndex] = useState(0);
   const [notes, setNotes] = useState(false);
+  const [motion, setMotion] = useState(true);
+  const [questionOpen, setQuestionOpen] = useState(false);
+  useEffect(() => setQuestionOpen(false), [index]);
   const [media, setMedia] = useState<Partial<Record<number, Medium>>>({});
   const stageRef = useRef<HTMLElement>(null);
   const mediaRef = useRef(media);
@@ -136,6 +146,7 @@ export function PresentationStudio() {
     });
   }
   const chapter = chapters[index];
+  const ChapterIcon = chapterIcons[index];
   const activeMedia = media[index];
   async function fullscreen() {
     try {
@@ -199,7 +210,7 @@ export function PresentationStudio() {
       <section
         ref={stageRef}
         aria-label={`Présentation : ${chapter.name}`}
-        className="relative overflow-y-auto rounded-2xl border border-[#c8aa72]/20 bg-[#0d0e0e] text-white shadow-2xl fullscreen:rounded-none"
+        className={`presentation-stage relative overflow-y-auto rounded-2xl border border-[#c8aa72]/20 bg-[#0d0e0e] text-white shadow-2xl fullscreen:rounded-none ${motion ? "studio-motion" : ""}`}
       >
         <div className="relative grid min-h-[560px] lg:grid-cols-[1.05fr_.95fr]">
           <div className="relative z-10 flex flex-col p-7 sm:p-10 lg:p-12">
@@ -209,7 +220,7 @@ export function PresentationStudio() {
               </span>
               <span className="text-[10px] tracking-[.2em] text-white/40">{chapter.eyebrow}</span>
             </div>
-            <div className="my-auto py-14">
+            <div key={index} className="studio-copy my-auto py-14">
               <div className="mb-6 inline-flex items-center gap-2 text-xs text-[#d6bc87]">
                 <span className="h-px w-7 bg-[#d6bc87]" />
                 {chapter.kicker}
@@ -220,14 +231,28 @@ export function PresentationStudio() {
               <p className="mt-6 max-w-lg text-sm leading-7 text-white/65 sm:text-base">
                 {chapter.text}
               </p>
-              <div className="mt-8 flex max-w-lg gap-4 rounded-xl border border-white/10 bg-white/[.04] p-5">
-                <MessageSquareQuote className="h-5 w-5 shrink-0 text-[#d6bc87]" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-[.2em] text-white/40">
-                    Question à votre audience
+              <div className="studio-question mt-8 max-w-lg rounded-xl border border-white/10 bg-white/[.04] p-5">
+                <button
+                  type="button"
+                  onClick={() => setQuestionOpen(!questionOpen)}
+                  aria-expanded={questionOpen}
+                  aria-controls="studio-audience-question"
+                  className="flex w-full items-center gap-3 text-left text-xs uppercase tracking-[.15em] text-[#d6bc87] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6bc87]"
+                >
+                  <MessageSquareQuote className="h-5 w-5 shrink-0" />{" "}
+                  {questionOpen ? "Masquer la question" : "Révéler la question à l’audience"}{" "}
+                  <span aria-hidden="true" className="ml-auto text-lg">
+                    {questionOpen ? "−" : "+"}
+                  </span>
+                </button>
+                {questionOpen && (
+                  <p
+                    id="studio-audience-question"
+                    className="studio-reveal mt-4 text-sm leading-relaxed text-white/85"
+                  >
+                    {chapter.prompt}
                   </p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/85">{chapter.prompt}</p>
-                </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3 text-[10px] tracking-[.18em] text-white/40">
@@ -241,7 +266,10 @@ export function PresentationStudio() {
               <span>0{chapters.length}</span>
             </div>
           </div>
-          <div className="relative min-h-[320px] overflow-hidden bg-[#171715] lg:min-h-full">
+          <div
+            key={index}
+            className="studio-visual relative min-h-[320px] overflow-hidden bg-[#171715] lg:min-h-full"
+          >
             {activeMedia ? (
               activeMedia.type === "video" ? (
                 <video
@@ -283,6 +311,16 @@ export function PresentationStudio() {
               </>
             )}
             {!activeMedia && (
+              <div
+                aria-hidden="true"
+                className="studio-orbit pointer-events-none absolute right-7 top-7 grid h-24 w-24 place-items-center rounded-full border border-[#d6bc87]/40 sm:h-32 sm:w-32"
+              >
+                <span className="studio-orbit-ring absolute inset-2 rounded-full border border-dashed border-[#d6bc87]/35" />
+                <ChapterIcon className="h-7 w-7 text-[#e8c98d] sm:h-9 sm:w-9" strokeWidth={1.2} />
+                <span className="studio-orbit-dot absolute left-1/2 top-0 h-1.5 w-1.5 rounded-full bg-[#e8c98d]" />
+              </div>
+            )}
+            {!activeMedia && (
               <div className="absolute bottom-7 left-7 right-7">
                 <span className="rounded-full border border-white/30 bg-black/30 px-3 py-1 text-[9px] uppercase tracking-[.18em]">
                   {chapter.tag} · Illustration
@@ -320,6 +358,14 @@ export function PresentationStudio() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMotion(!motion)}
+              aria-pressed={motion}
+              className="mr-2 rounded-full border border-white/20 px-3 py-2 text-xs text-white/70 hover:border-[#d6bc87]"
+            >
+              Animations {motion ? "activées" : "désactivées"}
+            </button>
             <button
               type="button"
               onClick={() => step(-1)}
