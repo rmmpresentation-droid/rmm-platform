@@ -148,4 +148,4 @@ Chaque fiche prospect permet d'ajouter des notes de suivi datées avec leur aute
 
 Par précaution, un prospect possédant des notes ne peut pas être supprimé depuis l'application. Il n'existe pas encore d'interface de modification ou de suppression des notes. Inclure la table `prospect_notes` dans les sauvegardes de la base, en plus des autres tables. Redémarrer l'API après mise à jour pour créer la table ; aucune donnée existante n'est effacée.
 
-Les nouveaux prospects sont créés sans étape de prospection (« Non commencé »). Le statut peut ensuite être choisi dans la liste. Les statuts des prospects déjà enregistrés ne sont pas modifiés.
+Les nouveaux prospects sont créés sans étape de prospection (« Non commencé »). Le statut, les modifications et la suppression autorisée sont accessibles dans la fiche individuelle, via « Voir la fiche » dans la liste. Les statuts des prospects déjà enregistrés ne sont pas modifiés.
