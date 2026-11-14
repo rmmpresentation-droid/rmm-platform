@@ -15,7 +15,9 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BoutiqueRouteImport } from './routes/boutique'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProduitsIndexRouteImport } from './routes/produits.index'
 import { Route as ProspectIdRouteImport } from './routes/prospect.$id'
+import { Route as ProduitsSlugRouteImport } from './routes/produits.$slug'
 import { Route as ProduitIdRouteImport } from './routes/produit.$id'
 
 const NetworkerRoute = NetworkerRouteImport.update({
@@ -48,9 +50,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProduitsIndexRoute = ProduitsIndexRouteImport.update({
+  id: '/produits/',
+  path: '/produits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProspectIdRoute = ProspectIdRouteImport.update({
   id: '/prospect/$id',
   path: '/prospect/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProduitsSlugRoute = ProduitsSlugRouteImport.update({
+  id: '/produits/$slug',
+  path: '/produits/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProduitIdRoute = ProduitIdRouteImport.update({
@@ -67,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/demande-rendez-vous': typeof DemandeRendezVousRoute
   '/networker': typeof NetworkerRoute
   '/produit/$id': typeof ProduitIdRoute
+  '/produits/$slug': typeof ProduitsSlugRoute
   '/prospect/$id': typeof ProspectIdRoute
+  '/produits/': typeof ProduitsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +91,9 @@ export interface FileRoutesByTo {
   '/demande-rendez-vous': typeof DemandeRendezVousRoute
   '/networker': typeof NetworkerRoute
   '/produit/$id': typeof ProduitIdRoute
+  '/produits/$slug': typeof ProduitsSlugRoute
   '/prospect/$id': typeof ProspectIdRoute
+  '/produits': typeof ProduitsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +104,9 @@ export interface FileRoutesById {
   '/demande-rendez-vous': typeof DemandeRendezVousRoute
   '/networker': typeof NetworkerRoute
   '/produit/$id': typeof ProduitIdRoute
+  '/produits/$slug': typeof ProduitsSlugRoute
   '/prospect/$id': typeof ProspectIdRoute
+  '/produits/': typeof ProduitsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +118,9 @@ export interface FileRouteTypes {
     | '/demande-rendez-vous'
     | '/networker'
     | '/produit/$id'
+    | '/produits/$slug'
     | '/prospect/$id'
+    | '/produits/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +130,9 @@ export interface FileRouteTypes {
     | '/demande-rendez-vous'
     | '/networker'
     | '/produit/$id'
+    | '/produits/$slug'
     | '/prospect/$id'
+    | '/produits'
   id:
     | '__root__'
     | '/'
@@ -120,7 +142,9 @@ export interface FileRouteTypes {
     | '/demande-rendez-vous'
     | '/networker'
     | '/produit/$id'
+    | '/produits/$slug'
     | '/prospect/$id'
+    | '/produits/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,7 +155,9 @@ export interface RootRouteChildren {
   DemandeRendezVousRoute: typeof DemandeRendezVousRoute
   NetworkerRoute: typeof NetworkerRoute
   ProduitIdRoute: typeof ProduitIdRoute
+  ProduitsSlugRoute: typeof ProduitsSlugRoute
   ProspectIdRoute: typeof ProspectIdRoute
+  ProduitsIndexRoute: typeof ProduitsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,11 +204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/produits/': {
+      id: '/produits/'
+      path: '/produits'
+      fullPath: '/produits/'
+      preLoaderRoute: typeof ProduitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prospect/$id': {
       id: '/prospect/$id'
       path: '/prospect/$id'
       fullPath: '/prospect/$id'
       preLoaderRoute: typeof ProspectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produits/$slug': {
+      id: '/produits/$slug'
+      path: '/produits/$slug'
+      fullPath: '/produits/$slug'
+      preLoaderRoute: typeof ProduitsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/produit/$id': {
@@ -203,7 +243,9 @@ const rootRouteChildren: RootRouteChildren = {
   DemandeRendezVousRoute: DemandeRendezVousRoute,
   NetworkerRoute: NetworkerRoute,
   ProduitIdRoute: ProduitIdRoute,
+  ProduitsSlugRoute: ProduitsSlugRoute,
   ProspectIdRoute: ProspectIdRoute,
+  ProduitsIndexRoute: ProduitsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,129 +1,340 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, Crown, Eye, Zap, Star, BadgeCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Section } from "@/components/layout/Section";
-import { ProductCard } from "@/components/product/ProductCard";
-import { expertReviews, networkerTestimonials } from "@/lib/data";
-import { catalogue } from "@/lib/product-catalogue";
-
+import { products } from "@/data/products";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RMM — L'excellence suisse, l'ascension tunisienne" },
-      { name: "description", content: "Découvrez SwisDerm Switzerland en Tunisie. Soins premium, opportunité network marketing." },
+      { title: "RMM — Le soin comme un rituel" },
+      {
+        name: "description",
+        content: "Découvrez les références SWISDERM et l’univers Rise Mindset Master.",
+      },
+      { property: "og:title", content: "RMM — Le soin comme un rituel" },
+      {
+        property: "og:description",
+        content: "Découvrez les références SWISDERM et l’univers Rise Mindset Master.",
+      },
     ],
   }),
   component: Home,
 });
-
-const pillars = [
-  { icon: Crown, title: "Leadership", subtitle: "Soin Visage", desc: "Une routine signature pour révéler l'éclat naturel et structurer la peau." },
-  { icon: Sparkles, title: "Mastery", subtitle: "Soin Corps", desc: "Sculpter, raffermir, sublimer chaque zone avec précision et élégance." },
-  { icon: Eye, title: "Vision", subtitle: "Compléments", desc: "Nourrir la beauté de l'intérieur via des actifs cellulaires d'excellence." },
-  { icon: Zap, title: "Action", subtitle: "Bien-être", desc: "Des innovations comme l'eau hydrogénée pour une vitalité durable." },
+const universes = [
+  { name: "Visage", sub: "L’art du soin", image: "/products/b-cream.jpg", filter: "visage" },
+  {
+    name: "Teint & protection",
+    sub: "Les essentiels",
+    image: "/products/sun-protector.jpg",
+    filter: "teint",
+  },
+  { name: "Corps", sub: "Un moment pour soi", image: "/products/s-fem-serum.jpg", filter: "corps" },
+  {
+    name: "Bien-être intérieur",
+    sub: "Au quotidien",
+    image: "/products/s-factor.jpg",
+    filter: "interieur",
+  },
 ];
-
+const steps = ["Mindset", "Apprentissage", "Action", "Croissance", "Leadership", "Succès"];
 function Home() {
-  const productSelection = catalogue.slice(0, 4);
-
+  const signature = products.find((p) => p.slug === "3s-capsule")!;
   return (
-    <div>
-      {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-[var(--gold)]/15 blur-[120px] animate-glow-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--gold)]/10 blur-[100px] animate-glow-pulse" style={{ animationDelay: "2s" }} />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-6 pt-28 pb-24 lg:pt-40 lg:pb-32 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-8 animate-fade-up">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)] animate-pulse" />
-            <span className="text-[10px] tracking-[0.3em] uppercase text-foreground/80">Franchise officielle SwisDerm Switzerland</span>
-          </div>
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] animate-fade-up" style={{ animationDelay: "0.1s" }}>
-            Rise in <span className="text-gradient-gold">Mindset.</span><br />
-            Master Your <span className="text-gradient-gold">Future.</span>
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-base lg:text-lg text-muted-foreground leading-relaxed animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            L'excellence suisse au service de votre bien-être. Franchise officielle SwisDerm en Tunisie.
+    <div className="maison">
+      <section className="maison-hero maison-wrap">
+        <div className="maison-hero-copy">
+          <p className="maison-eyebrow">
+            <span>01</span> — RISE MINDSET MASTER
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: "0.3s" }}>
-            <Button asChild size="lg" className="bg-gradient-gold text-background hover:opacity-90 font-medium px-8">
-              <Link to="/boutique">Découvrir la boutique <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-[var(--gold)]/40 text-[var(--gold)] hover:bg-[var(--gold)]/10 hover:text-[var(--gold-light)] px-8">
-              <Link to="/networker">Rejoindre le réseau</Link>
-            </Button>
+          <h1>
+            L’élégance <em>suisse</em>,
+            <br />
+            vécue au quotidien.
+          </h1>
+          <p className="maison-hero-intro">
+            Des soins, des rituels et une communauté pour prendre le temps de vous retrouver.
+            Découvrez l’univers SWISDERM à votre rythme.
+          </p>
+          <div className="maison-actions">
+            <a className="maison-btn" href="/produits">
+              Découvrir la collection <ArrowUpRight size={16} />
+            </a>
+            <a className="maison-text-link" href="#opportunite">
+              Notre communauté <span>↗</span>
+            </a>
+          </div>
+          <div className="maison-hero-bottom">
+            <span>UNE AUTRE IDÉE DU QUOTIDIEN</span>
+            <a href="#manifeste" aria-label="Découvrir la suite">
+              <ArrowDown size={18} strokeWidth={1} />
+            </a>
+          </div>
+        </div>
+        <div className="maison-hero-art">
+          <div className="maison-arch">
+            <img src="/editorial/3s.webp" alt="Boîte de 3S Capsule SWISDERM" fetchPriority="high" />
+          </div>
+          <span className="maison-vertical">SOIN & BIEN-ÊTRE — COLLECTION SWISDERM</span>
+          <div className="maison-art-label">
+            <span>LA SÉLECTION</span>
+            <strong>3S Capsule</strong>
+            <a href="/produits/3s-capsule">Découvrir ↗</a>
           </div>
         </div>
       </section>
-
-      {/* BEST SELLERS */}
-      <Section eyebrow="Sélection signature" title={<>Nos <span className="text-gradient-gold">références</span></>} subtitle="Une sélection issue des documents transmis, dont les informations restent à valider.">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {productSelection.map((p) => <ProductCard key={p.id} product={p} />)}
+      <section id="manifeste" className="maison-manifest maison-wrap">
+        <p className="maison-eyebrow">02 — NOTRE REGARD</p>
+        <h2>
+          Le bien-être n’est pas un luxe.
+          <br />
+          <em>C’est un rituel.</em>
+        </h2>
+        <p>
+          Un geste choisi. Une pause dans la journée.
+          <br />
+          Une attention que l’on s’accorde, simplement.
+        </p>
+        <span className="maison-rule" />
+      </section>
+      <section className="maison-wrap maison-section">
+        <div className="maison-section-head">
+          <div>
+            <p className="maison-eyebrow">03 — LA COLLECTION</p>
+            <h2>
+              À chacun
+              <br />
+              <em>son essentiel.</em>
+            </h2>
+          </div>
+          <p>
+            Explorez les références issues des documents de la marque. Caractéristiques et
+            disponibilités restent à confirmer.
+          </p>
         </div>
-      </Section>
-
-      {/* FOUR PILLARS */}
-      <Section eyebrow="Notre philosophie" title={<>The <span className="text-gradient-gold">Four Pillars</span></>} subtitle="Quatre piliers fondateurs qui structurent l'expérience RMM, de l'extérieur à l'intérieur.">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {pillars.map((p, i) => (
-            <div key={p.title} className="relative p-7 rounded-xl bg-card hairline hover-lift animate-fade-up" style={{ animationDelay: `${i * 0.08}s` }}>
-              <div className="w-12 h-12 rounded-full grid place-items-center bg-[var(--gold)]/10 border border-[var(--gold)]/30">
-                <p.icon className="h-5 w-5 text-[var(--gold)]" />
+        <div className="maison-bento">
+          {universes.map((u, i) => (
+            <a
+              className={`maison-universe u-${i}`}
+              href={`/produits?univers=${u.filter}`}
+              key={u.name}
+            >
+              <div className="maison-universe-img">
+                <img src={u.image} alt="" loading="lazy" />
               </div>
-              <h3 className="font-serif text-2xl mt-5">{p.title}</h3>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--gold)] mt-1">{p.subtitle}</div>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* EXPERT REVIEWS */}
-      <Section eyebrow="Validé par les experts" title={<>Avis d'<span className="text-gradient-gold">Experts</span></>} className="bg-[#0F0F0F]">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {expertReviews.map((e) => (
-            <div key={e.name} className="p-7 rounded-xl bg-card hairline">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--gold)]/30 to-[#1a1a1a] border-2 border-[var(--gold)]/40 grid place-items-center font-serif text-lg text-[var(--gold)]">
-                  {e.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+              <div className="maison-universe-title">
+                <div>
+                  <small>
+                    0{i + 1} — {u.sub}
+                  </small>
+                  <h3>{u.name}</h3>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{e.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{e.specialty} · {e.institution}</div>
-                </div>
+                <ArrowUpRight strokeWidth={1} size={26} />
               </div>
-              <div className="mt-4 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--gold)] px-2 py-0.5 rounded-full border border-[var(--gold)]/30">
-                <BadgeCheck className="h-3 w-3" /> Expert vérifié
+            </a>
+          ))}
+        </div>
+        <a className="maison-text-link maison-all" href="/produits">
+          Voir toute la collection <span>↗</span>
+        </a>
+      </section>
+      <section className="maison-signature">
+        <div className="maison-wrap maison-signature-grid">
+          <div className="maison-signature-img">
+            <img src="/products/3s-capsule.png" alt="SWISDERM 3S Capsule" loading="lazy" />
+          </div>
+          <div>
+            <p className="maison-eyebrow">04 — LE SOIN SIGNATURE</p>
+            <h2>
+              Un geste.
+              <br />
+              <em>Un moment à soi.</em>
+            </h2>
+            <p>{signature.description.fr}</p>
+            <div className="maison-ingredients">
+              <div>
+                <small>01</small>
+                <span>Pomme</span>
               </div>
-              <p className="mt-4 text-sm text-foreground/80 italic leading-relaxed">"{e.quote}"</p>
+              <div>
+                <small>02</small>
+                <span>Rose & orange</span>
+              </div>
+              <div>
+                <small>03</small>
+                <span>Huile de jojoba</span>
+              </div>
+            </div>
+            <a className="maison-btn maison-btn-light" href="/produits/3s-capsule">
+              Découvrir 3S Capsule <ArrowUpRight size={16} />
+            </a>
+            <p className="maison-small">
+              Ingrédients cités par la brochure. Composition et caractéristiques à confirmer.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section id="rituel" className="maison-wrap maison-ritual maison-section">
+        <div>
+          <p className="maison-eyebrow">05 — LE RITUEL</p>
+          <h2>
+            Du temps
+            <br />
+            <em>pour vous.</em>
+          </h2>
+          <p>
+            Chaque routine se construit selon vos besoins. Les conseils d’utilisation officiels sont
+            à confirmer.
+          </p>
+          <a href="/produits" className="maison-text-link">
+            Explorer la collection ↗
+          </a>
+        </div>
+        <div className="maison-ritual-photo">
+          <img
+            src="/editorial/rituel.webp"
+            alt="Composition décorative de linge et pierre claire"
+            loading="lazy"
+          />
+        </div>
+        <div className="maison-ritual-list">
+          {["Nettoyer", "Traiter", "Protéger"].map((x, i) => (
+            <div key={x}>
+              <span>0{i + 1}</span>
+              <h3>{x}</h3>
+              <ArrowUpRight size={20} strokeWidth={1} />
+            </div>
+          ))}
+          <p>
+            Le bon geste se choisit avec les informations et précautions officielles de chaque
+            produit.
+          </p>
+        </div>
+      </section>
+      <div className="maison-marquee" aria-label="Ingrédients cités dans les brochures">
+        <div>
+          <span>
+            Pomme · Rose des Alpes · Orange · Jojoba · Tournesol · Lierre · Guarana · Myrtille ·
+            Aloès · Camomille · Thé vert · Papaye · Cassis ·{" "}
+          </span>
+          <span aria-hidden="true">
+            Pomme · Rose des Alpes · Orange · Jojoba · Tournesol · Lierre · Guarana · Myrtille ·
+            Aloès · Camomille · Thé vert · Papaye · Cassis ·{" "}
+          </span>
+        </div>
+      </div>
+      <section id="methode" className="maison-wrap maison-method maison-section">
+        <div>
+          <p className="maison-eyebrow">06 — L’ACCOMPAGNEMENT</p>
+          <h2>
+            Avancer,
+            <br />
+            <em>à votre rythme.</em>
+          </h2>
+          <p>
+            Un cheminement autour de l’apprentissage, du partage et de la confiance. Pour découvrir,
+            poser vos questions et construire votre propre expérience.
+          </p>
+        </div>
+        <div className="maison-method-list">
+          {steps.map((x, i) => (
+            <div key={x}>
+              <small>0{i + 1}</small>
+              <span>{x}</span>
+              <span>↗</span>
             </div>
           ))}
         </div>
-      </Section>
-
-      {/* NETWORKER TESTIMONIALS */}
-      <Section eyebrow="Témoignages" title={<>Nos <span className="text-gradient-gold">Networkers</span> témoignent</>}>
-        <div className="grid lg:grid-cols-3 gap-6">
-          {networkerTestimonials.map((t) => (
-            <div key={t.name} className="relative p-7 rounded-xl bg-card hairline hover-lift">
-              <div className="absolute top-5 right-5 text-[10px] uppercase tracking-[0.2em] px-2 py-1 rounded-full bg-gradient-gold text-background font-semibold">{t.rank}</div>
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--gold)]/30 to-[#1a1a1a] border-2 border-[var(--gold)]/40 grid place-items-center font-serif text-lg text-[var(--gold)]">
-                {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+      </section>
+      <section id="opportunite" className="maison-opportunity">
+        <div className="maison-wrap maison-op-grid">
+          <div>
+            <p className="maison-eyebrow">07 — ENSEMBLE</p>
+            <h2>
+              Partager ce que
+              <br />
+              <em>vous aimez.</em>
+            </h2>
+            <p>
+              Découvrir une marque, se former, puis partager à son rythme. Une activité indépendante
+              dont les conditions restent à valider.
+            </p>
+            <p className="maison-small">
+              Les résultats dépendent de l’effort et de la situation de chacun. Aucun revenu n’est
+              garanti.
+            </p>
+            <Link to="/demande-rendez-vous" className="maison-btn maison-btn-light">
+              Échanger avec nous <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div className="maison-op-stages">
+            {["Découvrir", "Se former", "Partager"].map((x, i) => (
+              <div key={x}>
+                <small>0{i + 1}</small>
+                <span>{x}</span>
               </div>
-              <div className="mt-4">
-                <div className="font-medium">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.location}</div>
-              </div>
-              <p className="mt-4 text-sm text-foreground/80 italic leading-relaxed">"{t.quote}"</p>
-              <div className="mt-4 flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-3 w-3 fill-[var(--gold)] text-[var(--gold)]" />)}
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="maison-wrap maison-stories maison-section">
+        <p className="maison-eyebrow">08 — LA COMMUNAUTÉ</p>
+        <h2>
+          Bientôt, les histoires
+          <br />
+          <em>de notre communauté.</em>
+        </h2>
+        <p>Les témoignages authentiques et autorisés trouveront leur place ici.</p>
+      </section>
+      <section className="maison-wrap maison-faq maison-section">
+        <div>
+          <p className="maison-eyebrow">09 — EN TOUTE SIMPLICITÉ</p>
+          <h2>
+            Vos questions,
+            <br />
+            <em>nos réponses.</em>
+          </h2>
+        </div>
+        <div>
+          {[
+            [
+              "À qui s’adressent les produits ?",
+              "Les informations officielles sur les types de peau et les précautions sont à confirmer.",
+            ],
+            [
+              "Comment obtenir des informations sur une référence ?",
+              "Consultez la fiche du produit. Les coordonnées de contact seront ajoutées après validation.",
+            ],
+            [
+              "Comment fonctionne l’activité indépendante ?",
+              "Les conditions et le plan officiel sont en cours de validation. Aucun revenu n’est garanti.",
+            ],
+            [
+              "Comment passer commande ?",
+              "Les conditions de commande et de livraison seront communiquées après validation.",
+            ],
+          ].map(([q, a]) => (
+            <details key={q}>
+              <summary>
+                {q}
+                <span>+</span>
+              </summary>
+              <p>{a}</p>
+            </details>
           ))}
         </div>
-      </Section>
+      </section>
+      <section className="maison-final">
+        <div className="maison-wrap">
+          <p className="maison-eyebrow">UNE RENCONTRE, UN PREMIER PAS</p>
+          <h2>
+            Votre prochain rituel
+            <br />
+            <em>commence ici.</em>
+          </h2>
+          <p>La beauté des petits gestes, le plaisir de partager.</p>
+          <a href="/produits" className="maison-btn maison-btn-light">
+            Découvrir la collection <ArrowUpRight size={16} />
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Crown, TrendingUp, Users, GraduationCap, Sparkles, PackageCheck } from "lucide-react";
 import { PackCard } from "@/components/product/PackCard";
 import { Section } from "@/components/layout/Section";
@@ -8,6 +8,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { packs, networkerTestimonials } from "@/lib/data";
 
 export const Route = createFileRoute("/networker")({
+  beforeLoad: () => { throw redirect({ to: "/", hash: "opportunite" }); },
   head: () => ({
     meta: [
       { title: "Devenir Networker RMM — Transformez votre passion en revenus" },
