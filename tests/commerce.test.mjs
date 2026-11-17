@@ -48,12 +48,15 @@ test("catalogue commercial, options répétées, profils et validations", async 
     kind: "pack",
     packId: "business",
     options: ["option-1", "option-1"],
+    lines: [{ variant: "htl-60", quantity: 50 }],
   });
   assert.equal(r.status, 201);
   const id = r.body.id;
   data = (await admin.get("/api/commerce")).body;
   let order = data.orders.find((x) => x.id === id);
   assert.equal(order.snapshot.lines[0].quantity, 4);
+  assert.equal(order.snapshot.lines.length, 1);
+  assert.equal(order.snapshot.lines[0].variant, "sfactor-20");
   assert.equal(order.snapshot.pp, 120);
   assert.equal(order.snapshot.priceMillimes, 1200000);
   r = await admin.post(`/api/commerce/orders/${id}/validate`);

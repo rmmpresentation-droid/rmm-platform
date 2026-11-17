@@ -540,97 +540,142 @@ export function CommerceWorkspace({
         <div className="space-y-5">
           <form className={`${card} space-y-4`} onSubmit={submitOrder}>
             <h3 className="font-serif text-xl">Nouvelle commande interne</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm">
-                Networker acheteur
+            <p className="text-sm text-muted-foreground">
+              Choisissez d’abord le networker, puis son pack et les options d’achat correspondantes.
+              Chaque option contient une combinaison de produits.
+            </p>
+            <label className="block text-sm font-medium">
+              1 · Networker acheteur
+              <select
+                required
+                className={`${field} mt-2`}
+                value={buyer}
+                onChange={(e) => {
+                  setBuyer(e.target.value);
+                  setPack("");
+                  setKind("pack");
+                  setOptions([]);
+                }}
+              >
+                <option value="">Sélectionner un compte networker existant</option>
+                {directory
+                  .filter((p) => p.role === "networker")
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ·{" "}
+                      {profiles.find((x) => x.user_id === p.id)?.rank || "profil non défini"}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            {buyer && (
+              <label className="block text-sm font-medium">
+                2 · Pack ou commande particulière
                 <select
                   required
-                  className={`${field} mt-1`}
-                  value={buyer}
-                  onChange={(e) => setBuyer(e.target.value)}
-                >
-                  <option value="">Sélectionner</option>
-                  {directory
-                    .filter((p) => p.role === "networker")
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ·{" "}
-                        {profiles.find((x) => x.user_id === p.id)?.rank || "profil non défini"}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                Type
-                <select
-                  className={`${field} mt-1`}
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value as typeof kind)}
-                >
-                  <option value="pack">Pack et options</option>
-                  <option value="hydro">S Hydro séparé</option>
-                  <option value="custom">Commande personnalisée</option>
-                </select>
-              </label>
-            </div>
-            {kind === "pack" && (
-              <>
-                <label className="block text-sm">
-                  Pack
-                  <select
-                    required
-                    className={`${field} mt-1`}
-                    value={pack}
-                    onChange={(e) => {
-                      const id = e.target.value;
+                  className={`${field} mt-2`}
+                  value={kind === "hydro" ? "__hydro" : kind === "custom" ? "__custom" : pack}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (id === "__hydro" || id === "__custom") {
+                      setKind(id === "__hydro" ? "hydro" : "custom");
+                      setPack("");
+                      setOptions([]);
+                    } else {
+                      setKind("pack");
                       setPack(id);
                       setOptions(
                         Array(rules.packs.find((p) => p.id === id)?.optionCount || 0).fill(""),
                       );
-                    }}
-                  >
-                    <option value="">Sélectionner</option>
-                    {rules.packs.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} · {formatMoney(p.priceMillimes)} · {p.pp} PP
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {currentPack && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {options.map((value, i) => (
-                      <label key={i} className="block text-sm">
-                        Option {i + 1}
-                        <select
-                          required
-                          className={`${field} mt-1`}
-                          value={value}
-                          onChange={(e) =>
-                            setOptions(options.map((x, n) => (n === i ? e.target.value : x)))
-                          }
-                        >
-                          <option value="">Sélectionner</option>
-                          {allOptions.map((o) => (
-                            <option key={o.id} value={o.id}>
-                              {o.name} · {showLines(o.lines)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </>
+                    }
+                  }}
+                >
+                  <option value="">Choisir un pack</option>
+                  {rules.packs.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} · {formatMoney(p.priceMillimes)} · {p.pp} PP · {p.optionCount}{" "}
+                      option(s)
+                    </option>
+                  ))}
+                  <option value="__hydro">S Hydro · commande séparée Silver</option>
+                  <option value="__custom">Commande personnalisée · choix des produits</option>
+                </select>
+              </label>
             )}
-            {kind === "hydro" && (
+            {buyer && kind === "pack" && currentPack && (
+              <div className="space-y-3 rounded-lg border border-border p-4">
+                <h4 className="font-medium">
+                  3 · Choisir {currentPack.optionCount} option
+                  {currentPack.optionCount > 1 ? "s" : ""} d’achat
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Chaque option est une combinaison prédéfinie de produits. Une même option peut
+                  être choisie plusieurs fois.
+                </p>
+                <details className="rounded-md border border-border p-3">
+                  <summary className="cursor-pointer text-sm text-[var(--gold)]">
+                    Voir les compositions des options disponibles
+                  </summary>
+                  <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {allOptions.map((o) => (
+                      <li key={o.id} className="text-xs leading-relaxed text-muted-foreground">
+                        <strong className="text-foreground">{o.name} :</strong> {showLines(o.lines)}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {options.map((value, i) => {
+                    const selected = allOptions.find((o) => o.id === value);
+                    return (
+                      <div key={i} className="rounded-md border border-border p-3">
+                        <label className="block text-sm">
+                          Choix {i + 1}
+                          <select
+                            required
+                            className={`${field} mt-2`}
+                            value={value}
+                            onChange={(e) =>
+                              setOptions(options.map((x, n) => (n === i ? e.target.value : x)))
+                            }
+                          >
+                            <option value="">Sélectionner une option</option>
+                            {allOptions.map((o) => (
+                              <option key={o.id} value={o.id}>
+                                {o.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        {selected && (
+                          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                            <strong>Composition : </strong>
+                            {showLines(selected.lines)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-sm">
+                  Total du pack : <strong>{formatMoney(currentPack.priceMillimes)}</strong> ·{" "}
+                  {currentPack.pp} PP
+                </p>
+              </div>
+            )}
+            {buyer && kind === "hydro" && (
               <p className="rounded-md border border-border p-3 text-sm">
-                Commande distincte : {formatMoney(rules.hydro.priceMillimes)} · profil Silver requis
-                à la validation.
+                S Hydro est une commande distincte : {formatMoney(rules.hydro.priceMillimes)} ·
+                profil Silver requis à la validation.
               </p>
             )}
-            {kind === "custom" && (
-              <>
+            {buyer && kind === "custom" && (
+              <div className="space-y-4 rounded-lg border border-border p-4">
+                <h4 className="font-medium">3 · Composition personnalisée</h4>
+                <p className="text-xs text-muted-foreground">
+                  Choisissez directement les produits et les quantités uniquement pour cette
+                  commande personnalisée. Aucun nouveau pack n’est créé.
+                </p>
                 <LinesEditor
                   lines={lines}
                   onChange={setLines}
@@ -651,9 +696,14 @@ export function CommerceWorkspace({
                 <p className="text-xs text-muted-foreground">
                   S Hydro est vendu uniquement séparément ; PP non défini.
                 </p>
-              </>
+              </div>
             )}
-            <button disabled={busy} className={btn}>
+            <button
+              disabled={
+                busy || !buyer || (kind === "pack" && (!currentPack || options.some((id) => !id)))
+              }
+              className={btn}
+            >
               Créer le brouillon
             </button>
           </form>
