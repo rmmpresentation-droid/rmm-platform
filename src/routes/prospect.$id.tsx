@@ -1,3 +1,4 @@
+import { LanguageSwitcher } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -152,7 +153,10 @@ function ProspectPage() {
           <Link to="/">
             <Logo compact />
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-5 py-8 sm:py-12">

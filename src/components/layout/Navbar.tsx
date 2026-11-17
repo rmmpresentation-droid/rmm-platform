@@ -1,3 +1,4 @@
+import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
@@ -15,6 +16,7 @@ const links = [
 ];
 
 export function Navbar() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -32,18 +34,18 @@ export function Navbar() {
                 to={l.to}
                 className={`text-sm tracking-wide transition-colors ${active ? "text-[var(--gold)]" : "text-foreground/80 hover:text-[var(--gold)]"}`}
               >
-                {l.label}
+                {t(l.label)}
               </Link>
             );
           })}
         </nav>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
+          <LanguageSwitcher /><ThemeToggle />
           <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex border-[var(--gold)]/40 text-[var(--gold)] hover:bg-[var(--gold)]/10 hover:text-[var(--gold-light)]"><Link to="/dashboard">
-            <User className="h-3.5 w-3.5 mr-1.5" /> Connexion</Link>
+            <User className="h-3.5 w-3.5 mr-1.5" /> {t("Connexion")}</Link>
           </Button>
-          <button onClick={() => setOpen((v) => !v)} className="lg:hidden p-2 text-foreground" aria-label="Menu">
+          <button onClick={() => setOpen((v) => !v)} className="lg:hidden p-2 text-foreground" aria-label={t(open ? "Fermer le menu" : "Ouvrir le menu")} aria-expanded={open}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -54,7 +56,7 @@ export function Navbar() {
           <nav className="flex flex-col px-6 py-4 gap-2">
             {links.map((l) => (
               <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="py-2 text-sm text-foreground/80 hover:text-[var(--gold)]">
-                {l.label}
+                {t(l.label)}
               </Link>
             ))}
           </nav>

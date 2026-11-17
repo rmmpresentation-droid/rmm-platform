@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/demande-rendez-vous")({
 });
 const input = "mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 function AppointmentRequestPage() {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -57,26 +59,29 @@ function AppointmentRequestPage() {
   return (
     <section className="mx-auto max-w-3xl px-6 py-16">
       <p className="mb-6 rounded-md border border-border bg-card p-3 text-sm text-muted-foreground">
-        Préproduction locale : utilisez uniquement des données fictives.
+        {t("Préproduction locale : utilisez uniquement des données fictives.")}
       </p>
-      <p className="text-xs uppercase tracking-[.25em] text-[var(--gold)]">RMM · Prospection</p>
-      <h1 className="mt-3 font-serif text-4xl">Demander un rendez-vous</h1>
+      <p className="text-xs uppercase tracking-[.25em] text-[var(--gold)]">
+        {t("RMM · Prospection")}
+      </p>
+      <h1 className="mt-3 font-serif text-4xl">{t("Demander un rendez-vous")}</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        Indiquez votre préférence : votre demande sera examinée par l’administration. Le rendez-vous
-        n’est pas confirmé tant que l’administration ne l’a pas fixé.
+        {t(
+          "Indiquez votre préférence : votre demande sera examinée par l’administration. Le rendez-vous n’est pas confirmé tant que l’administration ne l’a pas fixé.",
+        )}
       </p>
       <p className="mt-3 text-sm text-muted-foreground">
-        Les membres du réseau peuvent faire leurs demandes dans leur{" "}
+        {t("Les membres du réseau peuvent faire leurs demandes dans leur")}{" "}
         <Link to="/dashboard" className="text-[var(--gold)] underline">
-          espace membre
+          {t("espace membre")}
         </Link>
         .
       </p>
       {sent ? (
         <div role="status" className="mt-8 rounded-xl border border-border bg-card p-6">
-          <h2 className="font-serif text-2xl">Demande enregistrée</h2>
+          <h2 className="font-serif text-2xl">{t("Demande enregistrée")}</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Elle est en attente de traitement. Aucune confirmation automatique n’est envoyée.
+            {t("Elle est en attente de traitement. Aucune confirmation automatique n’est envoyée.")}
           </p>
           <button
             type="button"
@@ -86,7 +91,7 @@ function AppointmentRequestPage() {
             }}
             className="mt-5 text-sm text-[var(--gold)] underline"
           >
-            Faire une autre demande
+            {t("Faire une autre demande")}
           </button>
         </div>
       ) : (
@@ -103,7 +108,7 @@ function AppointmentRequestPage() {
             </p>
           )}
           <label className="block text-sm">
-            Nom complet *
+            {t("Nom complet *")}
             <input
               required
               maxLength={160}
@@ -115,7 +120,7 @@ function AppointmentRequestPage() {
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              Téléphone *
+              {t("Téléphone *")}
               <input
                 required
                 type="tel"
@@ -127,7 +132,7 @@ function AppointmentRequestPage() {
               />
             </label>
             <label className="block text-sm">
-              E-mail *
+              {t("E-mail *")}
               <input
                 required
                 type="email"
@@ -140,14 +145,14 @@ function AppointmentRequestPage() {
             </label>
           </div>
           <label className="block text-sm">
-            Type de demande de prospection *
+            {t("Type de demande de prospection *")}
             <select
               required
               value={kind}
               onChange={(e) => setKind(e.target.value)}
               className={input}
             >
-              <option value="">Sélectionner</option>
+              <option value="">{t("Sélectionner")}</option>
               <option>Premier contact</option>
               <option>Présentation</option>
               <option>Closing</option>
@@ -155,7 +160,7 @@ function AppointmentRequestPage() {
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              Début souhaité · heure de Tunis *
+              {t("Début souhaité · heure de Tunis *")}
               <input
                 required
                 type="datetime-local"
@@ -165,7 +170,7 @@ function AppointmentRequestPage() {
               />
             </label>
             <label className="block text-sm">
-              Fin souhaitée · heure de Tunis *
+              {t("Fin souhaitée · heure de Tunis *")}
               <input
                 required
                 type="datetime-local"
@@ -176,7 +181,7 @@ function AppointmentRequestPage() {
             </label>
           </div>
           <label className="block text-sm">
-            Précisions facultatives
+            {t("Précisions facultatives")}
             <textarea
               maxLength={1000}
               value={detail}
@@ -193,8 +198,9 @@ function AppointmentRequestPage() {
               className="mt-1"
             />
             <span>
-              J’accepte que mes coordonnées et cette demande soient enregistrées et consultées par
-              l’administration RMM pour traiter ma demande. *
+              {t(
+                "J’accepte que mes coordonnées et cette demande soient enregistrées et consultées par l’administration RMM pour traiter ma demande. *",
+              )}
             </span>
           </label>
           <button

@@ -212,3 +212,7 @@ html.light .bg-\[\#080808\] { background-color: var(--card); }
 @keyframes studio-drift { from { transform: scale(1); } to { transform: scale(1.07); } }
 @keyframes studio-spin { to { transform: rotate(360deg); } }
 @keyframes studio-float { 50% { transform: translateY(-8px); } }
+
+/* RTL is a layout direction only; stored business values are unchanged. */
+html[dir="rtl"] { text-align: right; }
+html[dir="rtl"] .tracking-\[\.25em\], html[dir="rtl"] .tracking-\[\.2em\], html[dir="rtl"] .tracking-\[\.18em\] { letter-spacing: normal; }

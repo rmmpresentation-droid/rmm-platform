@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check, ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/produit/$id")({
 });
 
 function ProductPage() {
+  const { t } = useLanguage();
   const product = Route.useLoaderData();
   const is3s = product.id === "3s-capsule";
   const related = catalogue.filter((p) => p.id !== product.id).slice(0, 3);
@@ -40,11 +42,11 @@ function ProductPage() {
     <div>
       <div className="mx-auto max-w-7xl px-6 pt-8 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-[var(--gold)]">
-          Accueil
+          {t("Accueil")}
         </Link>
         <span className="mx-2">›</span>
         <Link to="/boutique" className="hover:text-[var(--gold)]">
-          Boutique
+          {t("Boutique")}
         </Link>
         <span className="mx-2">›</span>
         <span className="text-foreground">{product.name}</span>
@@ -66,25 +68,26 @@ function ProductPage() {
           <h1 className="mt-3 font-serif text-4xl lg:text-5xl">
             {is3s ? "SWISDERM 3S Capsule" : product.name}
           </h1>
-          <p className="mt-4 text-muted-foreground leading-relaxed">{product.description}</p>
+          <p className="mt-4 text-muted-foreground leading-relaxed">{t(product.description)}</p>
           {points.length > 0 && (
             <ul className="mt-6 space-y-2">
               {points.map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--gold)]" />
-                  {point}
+                  {t(point)}
                 </li>
               ))}
             </ul>
           )}
           <div className="mt-8 rounded-lg border border-[var(--gold)]/20 p-4 text-sm text-muted-foreground">
-            Informations issues de la brochure, à confirmer. Tarif communiqué ultérieurement.
+            {t("Informations issues de la brochure, à confirmer. Tarif communiqué ultérieurement.")}
           </div>
           <Link
             to="/demande-rendez-vous"
             className="mt-6 inline-flex items-center gap-2 text-sm text-[var(--gold)] underline"
           >
-            Demander un rendez-vous <ArrowRight size={15} />
+            {t("Demander un rendez-vous")}
+            <ArrowRight size={15} />
           </Link>
         </div>
       </section>
@@ -105,50 +108,52 @@ function ProductPage() {
                 value={value}
                 className="whitespace-nowrap rounded-none px-0 pb-3 text-sm data-[state=active]:border-b-2 data-[state=active]:border-[var(--gold)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--gold)]"
               >
-                {label}
+                {t(label)}
               </TabsTrigger>
             ))}
           </TabsList>
           <TabsContent value="description" className="max-w-3xl pt-8">
-            <p className="text-lg leading-relaxed text-foreground/85">{product.description}</p>
+            <p className="text-lg leading-relaxed text-foreground/85">{t(product.description)}</p>
           </TabsContent>
           <TabsContent value="benefits" className="max-w-3xl pt-8">
             <p className="text-muted-foreground">
-              Les bénéfices mentionnés dans la brochure sont en cours de vérification et ne sont pas
-              encore publiés.
+              {t(
+                "Les bénéfices mentionnés dans la brochure sont en cours de vérification et ne sont pas encore publiés.",
+              )}
             </p>
           </TabsContent>
           <TabsContent value="ingredients" className="max-w-3xl pt-8">
             <p className="leading-relaxed">
-              {product.ingredients || "Informations sur les ingrédients à compléter."}
+              {t(product.ingredients || "Informations sur les ingrédients à compléter.")}
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
-              Ces indications ne constituent pas une liste INCI complète. Composition officielle à
-              confirmer.
+              {t(
+                "Ces indications ne constituent pas une liste INCI complète. Composition officielle à confirmer.",
+              )}
             </p>
           </TabsContent>
           <TabsContent value="usage" className="max-w-3xl pt-8">
             <p className="text-muted-foreground">
-              Mode d’emploi et précautions à confirmer auprès du fabricant.
+              {t("Mode d’emploi et précautions à confirmer auprès du fabricant.")}
             </p>
           </TabsContent>
           <TabsContent value="video" className="pt-8">
-            <p className="text-muted-foreground">Aucune vidéo disponible pour le moment.</p>
+            <p className="text-muted-foreground">{t("Aucune vidéo disponible pour le moment.")}</p>
           </TabsContent>
           <TabsContent value="reviews" className="pt-8">
             <p className="text-muted-foreground">
-              Aucun avis client vérifié disponible pour le moment.
+              {t("Aucun avis client vérifié disponible pour le moment.")}
             </p>
           </TabsContent>
           <TabsContent value="experts" className="pt-8">
             <p className="text-muted-foreground">
-              Aucun avis expert vérifié disponible pour le moment.
+              {t("Aucun avis expert vérifié disponible pour le moment.")}
             </p>
           </TabsContent>
         </Tabs>
       </section>
       <section className="mx-auto max-w-7xl px-6 py-12">
-        <h2 className="font-serif text-3xl">Découvrir d’autres références</h2>
+        <h2 className="font-serif text-3xl">{t("Découvrir d’autres références")}</h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {related.map((p) => (
             <ProductCard key={p.id} product={p} />

@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 type Variant = {
@@ -78,9 +79,10 @@ function LinesEditor({
   variants: Variant[];
   products: Product[];
 }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">Composition</p>
+      <p className="text-sm font-medium">{t("Composition")}</p>
       {lines.map((line, i) => (
         <div className="flex flex-wrap gap-2" key={i}>
           <select
@@ -91,7 +93,7 @@ function LinesEditor({
               onChange(lines.map((x, n) => (n === i ? { ...x, variant: e.target.value } : x)))
             }
           >
-            <option value="">Choisir un produit et son format</option>
+            <option value="">{t("Choisir un produit et son format")}</option>
             {variants
               .filter((v) => v.active)
               .map((v) => (
@@ -118,7 +120,7 @@ function LinesEditor({
             onClick={() => onChange(lines.filter((_, n) => n !== i))}
             className="px-2 text-sm text-red-400"
           >
-            Retirer
+            {t("Retirer")}
           </button>
         </div>
       ))}
@@ -127,7 +129,7 @@ function LinesEditor({
         className="text-sm text-[var(--gold)]"
         onClick={() => onChange([...lines, { variant: "", quantity: 1 }])}
       >
-        + Ajouter une référence
+        {t("+ Ajouter une référence")}
       </button>
     </div>
   );
@@ -141,6 +143,7 @@ export function CommerceWorkspace({
   directory: Person[];
   onCatalogueImported: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -194,7 +197,7 @@ export function CommerceWorkspace({
   if (!data.initialized)
     return (
       <section className={`${card} mt-6`}>
-        <h2 className="font-serif text-2xl">Module produits et commandes</h2>
+        <h2 className="font-serif text-2xl">{t("Module produits et commandes")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Initialisez les produits existants, les formats séparés et les règles validées pour la
           préproduction. Les quantités commencent à zéro ; les fiches existantes ne sont pas
@@ -206,7 +209,7 @@ export function CommerceWorkspace({
           </p>
         )}
         <button disabled={busy} className={`${btn} mt-4`} onClick={() => void setup()}>
-          Initialiser le module local
+          {t("Initialiser le module local")}
         </button>
       </section>
     );
@@ -214,7 +217,7 @@ export function CommerceWorkspace({
   const variantName = (id: string) => {
     const v = variants.find((x) => x.id === id);
     return v
-      ? `${products.find((p) => p.id === v.product_id)?.title || "Produit"} · ${v.format}`
+      ? `${products.find((p) => p.id === v.product_id)?.title || t("Produit")} · ${t(v.format)}`
       : id;
   };
   const currentPack = rules.packs.find((p) => p.id === pack);
@@ -250,7 +253,8 @@ export function CommerceWorkspace({
             : "Commandes et stock transactionnel"}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Règles {rules.version} · préproduction locale. Stock par format, déduit uniquement à la
+          {t("Règles")}
+          {rules.version} · préproduction locale. Stock par format, déduit uniquement à la
           validation. Les anciennes fiches restent séparées et ne déduisent pas le stock.
         </p>
       </div>
@@ -282,22 +286,27 @@ export function CommerceWorkspace({
                 onClick={() => setTab(id)}
                 className={`rounded-md border px-4 py-2 text-sm ${tab === id ? "border-[var(--gold)] text-[var(--gold)]" : "border-border"}`}
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
           {tab === "stock" && (
             <div className="space-y-4">
               <div className={card}>
-                <h3 className="font-serif text-xl">Références et unités</h3>
+                <h3 className="font-serif text-xl">{t("Références et unités")}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Les formats sont distincts. Les quantités sont modifiées par mouvement avec motif.
+                  {t(
+                    "Les formats sont distincts. Les quantités sont modifiées par mouvement avec motif.",
+                  )}
                 </p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {variants.map((v) => (
                     <div key={v.id} className="rounded-md border border-border p-3 text-sm">
                       <strong>{variantName(v.id)}</strong>
-                      <p className="mt-1 text-[var(--gold)]">{v.quantity} unité(s)</p>
+                      <p className="mt-1 text-[var(--gold)]">
+                        {v.quantity}
+                        {t("unité(s)")}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -318,16 +327,16 @@ export function CommerceWorkspace({
                     );
                   }}
                 >
-                  <h3 className="font-serif text-xl">Ajuster le stock</h3>
+                  <h3 className="font-serif text-xl">{t("Ajuster le stock")}</h3>
                   <label className="block text-sm">
-                    Référence
+                    {t("Référence")}
                     <select
                       required
                       className={`${field} mt-1`}
                       value={variant}
                       onChange={(e) => setVariant(e.target.value)}
                     >
-                      <option value="">Sélectionner</option>
+                      <option value="">{t("Sélectionner")}</option>
                       {variants.map((v) => (
                         <option key={v.id} value={v.id}>
                           {variantName(v.id)}
@@ -336,7 +345,7 @@ export function CommerceWorkspace({
                     </select>
                   </label>
                   <label className="block text-sm">
-                    Variation (+ entrée, − sortie)
+                    {t("Variation (+ entrée, − sortie)")}
                     <input
                       required
                       type="number"
@@ -347,7 +356,7 @@ export function CommerceWorkspace({
                     />
                   </label>
                   <label className="block text-sm">
-                    Motif
+                    {t("Motif")}
                     <input
                       required
                       maxLength={250}
@@ -357,7 +366,7 @@ export function CommerceWorkspace({
                     />
                   </label>
                   <button disabled={busy} className={btn}>
-                    Enregistrer le mouvement
+                    {t("Enregistrer le mouvement")}
                   </button>
                 </form>
                 <form
@@ -370,16 +379,16 @@ export function CommerceWorkspace({
                     );
                   }}
                 >
-                  <h3 className="font-serif text-xl">Ajouter un format</h3>
+                  <h3 className="font-serif text-xl">{t("Ajouter un format")}</h3>
                   <label className="block text-sm">
-                    Produit
+                    {t("Produit")}
                     <select
                       required
                       className={`${field} mt-1`}
                       value={product}
                       onChange={(e) => setProduct(e.target.value)}
                     >
-                      <option value="">Sélectionner</option>
+                      <option value="">{t("Sélectionner")}</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.title}
@@ -388,7 +397,7 @@ export function CommerceWorkspace({
                     </select>
                   </label>
                   <label className="block text-sm">
-                    Format
+                    {t("Format")}
                     <input
                       required
                       maxLength={160}
@@ -398,10 +407,12 @@ export function CommerceWorkspace({
                     />
                   </label>
                   <button disabled={busy} className={btn}>
-                    Ajouter un format
+                    {t("Ajouter un format")}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    Pour ajouter ou modifier un produit, utilisez les fiches produits ci-dessous.
+                    {t(
+                      "Pour ajouter ou modifier un produit, utilisez les fiches produits ci-dessous.",
+                    )}
                   </p>
                 </form>
               </div>
@@ -426,18 +437,20 @@ export function CommerceWorkspace({
                 <div key={p.id} className={card}>
                   <h3 className="font-serif text-xl">{p.name}</h3>
                   <p className="mt-3 text-sm">
-                    {formatMoney(p.priceMillimes)} · {p.pp} PP
+                    {formatMoney(p.priceMillimes)} · {p.pp}
+                    {t("PP")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {p.optionCount} option(s), répétition autorisée
+                    {p.optionCount}
+                    {t("option(s), répétition autorisée")}
                   </p>
                 </div>
               ))}
               <div className={card}>
-                <h3 className="font-serif text-xl">S Hydro · commande distincte</h3>
+                <h3 className="font-serif text-xl">{t("S Hydro · commande distincte")}</h3>
                 <p className="mt-3 text-sm">{formatMoney(rules.hydro.priceMillimes)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Réservée au profil Silver à la validation · PP non défini.
+                  {t("Réservée au profil Silver à la validation · PP non défini.")}
                 </p>
               </div>
             </div>
@@ -462,9 +475,9 @@ export function CommerceWorkspace({
                   );
                 }}
               >
-                <h3 className="font-serif text-xl">Créer une option personnalisée</h3>
+                <h3 className="font-serif text-xl">{t("Créer une option personnalisée")}</h3>
                 <label className="block text-sm">
-                  Nom
+                  {t("Nom")}
                   <input
                     required
                     maxLength={160}
@@ -480,10 +493,10 @@ export function CommerceWorkspace({
                   variants={variants}
                 />
                 <p className="text-xs text-muted-foreground">
-                  S Hydro n’est pas éligible aux options de pack.
+                  {t("S Hydro n’est pas éligible aux options de pack.")}
                 </p>
                 <button disabled={busy} className={btn}>
-                  Créer l’option
+                  {t("Créer l’option")}
                 </button>
               </form>
             </div>
@@ -499,16 +512,16 @@ export function CommerceWorkspace({
                 );
               }}
             >
-              <h3 className="font-serif text-xl">Profil commercial du networker</h3>
+              <h3 className="font-serif text-xl">{t("Profil commercial du networker")}</h3>
               <label className="block text-sm">
-                Networker
+                {t("Networker")}
                 <select
                   required
                   className={`${field} mt-1`}
                   value={buyer}
                   onChange={(e) => setBuyer(e.target.value)}
                 >
-                  <option value="">Sélectionner</option>
+                  <option value="">{t("Sélectionner")}</option>
                   {directory
                     .filter((p) => p.role === "networker")
                     .map((p) => (
@@ -519,7 +532,7 @@ export function CommerceWorkspace({
                 </select>
               </label>
               <label className="block text-sm">
-                Profil
+                {t("Profil")}
                 <select
                   className={`${field} mt-1`}
                   value={rank}
@@ -531,7 +544,7 @@ export function CommerceWorkspace({
                 </select>
               </label>
               <button disabled={busy} className={btn}>
-                Enregistrer le profil
+                {t("Enregistrer le profil")}
               </button>
             </form>
           )}
@@ -539,13 +552,14 @@ export function CommerceWorkspace({
       ) : (
         <div className="space-y-5">
           <form className={`${card} space-y-4`} onSubmit={submitOrder}>
-            <h3 className="font-serif text-xl">Nouvelle commande interne</h3>
+            <h3 className="font-serif text-xl">{t("Nouvelle commande interne")}</h3>
             <p className="text-sm text-muted-foreground">
-              Choisissez d’abord le networker, puis son pack et les options d’achat correspondantes.
-              Chaque option contient une combinaison de produits.
+              {t(
+                "Choisissez d’abord le networker, puis son pack et les options d’achat correspondantes. Chaque option contient une combinaison de produits.",
+              )}
             </p>
             <label className="block text-sm font-medium">
-              1 · Networker acheteur
+              {t("1 · Networker acheteur")}
               <select
                 required
                 className={`${field} mt-2`}
@@ -557,7 +571,7 @@ export function CommerceWorkspace({
                   setOptions([]);
                 }}
               >
-                <option value="">Sélectionner un compte networker existant</option>
+                <option value="">{t("Sélectionner un compte networker existant")}</option>
                 {directory
                   .filter((p) => p.role === "networker")
                   .map((p) => (
@@ -570,7 +584,7 @@ export function CommerceWorkspace({
             </label>
             {buyer && (
               <label className="block text-sm font-medium">
-                2 · Pack ou commande particulière
+                {t("2 · Pack ou commande particulière")}
                 <select
                   required
                   className={`${field} mt-2`}
@@ -590,31 +604,37 @@ export function CommerceWorkspace({
                     }
                   }}
                 >
-                  <option value="">Choisir un pack</option>
+                  <option value="">{t("Choisir un pack")}</option>
                   {rules.packs.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} · {formatMoney(p.priceMillimes)} · {p.pp} PP · {p.optionCount}{" "}
-                      option(s)
+                      {t("option(s)")}
                     </option>
                   ))}
-                  <option value="__hydro">S Hydro · commande séparée Silver</option>
-                  <option value="__custom">Commande personnalisée · choix des produits</option>
+                  <option value="__hydro">{t("S Hydro · commande séparée Silver")}</option>
+                  <option value="__custom">
+                    {t("Commande personnalisée · choix des produits")}
+                  </option>
                 </select>
               </label>
             )}
             {buyer && kind === "pack" && currentPack && (
               <div className="space-y-3 rounded-lg border border-border p-4">
                 <h4 className="font-medium">
-                  3 · Choisir {currentPack.optionCount} option
-                  {currentPack.optionCount > 1 ? "s" : ""} d’achat
+                  {t("3 · Choisir")}
+                  {currentPack.optionCount}
+                  {t("option")}
+                  {currentPack.optionCount > 1 ? "s" : ""}
+                  {t("d’achat")}
                 </h4>
                 <p className="text-xs text-muted-foreground">
-                  Chaque option est une combinaison prédéfinie de produits. Une même option peut
-                  être choisie plusieurs fois.
+                  {t(
+                    "Chaque option est une combinaison prédéfinie de produits. Une même option peut être choisie plusieurs fois.",
+                  )}
                 </p>
                 <details className="rounded-md border border-border p-3">
                   <summary className="cursor-pointer text-sm text-[var(--gold)]">
-                    Voir les compositions des options disponibles
+                    {t("Voir les compositions des options disponibles")}
                   </summary>
                   <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                     {allOptions.map((o) => (
@@ -630,7 +650,8 @@ export function CommerceWorkspace({
                     return (
                       <div key={i} className="rounded-md border border-border p-3">
                         <label className="block text-sm">
-                          Choix {i + 1}
+                          {t("Choix")}
+                          {i + 1}
                           <select
                             required
                             className={`${field} mt-2`}
@@ -639,7 +660,7 @@ export function CommerceWorkspace({
                               setOptions(options.map((x, n) => (n === i ? e.target.value : x)))
                             }
                           >
-                            <option value="">Sélectionner une option</option>
+                            <option value="">{t("Sélectionner une option")}</option>
                             {allOptions.map((o) => (
                               <option key={o.id} value={o.id}>
                                 {o.name}
@@ -649,7 +670,7 @@ export function CommerceWorkspace({
                         </label>
                         {selected && (
                           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                            <strong>Composition : </strong>
+                            <strong>{t("Composition :")}</strong>
                             {showLines(selected.lines)}
                           </p>
                         )}
@@ -658,23 +679,26 @@ export function CommerceWorkspace({
                   })}
                 </div>
                 <p className="text-sm">
-                  Total du pack : <strong>{formatMoney(currentPack.priceMillimes)}</strong> ·{" "}
-                  {currentPack.pp} PP
+                  {t("Total du pack :")}
+                  <strong>{formatMoney(currentPack.priceMillimes)}</strong> · {currentPack.pp}
+                  {t("PP")}
                 </p>
               </div>
             )}
             {buyer && kind === "hydro" && (
               <p className="rounded-md border border-border p-3 text-sm">
-                S Hydro est une commande distincte : {formatMoney(rules.hydro.priceMillimes)} ·
-                profil Silver requis à la validation.
+                {t("S Hydro est une commande distincte :")}
+                {formatMoney(rules.hydro.priceMillimes)}
+                {t("· profil Silver requis à la validation.")}
               </p>
             )}
             {buyer && kind === "custom" && (
               <div className="space-y-4 rounded-lg border border-border p-4">
-                <h4 className="font-medium">3 · Composition personnalisée</h4>
+                <h4 className="font-medium">{t("3 · Composition personnalisée")}</h4>
                 <p className="text-xs text-muted-foreground">
-                  Choisissez directement les produits et les quantités uniquement pour cette
-                  commande personnalisée. Aucun nouveau pack n’est créé.
+                  {t(
+                    "Choisissez directement les produits et les quantités uniquement pour cette commande personnalisée. Aucun nouveau pack n’est créé.",
+                  )}
                 </p>
                 <LinesEditor
                   lines={lines}
@@ -683,7 +707,7 @@ export function CommerceWorkspace({
                   variants={variants}
                 />
                 <label className="block text-sm">
-                  Prix fixé par l’administration (DT)
+                  {t("Prix fixé par l’administration (DT)")}
                   <input
                     required
                     inputMode="decimal"
@@ -694,7 +718,7 @@ export function CommerceWorkspace({
                   />
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  S Hydro est vendu uniquement séparément ; PP non défini.
+                  {t("S Hydro est vendu uniquement séparément ; PP non défini.")}
                 </p>
               </div>
             )}
@@ -704,13 +728,15 @@ export function CommerceWorkspace({
               }
               className={btn}
             >
-              Créer le brouillon
+              {t("Créer le brouillon")}
             </button>
           </form>
           <div className={card}>
-            <h3 className="font-serif text-xl">Commandes</h3>
+            <h3 className="font-serif text-xl">{t("Commandes")}</h3>
             {orders.length === 0 && (
-              <p className="mt-3 text-sm text-muted-foreground">Aucune commande dans ce module.</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {t("Aucune commande dans ce module.")}
+              </p>
             )}
             <div className="mt-4 space-y-3">
               {orders.map((o) => (
@@ -720,13 +746,13 @@ export function CommerceWorkspace({
                       {o.snapshot.pack?.name || (o.kind === "hydro" ? "S Hydro" : "Personnalisée")}{" "}
                       · {directory.find((p) => p.id === o.buyer_id)?.name || "Compte indisponible"}
                     </strong>
-                    <span>{o.status}</span>
+                    <span>{t(o.status)}</span>
                   </div>
                   <p className="mt-2 text-muted-foreground">{showLines(o.snapshot.lines)}</p>
                   <p className="mt-2">
                     {formatMoney(o.snapshot.priceMillimes)}
-                    {o.snapshot.pp !== null ? ` · ${o.snapshot.pp} PP` : ""} · règles{" "}
-                    {o.rules_version}
+                    {o.snapshot.pp !== null ? ` · ${o.snapshot.pp} PP` : ""}
+                    {t("· règles")} {o.rules_version}
                   </p>
                   {o.snapshot.options && (
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -746,7 +772,7 @@ export function CommerceWorkspace({
                           );
                       }}
                     >
-                      Valider et déduire le stock
+                      {t("Valider et déduire le stock")}
                     </button>
                   )}
                 </article>

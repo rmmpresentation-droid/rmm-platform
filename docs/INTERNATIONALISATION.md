@@ -1,0 +1,5 @@
+# Internationalisation (préproduction, en cours)
+
+Un sélecteur FR / EN / AR est disponible dans la navigation publique et l'espace connecté, y compris la fiche prospect. La préférence est conservée dans le navigateur (`localStorage`, clé `rmm-language`) ; elle n'est pas synchronisée entre appareils. L'arabe active `dir="rtl"` sur le document après chargement. Le rendu initial est en français et les textes sans traduction restent en français.
+
+La couverture n'est pas complète : notamment la page réseau, le studio de présentation, le Kanban et la fiche prospect, ainsi que de nombreux formulaires, messages serveur, dates, libellés accessibles et métadonnées restent à traduire. La mise en page RTL, la persistance et les parcours doivent encore être vérifiés dans un navigateur, notamment sur mobile et dans l'espace connecté. Les valeurs métier et données utilisateur restent inchangées : seules les chaînes d'affichage connues sont traduites. Une revue linguistique et fonctionnelle est nécessaire avant toute publication.

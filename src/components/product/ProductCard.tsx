@@ -1,8 +1,10 @@
+import { useLanguage } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { catalogueImage, type CatalogueProduct } from "@/lib/product-catalogue";
 
 export function ProductCard({ product }: { product: CatalogueProduct }) {
+  const { t } = useLanguage();
   return (
     <Link
       to="/produit/$id"
@@ -13,7 +15,7 @@ export function ProductCard({ product }: { product: CatalogueProduct }) {
         className={`relative grid aspect-square place-items-center overflow-hidden ${product.id === "3s-capsule" ? "bg-black" : "bg-[#faf9f6]"}`}
       >
         <span className="absolute left-4 top-4 z-10 text-[10px] uppercase tracking-[.2em] text-muted-foreground">
-          Référence RMM
+          {t("Référence RMM")}
         </span>
         <img
           src={catalogueImage(product.id)}
@@ -25,7 +27,7 @@ export function ProductCard({ product }: { product: CatalogueProduct }) {
       <div className="flex items-center justify-between gap-3 p-5">
         <div>
           <h3 className="font-serif text-lg">{product.name}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Informations à valider</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("Informations à valider")}</p>
         </div>
         <ArrowUpRight size={18} className="shrink-0 text-[var(--gold)]" aria-hidden="true" />
       </div>

@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { LanguageProvider } from "../lib/i18n";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -124,6 +125,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
       <div className="min-h-screen flex flex-col">
         {!isAdmin && <Navbar />}
         <main className={`flex-1 ${!isAdmin ? "pt-16" : ""}`}>
@@ -131,6 +133,7 @@ function RootComponent() {
         </main>
         {!isAdmin && <Footer />}
       </div>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
