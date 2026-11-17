@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { sectionNames, statuses } from '../src/lib/local-workspace.mjs';
 import { validateExtra } from '../src/lib/business-fields.mjs';
 import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
+import { initializeCommerce, mountCommerce } from './commerce.mjs';
 
 const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
 const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
@@ -31,6 +32,7 @@ export async function initialize(pool, email, password) {
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS training_attendance (training_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, attended BOOLEAN NOT NULL, quiz_score TEXT NOT NULL DEFAULT \'\', PRIMARY KEY (training_id,user_id))');
+  await initializeCommerce(pool);
   const count = await pool.query('SELECT COUNT(*)::int AS count FROM users');
   if (count.rows[0].count === 0) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) throw new Error('RMM_ADMIN_EMAIL valide et RMM_ADMIN_PASSWORD (12 caractères minimum, 72 octets maximum) sont requis pour initialiser la base.');
@@ -73,6 +75,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (!result.rows[0]) return res.status(401).json({error:'Session expirée'});
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
+  mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   app.get('/api/me', auth, (req,res) => res.json(req.user));
   app.post('/api/logout', auth, async (req,res,next) => { try { await pool.query('DELETE FROM sessions WHERE token_hash=$1',[hash(req.token)]); res.setHeader('Set-Cookie', sessionCookie('',0)); res.json({ok:true}); } catch(e) {next(e);} });
   app.get('/api/users', auth, async (req,res,next) => { try { if(req.user.role !== 'superadmin') return res.status(403).json({error:'Accès interdit'}); const result=await pool.query('SELECT id,email,name,role,created_at FROM users ORDER BY created_at DESC'); res.json(result.rows); } catch(e){next(e);} });
@@ -335,6 +338,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (extraError) return res.status(400).json({error:extraError});
     if (section === 'prospects' && req.body.status === 'Sans commande' && !extra.refusal_reason?.trim() && (previous.status !== 'Sans commande' || JSON.parse(previous.extra || '{}').refusal_reason?.trim())) return res.status(400).json({error:'Indiquez le motif du refus.'});
     const commerceError=await validateCommerce(section,extra,!JSON.parse(previous.extra || '{}').item_type && !JSON.parse(previous.extra || '{}').pack_id && !extra.item_type && !extra.pack_id); if(commerceError) return res.status(400).json({error:commerceError});
+    if (section==='stock' && extra.item_type!=='Produit' && (await pool.query('SELECT id FROM commerce_variants WHERE product_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce produit possède des références de stock ; son type ne peut pas être modifié.'});
     if (section==='stock' && JSON.parse(previous.extra || '{}').item_type==='Pack' && extra.item_type!=='Pack') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===previous.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const presenterError=await validatePresenter(section,extra); if(presenterError) return res.status(400).json({error:presenterError});
     if (section === 'formations' && JSON.parse(previous.extra || '{}').presenter_id && !extra.presenter_id) return res.status(400).json({error:'Présentateur requis'});
@@ -356,6 +360,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if(!admin(req.user.role) && ['formations','ressources','taches'].includes(req.params.section)) return res.status(403).json({error:'Accès en lecture seule'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM prospect_notes WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect possède des notes et ne peut pas être supprimé.'});
     if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>JSON.parse(m.extra||'{}').prospect_id===req.params.id)) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}
+    if(req.params.section==='stock' && (await pool.query('SELECT id FROM commerce_variants WHERE product_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce produit possède des références de stock et ne peut pas être supprimé.'});
     if(req.params.section==='stock') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===req.params.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const result=await pool.query(`DELETE FROM entries WHERE id=$1 AND section=$2 ${admin(req.user.role)?'':'AND created_by=$3'} RETURNING id`,[req.params.id,req.params.section,...(admin(req.user.role)?[]:[req.user.id])]); if(!result.rows[0]) return res.status(404).json({error:'Élément introuvable'}); res.json({ok:true});
   }catch(e){next(e);}});

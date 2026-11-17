@@ -1,0 +1,84 @@
+{
+  "version": "2026-11-04-v1",
+  "approval": "Paramètres confirmés par l'utilisateur pour la préproduction locale ; à revalider avant toute production.",
+  "variants": [
+    { "id": "3s-25", "product": "3s-capsule", "format": "25 capsules" },
+    { "id": "sfactor-20", "product": "s-factor", "format": "20 sachets (pack)" },
+    { "id": "htl-200", "product": "hydrating-toning-lotion", "format": "200 ml" },
+    { "id": "htl-60", "product": "hydrating-toning-lotion", "format": "60 ml" },
+    { "id": "btox", "product": "b-cream", "format": "Format à confirmer" },
+    { "id": "biowhite-15", "product": "bio-white-cream", "format": "15 ml" },
+    { "id": "foundation-30", "product": "revitalizing-foundation", "format": "30 ml" },
+    { "id": "cleansing-100", "product": "gentle-cleansing-cream", "format": "100 ml" },
+    { "id": "caffe-pack", "product": "s-xtra-caffe", "format": "Pack (format à confirmer)" },
+    { "id": "fem-30", "product": "s-fem-serum", "format": "30 ml" },
+    { "id": "hydro", "product": "s-hydro", "format": "Appareil" },
+    { "id": "sun", "product": "sun-protector", "format": "Format à confirmer" }
+  ],
+  "packs": [
+    { "id": "bronze", "name": "Bronze", "priceMillimes": 600000, "pp": 60, "optionCount": 1 },
+    { "id": "business", "name": "Business", "priceMillimes": 1200000, "pp": 120, "optionCount": 2 },
+    { "id": "silver", "name": "Silver", "priceMillimes": 1800000, "pp": 180, "optionCount": 3 },
+    { "id": "gold", "name": "Gold", "priceMillimes": 4200000, "pp": 420, "optionCount": 7 },
+    { "id": "platinum", "name": "Platinum", "priceMillimes": 8400000, "pp": 840, "optionCount": 14 }
+  ],
+  "options": [
+    { "id": "option-1", "name": "Option 1", "lines": [{ "variant": "sfactor-20", "quantity": 2 }] },
+    {
+      "id": "option-2",
+      "name": "Option 2",
+      "lines": [
+        { "variant": "3s-25", "quantity": 2 },
+        { "variant": "htl-200", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "option-3",
+      "name": "Option 3",
+      "lines": [
+        { "variant": "3s-25", "quantity": 2 },
+        { "variant": "btox", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "option-4",
+      "name": "Option 4",
+      "lines": [
+        { "variant": "3s-25", "quantity": 2 },
+        { "variant": "htl-60", "quantity": 2 }
+      ]
+    },
+    {
+      "id": "option-5",
+      "name": "Option 5",
+      "lines": [
+        { "variant": "sfactor-20", "quantity": 1 },
+        { "variant": "3s-25", "quantity": 1 },
+        { "variant": "htl-60", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "option-6",
+      "name": "Option 6",
+      "lines": [
+        { "variant": "3s-25", "quantity": 2 },
+        { "variant": "biowhite-15", "quantity": 1 },
+        { "variant": "foundation-30", "quantity": 1 },
+        { "variant": "cleansing-100", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "option-7",
+      "name": "Option 7",
+      "lines": [
+        { "variant": "biowhite-15", "quantity": 1 },
+        { "variant": "3s-25", "quantity": 1 },
+        { "variant": "cleansing-100", "quantity": 1 },
+        { "variant": "htl-60", "quantity": 1 }
+      ]
+    },
+    { "id": "option-8", "name": "Option 8", "lines": [{ "variant": "caffe-pack", "quantity": 6 }] },
+    { "id": "option-9", "name": "Option 9", "lines": [{ "variant": "fem-30", "quantity": 6 }] }
+  ],
+  "hydro": { "variant": "hydro", "quantity": 1, "priceMillimes": 2000000, "requiredRank": "Silver" }
+}
