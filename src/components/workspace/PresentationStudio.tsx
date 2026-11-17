@@ -1,3 +1,4 @@
+import { ArabicJourney } from "@/components/workspace/ArabicJourney";
 import { useLanguage } from "@/lib/i18n";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
@@ -80,6 +81,41 @@ const chapterIcons = [Sparkles, HeartPulse, Building2, Layers3, Orbit];
 type Medium = { url: string; type: "image" | "video"; name: string };
 
 export function PresentationStudio() {
+  const [journey, setJourney] = useState(true);
+  const { t } = useLanguage();
+  return (
+    <div>
+      <div
+        className="mt-6 flex flex-wrap gap-2"
+        role="group"
+        aria-label={t("Choisir la présentation")}
+      >
+        <button
+          type="button"
+          aria-pressed={journey}
+          onClick={() => setJourney(true)}
+          className={`rounded-full border px-4 py-2 text-sm ${journey ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+        >
+          {t("Parcours arabe interactif")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={!journey}
+          onClick={() => setJourney(false)}
+          className={`rounded-full border px-4 py-2 text-sm ${!journey ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+        >
+          {t("Studio précédent")}
+        </button>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {t("Les médias locaux sont effacés en changeant de présentation.")}
+      </p>
+      {journey ? <ArabicJourney /> : <LegacyPresentationStudio />}
+    </div>
+  );
+}
+
+function LegacyPresentationStudio() {
   const { t: tr } = useLanguage();
   const [index, setIndex] = useState(0);
   const [notes, setNotes] = useState(false);

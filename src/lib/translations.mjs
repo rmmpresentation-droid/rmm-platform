@@ -1068,6 +1068,16 @@ arabicAdditions[
 ] =
   "بيئة تجريبية محلية. يُخصم المخزون حسب الحجم عند التأكيد فقط. السجلات القديمة منفصلة ولا تخصم من المخزون.";
 arabicAdditions["Historique des mouvements"] = "سجل حركات المخزون";
+rows.push(
+  ["Choisir la présentation", "Choose presentation", "اختر العرض"],
+  ["Parcours arabe interactif", "Interactive Arabic journey", "الرحلة التفاعلية بالعربية"],
+  ["Studio précédent", "Previous studio", "الاستوديو السابق"],
+  [
+    "Les médias locaux sont effacés en changeant de présentation.",
+    "Local media are cleared when switching presentations.",
+    "تُزال الوسائط المحلية عند تغيير العرض.",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
