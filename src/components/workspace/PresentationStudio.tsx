@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Building2,
@@ -79,6 +80,7 @@ const chapterIcons = [Sparkles, HeartPulse, Building2, Layers3, Orbit];
 type Medium = { url: string; type: "image" | "video"; name: string };
 
 export function PresentationStudio() {
+  const { t: tr } = useLanguage();
   const [index, setIndex] = useState(0);
   const [notes, setNotes] = useState(false);
   const [motion, setMotion] = useState(true);
@@ -161,17 +163,19 @@ export function PresentationStudio() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[.22em] text-[var(--gold)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--gold)]" /> Studio de présentation{" "}
+            <span className="h-2 w-2 rounded-full bg-[var(--gold)]" />{" "}
+            {tr("Studio de présentation")}{" "}
             <span className="rounded-full border border-[var(--gold)]/30 px-2 py-1 text-[9px]">
-              Démo
+              {tr("Démo")}
             </span>
           </div>
           <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
-            Une conversation, pas un diaporama.
+            {tr("Une conversation, pas un diaporama.")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Un parcours interactif à personnaliser avec vos contenus validés. Les médias ajoutés
-            restent uniquement dans cet onglet.
+            {tr(
+              "Un parcours interactif à personnaliser avec vos contenus validés. Les médias ajoutés restent uniquement dans cet onglet.",
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -182,18 +186,21 @@ export function PresentationStudio() {
             className="rounded-full border border-border px-4 py-2 text-xs hover:border-[var(--gold)]"
           >
             <Lightbulb className="mr-2 inline h-4 w-4" />{" "}
-            {notes ? "Masquer les notes" : "Notes présentateur"}
+            {tr(notes ? "Masquer les notes" : "Notes présentateur")}
           </button>
           <button
             type="button"
             onClick={() => void fullscreen()}
             className="rounded-full border border-border px-4 py-2 text-xs hover:border-[var(--gold)]"
           >
-            <Expand className="mr-2 inline h-4 w-4" /> Plein écran
+            <Expand className="mr-2 inline h-4 w-4" /> {tr("Plein écran")}
           </button>
         </div>
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-2" aria-label="Chapitres de la présentation">
+      <div
+        className="flex gap-2 overflow-x-auto pb-2"
+        aria-label={tr("Chapitres de la présentation")}
+      >
         {chapters.map((c, i) => (
           <button
             key={c.name}
@@ -203,33 +210,35 @@ export function PresentationStudio() {
             className={`shrink-0 rounded-full border px-4 py-2 text-xs transition ${i === index ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border text-muted-foreground hover:border-[var(--gold)]"}`}
           >
             <span className="mr-2 opacity-60">0{i + 1}</span>
-            {c.name}
+            {tr(c.name)}
           </button>
         ))}
       </div>
       <section
         ref={stageRef}
-        aria-label={`Présentation : ${chapter.name}`}
+        aria-label={`Présentation : ${tr(chapter.name)}`}
         className={`presentation-stage relative overflow-y-auto rounded-2xl border border-[#c8aa72]/20 bg-[#0d0e0e] text-white shadow-2xl fullscreen:rounded-none ${motion ? "studio-motion" : ""}`}
       >
         <div className="relative grid min-h-[560px] lg:grid-cols-[1.05fr_.95fr]">
           <div className="relative z-10 flex flex-col p-7 sm:p-10 lg:p-12">
             <div className="flex items-center justify-between gap-3">
               <span className="text-[10px] uppercase tracking-[.25em] text-[#d6bc87]">
-                RMM / PRÉSENTATION · DÉMO
+                {tr("RMM / PRÉSENTATION · DÉMO")}
               </span>
-              <span className="text-[10px] tracking-[.2em] text-white/40">{chapter.eyebrow}</span>
+              <span className="text-[10px] tracking-[.2em] text-white/40">
+                {tr(chapter.eyebrow)}
+              </span>
             </div>
             <div key={index} className="studio-copy my-auto py-14">
               <div className="mb-6 inline-flex items-center gap-2 text-xs text-[#d6bc87]">
                 <span className="h-px w-7 bg-[#d6bc87]" />
-                {chapter.kicker}
+                {tr(chapter.kicker)}
               </div>
               <h3 className="max-w-xl font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl xl:text-6xl">
-                {chapter.title}
+                {tr(chapter.title)}
               </h3>
               <p className="mt-6 max-w-lg text-sm leading-7 text-white/65 sm:text-base">
-                {chapter.text}
+                {tr(chapter.text)}
               </p>
               <div className="studio-question mt-8 max-w-lg rounded-xl border border-white/10 bg-white/[.04] p-5">
                 <button
@@ -240,7 +249,7 @@ export function PresentationStudio() {
                   className="flex w-full items-center gap-3 text-left text-xs uppercase tracking-[.15em] text-[#d6bc87] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6bc87]"
                 >
                   <MessageSquareQuote className="h-5 w-5 shrink-0" />{" "}
-                  {questionOpen ? "Masquer la question" : "Révéler la question à l’audience"}{" "}
+                  {tr(questionOpen ? "Masquer la question" : "Révéler la question à l’audience")}{" "}
                   <span aria-hidden="true" className="ml-auto text-lg">
                     {questionOpen ? "−" : "+"}
                   </span>
@@ -250,7 +259,7 @@ export function PresentationStudio() {
                     id="studio-audience-question"
                     className="studio-reveal mt-4 text-sm leading-relaxed text-white/85"
                   >
-                    {chapter.prompt}
+                    {tr(chapter.prompt)}
                   </p>
                 )}
               </div>
@@ -304,7 +313,7 @@ export function PresentationStudio() {
               <>
                 <img
                   src="/presentation/vision.jpg"
-                  alt="Illustration abstraite d’un horizon lumineux"
+                  alt={tr("Illustration abstraite d’un horizon lumineux")}
                   className="absolute inset-0 h-full w-full object-cover opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/10" />
@@ -323,23 +332,23 @@ export function PresentationStudio() {
             {!activeMedia && (
               <div className="absolute bottom-7 left-7 right-7">
                 <span className="rounded-full border border-white/30 bg-black/30 px-3 py-1 text-[9px] uppercase tracking-[.18em]">
-                  {chapter.tag} · Illustration
+                  {tr(chapter.tag)} · {tr("Illustration")}
                 </span>
-                <p className="mt-3 font-serif text-2xl">{chapter.accent}</p>
+                <p className="mt-3 font-serif text-2xl">{tr(chapter.accent)}</p>
               </div>
             )}
           </div>
         </div>
         {notes && (
           <aside className="border-t border-white/10 bg-[#1b1a16] px-7 py-4 text-sm text-white/70 sm:px-10">
-            <strong className="mr-2 text-[#d6bc87]">Note présentateur ·</strong>
-            {chapter.note}
+            <strong className="mr-2 text-[#d6bc87]">{tr("Note présentateur ·")}</strong>
+            {tr(chapter.note)}
           </aside>
         )}
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 px-7 py-4 sm:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <label className="cursor-pointer rounded-full border border-white/20 px-4 py-2 text-xs text-white/80 hover:border-[#d6bc87]">
-              <Upload className="mr-2 inline h-3.5 w-3.5" /> Ajouter image / vidéo
+              <Upload className="mr-2 inline h-3.5 w-3.5" /> {tr("Ajouter image / vidéo")}
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -353,7 +362,7 @@ export function PresentationStudio() {
                 onClick={clearMedia}
                 className="text-xs text-white/60 hover:text-white"
               >
-                <X className="mr-1 inline h-3 w-3" /> Retirer {activeMedia.name}
+                <X className="mr-1 inline h-3 w-3" /> {tr("Retirer")} {activeMedia.name}
               </button>
             )}
           </div>
@@ -364,13 +373,13 @@ export function PresentationStudio() {
               aria-pressed={motion}
               className="mr-2 rounded-full border border-white/20 px-3 py-2 text-xs text-white/70 hover:border-[#d6bc87]"
             >
-              Animations {motion ? "activées" : "désactivées"}
+              {tr("Animations")} {tr(motion ? "activées" : "désactivées")}
             </button>
             <button
               type="button"
               onClick={() => step(-1)}
               disabled={index === 0}
-              aria-label="Chapitre précédent"
+              aria-label={tr("Chapitre précédent")}
               className="rounded-full border border-white/20 p-2.5 disabled:opacity-25"
             >
               <ChevronLeft size={16} />
@@ -381,7 +390,7 @@ export function PresentationStudio() {
               disabled={index === chapters.length - 1}
               className="rounded-full bg-[#d6bc87] px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-30"
             >
-              Suivant <ChevronRight className="ml-1 inline h-4 w-4" />
+              {tr("Suivant")} <ChevronRight className="ml-1 inline h-4 w-4" />
             </button>
           </div>
         </div>
@@ -389,37 +398,40 @@ export function PresentationStudio() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-5">
           <ImageIcon className="h-5 w-5 text-[var(--gold)]" />
-          <h3 className="mt-4 font-medium">Votre médiathèque</h3>
+          <h3 className="mt-4 font-medium">{tr("Votre médiathèque")}</h3>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Ajoutez une image ou une vidéo par chapitre pour cette session. Aucun fichier n’est
-            enregistré sur le serveur.
+            {tr(
+              "Ajoutez une image ou une vidéo par chapitre pour cette session. Aucun fichier n’est enregistré sur le serveur.",
+            )}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-5">
           <MessageSquareQuote className="h-5 w-5 text-[var(--gold)]" />
-          <h3 className="mt-4 font-medium">Témoignages</h3>
+          <h3 className="mt-4 font-medium">{tr("Témoignages")}</h3>
           <p className="mt-2 text-xs uppercase tracking-wider text-[var(--gold)]">
-            Exemple fictif · démonstration
+            {tr("Exemple fictif · démonstration")}
           </p>
           <blockquote className="mt-2 font-serif text-base">
-            « J’ai apprécié le temps pris pour répondre à mes questions. »
+            {tr("« J’ai apprécié le temps pris pour répondre à mes questions. »")}
           </blockquote>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            À remplacer par des témoignages authentiques, autorisés et vérifiés.
+            {tr("À remplacer par des témoignages authentiques, autorisés et vérifiés.")}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-5">
           <Play className="h-5 w-5 text-[var(--gold)]" />
-          <h3 className="mt-4 font-medium">À vous de jouer</h3>
+          <h3 className="mt-4 font-medium">{tr("À vous de jouer")}</h3>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Naviguez au clavier avec les flèches ou utilisez les chapitres. Présentation et médias
-            sont provisoires.
+            {tr(
+              "Naviguez au clavier avec les flèches ou utilisez les chapitres. Présentation et médias sont provisoires.",
+            )}
           </p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Démonstration locale uniquement · Pas de conseils médicaux ou financiers, ni de promesse
-        d’efficacité ou de revenus.
+        {tr(
+          "Démonstration locale uniquement · Pas de conseils médicaux ou financiers, ni de promesse d’efficacité ou de revenus.",
+        )}
       </p>
     </div>
   );

@@ -13,6 +13,7 @@ export const Route = createFileRoute("/demande-rendez-vous")({
 });
 const input = "mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 function AppointmentRequestPage() {
+  const { t: tr } = useLanguage();
   const { t } = useLanguage();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -153,9 +154,9 @@ function AppointmentRequestPage() {
               className={input}
             >
               <option value="">{t("Sélectionner")}</option>
-              <option>Premier contact</option>
-              <option>Présentation</option>
-              <option>Closing</option>
+              <option value="Premier contact">{tr("Premier contact")}</option>
+              <option value="Présentation">{tr("Présentation")}</option>
+              <option value="Closing">{tr("Closing")}</option>
             </select>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">

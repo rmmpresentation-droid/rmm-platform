@@ -1,9 +1,11 @@
+import { useLanguage } from "@/lib/i18n";
 import { Check, Sparkles } from "lucide-react";
 import type { Pack } from "@/lib/data";
 import { formatTND } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 
 export function PackCard({ pack, large = false }: { pack: Pack; large?: boolean }) {
+  const { t } = useLanguage();
   return (
     <div
       className={`relative rounded-xl p-6 bg-card border transition-all duration-500 hover-lift overflow-hidden
@@ -18,7 +20,7 @@ export function PackCard({ pack, large = false }: { pack: Pack; large?: boolean 
       )}
       {pack.popular && (
         <div className="absolute -top-px left-1/2 -translate-x-1/2 px-4 py-1 rounded-b-md bg-gradient-gold text-background text-[10px] font-semibold tracking-[0.2em] uppercase">
-          {pack.highlight}
+          {t(pack.highlight || "")}
         </div>
       )}
 
@@ -30,7 +32,9 @@ export function PackCard({ pack, large = false }: { pack: Pack; large?: boolean 
         <div className="mt-4 flex items-baseline gap-2">
           <span className="font-serif text-4xl text-gradient-gold">{formatTND(pack.price)}</span>
         </div>
-        <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{pack.pp} Points Produit</p>
+        <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          {pack.pp} {t("Points Produit")}
+        </p>
 
         <div className="my-6 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/30 to-transparent" />
 
@@ -38,13 +42,13 @@ export function PackCard({ pack, large = false }: { pack: Pack; large?: boolean 
           {pack.benefits.map((b) => (
             <li key={b} className="flex items-start gap-3 text-sm text-foreground/90">
               <Check className="h-4 w-4 text-[var(--gold)] mt-0.5 shrink-0" />
-              <span>{b}</span>
+              <span>{t(b)}</span>
             </li>
           ))}
         </ul>
 
         <Button className="mt-6 w-full bg-gradient-gold text-background hover:opacity-90 font-medium">
-          Choisir ce pack
+          {t("Choisir ce pack")}
         </Button>
       </div>
     </div>

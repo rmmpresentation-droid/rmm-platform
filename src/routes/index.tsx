@@ -49,7 +49,8 @@ const pillars = [
 ];
 
 function Home() {
-  const { t } = useLanguage();
+  const { t: tr } = useLanguage();
+  const { t, language } = useLanguage();
   const productSelection = catalogue.slice(0, 4);
 
   return (
@@ -67,23 +68,34 @@ function Home() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-8 animate-fade-up">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)] animate-pulse" />
             <span className="text-[10px] tracking-[0.3em] uppercase text-foreground/80">
-              Franchise officielle SwisDerm Switzerland
+              {tr("Franchise officielle SwisDerm Switzerland")}
             </span>
           </div>
           <h1
             className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] animate-fade-up"
             style={{ animationDelay: "0.1s" }}
           >
-            Rise in <span className="text-gradient-gold">Mindset.</span>
-            <br />
-            Master Your <span className="text-gradient-gold">Future.</span>
+            {language === "ar" ? (
+              <>
+                ارتقِ <span className="text-gradient-gold">بفكرك.</span>
+                <br />
+                اصنع <span className="text-gradient-gold">مستقبلك.</span>
+              </>
+            ) : (
+              <>
+                Rise in <span className="text-gradient-gold">Mindset.</span>
+                <br />
+                Master Your <span className="text-gradient-gold">Future.</span>
+              </>
+            )}
           </h1>
           <p
             className="mt-6 max-w-2xl mx-auto text-base lg:text-lg text-muted-foreground leading-relaxed animate-fade-up"
             style={{ animationDelay: "0.2s" }}
           >
-            L'excellence suisse au service de votre bien-être. Franchise officielle SwisDerm en
-            Tunisie.
+            {tr(
+              "L'excellence suisse au service de votre bien-être. Franchise officielle SwisDerm en Tunisie.",
+            )}
           </p>
           <div
             className="mt-10 flex flex-col sm:flex-row gap-4 justify-center animate-fade-up"
@@ -113,13 +125,15 @@ function Home() {
 
       {/* BEST SELLERS */}
       <Section
-        eyebrow="Sélection signature"
+        eyebrow={tr("Sélection signature")}
         title={
           <>
             {t("Nos")} <span className="text-gradient-gold">{t("références")}</span>
           </>
         }
-        subtitle="Une sélection issue des documents transmis, dont les informations restent à valider."
+        subtitle={tr(
+          "Une sélection issue des documents transmis, dont les informations restent à valider.",
+        )}
       >
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {productSelection.map((p) => (
@@ -130,13 +144,23 @@ function Home() {
 
       {/* FOUR PILLARS */}
       <Section
-        eyebrow="Notre philosophie"
+        eyebrow={tr("Notre philosophie")}
         title={
           <>
-            The <span className="text-gradient-gold">Four Pillars</span>
+            {language === "ar" ? (
+              <>
+                الركائز <span className="text-gradient-gold">الأربع</span>
+              </>
+            ) : (
+              <>
+                The <span className="text-gradient-gold">Four Pillars</span>
+              </>
+            )}
           </>
         }
-        subtitle="Quatre piliers fondateurs qui structurent l'expérience RMM, de l'extérieur à l'intérieur."
+        subtitle={tr(
+          "Quatre piliers fondateurs qui structurent l'expérience RMM, de l'extérieur à l'intérieur.",
+        )}
       >
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {pillars.map((p, i) => (
@@ -148,11 +172,11 @@ function Home() {
               <div className="w-12 h-12 rounded-full grid place-items-center bg-[var(--gold)]/10 border border-[var(--gold)]/30">
                 <p.icon className="h-5 w-5 text-[var(--gold)]" />
               </div>
-              <h3 className="font-serif text-2xl mt-5">{p.title}</h3>
+              <h3 className="font-serif text-2xl mt-5">{t(p.title)}</h3>
               <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--gold)] mt-1">
-                {p.subtitle}
+                {t(p.subtitle)}
               </div>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{p.desc}</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{t(p.desc)}</p>
             </div>
           ))}
         </div>
@@ -160,10 +184,18 @@ function Home() {
 
       {/* EXPERT REVIEWS */}
       <Section
-        eyebrow="Validé par les experts"
+        eyebrow={tr("Validé par les experts")}
         title={
           <>
-            Avis d'<span className="text-gradient-gold">Experts</span>
+            {language === "ar" ? (
+              <>
+                آراء <span className="text-gradient-gold">الخبراء</span>
+              </>
+            ) : (
+              <>
+                Avis d'<span className="text-gradient-gold">Experts</span>
+              </>
+            )}
           </>
         }
         className="bg-[#0F0F0F]"
@@ -187,7 +219,7 @@ function Home() {
                 </div>
               </div>
               <div className="mt-4 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--gold)] px-2 py-0.5 rounded-full border border-[var(--gold)]/30">
-                <BadgeCheck className="h-3 w-3" /> Expert vérifié
+                <BadgeCheck className="h-3 w-3" /> {tr("Expert vérifié")}
               </div>
               <p className="mt-4 text-sm text-foreground/80 italic leading-relaxed">"{e.quote}"</p>
             </div>
@@ -197,10 +229,18 @@ function Home() {
 
       {/* NETWORKER TESTIMONIALS */}
       <Section
-        eyebrow="Témoignages"
+        eyebrow={tr("Témoignages")}
         title={
           <>
-            {t("Nos")} <span className="text-gradient-gold">{t("Networkers")}</span> témoignent
+            {language === "ar" ? (
+              <>
+                شهادات <span className="text-gradient-gold">أعضاء الشبكة</span>
+              </>
+            ) : (
+              <>
+                {t("Nos")} <span className="text-gradient-gold">{t("Networkers")}</span> témoignent
+              </>
+            )}
           </>
         }
       >

@@ -143,6 +143,7 @@ export function CommerceWorkspace({
   directory: Person[];
   onCatalogueImported: () => Promise<void>;
 }) {
+  const { t: tr } = useLanguage();
   const { t } = useLanguage();
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState("");
@@ -199,9 +200,9 @@ export function CommerceWorkspace({
       <section className={`${card} mt-6`}>
         <h2 className="font-serif text-2xl">{t("Module produits et commandes")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Initialisez les produits existants, les formats séparés et les règles validées pour la
-          préproduction. Les quantités commencent à zéro ; les fiches existantes ne sont pas
-          écrasées.
+          {tr(
+            "Initialisez les produits existants, les formats séparés et les règles validées pour la préproduction. Les quantités commencent à zéro ; les fiches existantes ne sont pas écrasées.",
+          )}
         </p>
         {error && (
           <p role="alert" className="mt-3 text-sm text-red-400">
@@ -254,8 +255,10 @@ export function CommerceWorkspace({
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {t("Règles")}
-          {rules.version} · préproduction locale. Stock par format, déduit uniquement à la
-          validation. Les anciennes fiches restent séparées et ne déduisent pas le stock.
+          {rules.version} ·{" "}
+          {tr(
+            "Préproduction locale. Stock par format, déduit uniquement à la validation. Les anciennes fiches restent séparées et ne déduisent pas le stock.",
+          )}
         </p>
       </div>
       {error && (
@@ -270,7 +273,7 @@ export function CommerceWorkspace({
       )}
       {view === "stock" ? (
         <>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Gestion commerciale">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={tr("Gestion commerciale")}>
             {(
               [
                 ["stock", "Stock par format"],
@@ -418,7 +421,7 @@ export function CommerceWorkspace({
               </div>
               <details className={card}>
                 <summary className="cursor-pointer font-medium">
-                  Historique des mouvements ({movements.length})
+                  {tr("Historique des mouvements")} ({movements.length})
                 </summary>
                 <ul className="mt-3 space-y-2 text-xs">
                   {movements.map((m, i) => (

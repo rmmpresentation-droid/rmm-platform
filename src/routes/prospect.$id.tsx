@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/prospect/$id")({
 });
 
 function ProspectPage() {
+  const { t: tr } = useLanguage();
   const { id } = Route.useParams();
   const [prospect, setProspect] = useState<Prospect | null>(null);
   const [directory, setDirectory] = useState<DirectoryEntry[]>([]);
@@ -164,46 +166,48 @@ function ProspectPage() {
           href="/dashboard?section=prospects"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--gold)]"
         >
-          <ArrowLeft size={16} /> Retour aux prospects
+          <ArrowLeft size={16} /> {tr("Retour aux prospects")}
         </a>
         {state === "loading" && (
           <p className="mt-8 text-muted-foreground" role="status">
-            Chargement de la fiche…
+            {tr("Chargement de la fiche…")}
           </p>
         )}
         {state === "login" && (
           <div className="mt-8 rounded-xl bg-card hairline p-6">
-            <h1 className="font-serif text-2xl">Connexion requise</h1>
-            <p className="mt-3 text-muted-foreground">Connectez-vous pour consulter cette fiche.</p>
+            <h1 className="font-serif text-2xl">{tr("Connexion requise")}</h1>
+            <p className="mt-3 text-muted-foreground">
+              {tr("Connectez-vous pour consulter cette fiche.")}
+            </p>
             <Link to="/dashboard" className="mt-4 inline-block text-[var(--gold)] underline">
-              Se connecter
+              {tr("Se connecter")}
             </Link>
           </div>
         )}
         {state === "unavailable" && (
           <div className="mt-8 rounded-xl bg-card hairline p-6">
-            <h1 className="font-serif text-2xl">Fiche indisponible</h1>
+            <h1 className="font-serif text-2xl">{tr("Fiche indisponible")}</h1>
             <p className="mt-3 text-muted-foreground">
-              Ce prospect est introuvable ou vous n’avez pas accès à sa fiche.
+              {tr("Ce prospect est introuvable ou vous n’avez pas accès à sa fiche.")}
             </p>
           </div>
         )}
         {state === "error" && (
           <p role="alert" className="mt-8 rounded-md border border-red-400/40 p-4 text-red-500">
-            Impossible de charger la fiche. Réessayez plus tard.
+            {tr("Impossible de charger la fiche. Réessayez plus tard.")}
           </p>
         )}
         {state === "ready" && prospect && (
           <>
             <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8">
               <p className="text-xs uppercase tracking-[.2em] text-[var(--gold)]">
-                Prospection · Fiche individuelle
+                {tr("Prospection · Fiche individuelle")}
               </p>
               <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h1 className="font-serif text-3xl sm:text-4xl">{prospect.title}</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Contact :{" "}
+                    {tr("Contact :")}{" "}
                     {contact ||
                       (prospect.assigned_to
                         ? "Membre du réseau"
@@ -211,7 +215,7 @@ function ProspectPage() {
                   </p>
                 </div>
                 <span className="rounded-full bg-[var(--gold)]/15 px-4 py-2 text-sm text-[var(--gold)]">
-                  {prospectStatusLabel(prospect.status)}
+                  {tr(prospectStatusLabel(prospect.status))}
                 </span>
               </div>
               <div className="mt-6 flex flex-wrap items-end gap-3">
@@ -224,7 +228,7 @@ function ProspectPage() {
                   }}
                   className="rounded-md bg-gradient-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
                 >
-                  Modifier la fiche
+                  {tr("Modifier la fiche")}
                 </button>
                 {canAdmin && (
                   <button
@@ -233,7 +237,7 @@ function ProspectPage() {
                     onClick={() => void deleteProspect()}
                     className="rounded-md border border-red-500/50 px-4 py-2 text-sm text-red-500 disabled:opacity-50"
                   >
-                    Supprimer
+                    {tr("Supprimer")}
                   </button>
                 )}
               </div>
@@ -269,58 +273,60 @@ function ProspectPage() {
             />
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <section className="rounded-xl bg-card hairline p-6">
-                <h2 className="font-serif text-2xl">Coordonnées et profil</h2>
+                <h2 className="font-serif text-2xl">{tr("Coordonnées et profil")}</h2>
                 <dl className="mt-5 space-y-4 text-sm">
                   <Detail
                     icon={<Phone size={16} />}
-                    label="Téléphone"
+                    label={tr("Téléphone")}
                     value={prospect.extra?.phone}
                   />
                   <Detail
                     icon={<Mail size={16} />}
-                    label="Adresse e-mail"
+                    label={tr("Adresse e-mail")}
                     value={prospect.extra?.email}
                   />
                   <Detail
                     icon={<MapPin size={16} />}
-                    label="Emplacement"
+                    label={tr("Emplacement")}
                     value={prospect.extra?.location}
                   />
                   <Detail
                     icon={<Target size={16} />}
-                    label="Centre d’intérêt"
-                    value={prospect.extra?.interest}
+                    label={tr("Centre d’intérêt")}
+                    value={prospect.extra?.interest ? tr(prospect.extra.interest) : undefined}
                   />
                   <Detail
                     icon={<CircleUserRound size={16} />}
-                    label="Responsable indicatif"
+                    label={tr("Responsable indicatif")}
                     value={prospect.owner}
                   />
                 </dl>
               </section>
               <section className="rounded-xl bg-card hairline p-6">
-                <h2 className="font-serif text-2xl">Suivi de prospection</h2>
+                <h2 className="font-serif text-2xl">{tr("Suivi de prospection")}</h2>
                 <dl className="mt-5 space-y-4 text-sm">
                   <Detail
                     icon={<CalendarDays size={16} />}
-                    label="Prochaine relance"
+                    label={tr("Prochaine relance")}
                     value={prospect.date?.replace("T", " ")}
                   />
                   <Detail
                     icon={<Target size={16} />}
-                    label="Prochaine action"
+                    label={tr("Prochaine action")}
                     value={prospect.extra?.next_action}
                   />
                 </dl>
                 {prospect.status === "Sans commande" && (
                   <p className="mt-6 text-sm">
-                    <strong>Motif du refus :</strong>{" "}
-                    {prospect.extra?.refusal_reason || "Non renseigné (historique)"}
+                    <strong>{tr("Motif du refus :")}</strong>{" "}
+                    {prospect.extra?.refusal_reason || tr("Non renseigné (historique)")}
                   </p>
                 )}
-                <h3 className="mt-6 text-sm font-semibold">Notes et résultat de prospection</h3>
+                <h3 className="mt-6 text-sm font-semibold">
+                  {tr("Notes et résultat de prospection")}
+                </h3>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                  {prospect.detail || "Non renseigné"}
+                  {prospect.detail || tr("Non renseigné")}
                 </p>
               </section>
             </div>
@@ -349,6 +355,7 @@ function ProspectEditDialog({
   onClose: () => void;
   onSave: (updated: Prospect) => Promise<boolean>;
 }) {
+  const { t: tr } = useLanguage();
   const [draft, setDraft] = useState<Prospect>(() => ({
     ...prospect,
     extra: { ...prospect.extra },
@@ -393,13 +400,13 @@ function ProspectEditDialog({
             tabIndex={-1}
             className="font-serif text-2xl outline-none"
           >
-            Modifier la fiche prospect
+            {tr("Modifier la fiche prospect")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             disabled={busy}
-            aria-label="Fermer le formulaire"
+            aria-label={tr("Fermer le formulaire")}
             className="rounded-md border border-border px-3 py-1 text-xl leading-none"
           >
             ×
@@ -411,7 +418,7 @@ function ProspectEditDialog({
           </p>
         )}
         <label className="block text-sm">
-          Nom complet du prospect *
+          {tr("Nom complet du prospect *")}
           <input
             required
             maxLength={160}
@@ -424,7 +431,7 @@ function ProspectEditDialog({
           .filter((f) => f.key !== "refusal_reason")
           .map((f) => (
             <label key={f.key} className="block text-sm">
-              {f.label}
+              {tr(f.label)}
               {f.required && " *"}
               {f.type === "select" ? (
                 <select
@@ -433,9 +440,11 @@ function ProspectEditDialog({
                   value={draft.extra[f.key] || ""}
                   onChange={(event) => setExtra(f.key, event.target.value)}
                 >
-                  <option value="">Sélectionner</option>
+                  <option value="">{tr("Sélectionner")}</option>
                   {f.options?.map((option) => (
-                    <option key={option}>{option}</option>
+                    <option key={option} value={option}>
+                      {tr(option)}
+                    </option>
                   ))}
                 </select>
               ) : (
@@ -452,14 +461,14 @@ function ProspectEditDialog({
           ))}
         {isAdmin ? (
           <label className="block text-sm">
-            Membre ayant contacté le prospect *
+            {tr("Membre ayant contacté le prospect *")}
             <select
               required
               className={field}
               value={draft.assigned_to || ""}
               onChange={(event) => setDraft({ ...draft, assigned_to: event.target.value })}
             >
-              <option value="">Sélectionner un compte existant</option>
+              <option value="">{tr("Sélectionner un compte existant")}</option>
               {directory.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.name} · {person.role}
@@ -468,15 +477,17 @@ function ProspectEditDialog({
             </select>
             {!directory.length && (
               <span className="mt-1 block text-xs text-muted-foreground">
-                Annuaire indisponible : réessayez avant de modifier l’affectation.
+                {tr("Annuaire indisponible : réessayez avant de modifier l’affectation.")}
               </span>
             )}
           </label>
         ) : (
-          <p className="text-sm text-muted-foreground">Contact enregistré : {user.name}</p>
+          <p className="text-sm text-muted-foreground">
+            {tr("Contact enregistré :")} {user.name}
+          </p>
         )}
         <label className="block text-sm">
-          Notes et résultat de prospection
+          {tr("Notes et résultat de prospection")}
           <textarea
             maxLength={1000}
             className={`${field} min-h-24`}
@@ -485,7 +496,7 @@ function ProspectEditDialog({
           />
         </label>
         <label className="block text-sm">
-          Responsable (nom indicatif, non affecté)
+          {tr("Responsable (nom indicatif, non affecté)")}
           <input
             maxLength={160}
             className={field}
@@ -494,7 +505,7 @@ function ProspectEditDialog({
           />
         </label>
         <label className="block text-sm">
-          Prochaine relance
+          {tr("Prochaine relance")}
           <input
             type="datetime-local"
             className={field}
@@ -510,7 +521,7 @@ function ProspectEditDialog({
             {busy ? "Enregistrement…" : "Enregistrer"}
           </button>
           <button type="button" disabled={busy} onClick={onClose} className="text-sm">
-            Annuler
+            {tr("Annuler")}
           </button>
         </div>
       </form>
@@ -533,6 +544,7 @@ function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; 
 type ProspectNote = { id: string; content: string; created_at: string; author: string };
 
 function ProspectNotes({ prospectId }: { prospectId: string }) {
+  const { t: tr, language } = useLanguage();
   const [notes, setNotes] = useState<ProspectNote[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
@@ -592,15 +604,16 @@ function ProspectNotes({ prospectId }: { prospectId: string }) {
   return (
     <section className="mt-6 rounded-xl bg-card hairline p-6" aria-labelledby="notes-heading">
       <h2 id="notes-heading" className="font-serif text-2xl">
-        Notes de suivi
+        {tr("Notes de suivi")}
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Ajoutez des observations au fil de la prospection. Les notes sont visibles par les personnes
-        autorisées à consulter cette fiche.
+        {tr(
+          "Ajoutez des observations au fil de la prospection. Les notes sont visibles par les personnes autorisées à consulter cette fiche.",
+        )}
       </p>
       <form onSubmit={addNote} className="mt-5 space-y-3">
         <label htmlFor="prospect-note" className="block text-sm font-medium">
-          Nouvelle note
+          {tr("Nouvelle note")}
         </label>
         <textarea
           id="prospect-note"
@@ -609,10 +622,12 @@ function ProspectNotes({ prospectId }: { prospectId: string }) {
           value={content}
           onChange={(event) => setContent(event.target.value)}
           className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-          placeholder="Saisir une note de suivi…"
+          placeholder={tr("Saisir une note de suivi…")}
         />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">{content.length} / 3 000 caractères</span>
+          <span className="text-xs text-muted-foreground">
+            {content.length} {tr("/ 3 000 caractères")}
+          </span>
           <button
             type="submit"
             disabled={saving || loading || loadFailed || !content.trim()}
@@ -630,19 +645,19 @@ function ProspectNotes({ prospectId }: { prospectId: string }) {
             className="underline"
             onClick={() => setAttempt((value) => value + 1)}
           >
-            Réessayer le chargement
+            {tr("Réessayer le chargement")}
           </button>
         </div>
       )}
-      <h3 className="mt-7 font-semibold">Historique des notes</h3>
+      <h3 className="mt-7 font-semibold">{tr("Historique des notes")}</h3>
       {loading ? (
         <p role="status" className="mt-3 text-sm text-muted-foreground">
-          Chargement des notes…
+          {tr("Chargement des notes…")}
         </p>
       ) : loadFailed ? (
-        <p className="mt-3 text-sm text-muted-foreground">Historique indisponible.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{tr("Historique indisponible.")}</p>
       ) : !notes.length ? (
-        <p className="mt-3 text-sm text-muted-foreground">Aucune note enregistrée.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{tr("Aucune note enregistrée.")}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {notes.map((note) => (
@@ -650,11 +665,14 @@ function ProspectNotes({ prospectId }: { prospectId: string }) {
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <strong className="text-foreground">{note.author}</strong>
                 <time dateTime={note.created_at}>
-                  {new Intl.DateTimeFormat("fr-TN", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    timeZone: "Africa/Tunis",
-                  }).format(new Date(note.created_at))}{" "}
+                  {new Intl.DateTimeFormat(
+                    language === "ar" ? "ar-TN" : language === "en" ? "en-GB" : "fr-TN",
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "Africa/Tunis",
+                    },
+                  ).format(new Date(note.created_at))}{" "}
                   · Tunis
                 </time>
               </div>

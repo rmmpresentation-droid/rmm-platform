@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, GripVertical } from "lucide-react";
@@ -72,6 +73,7 @@ export function ProspectKanban({
   onUpdate: (item: KanbanProspect) => Promise<void>;
   single?: boolean;
 }) {
+  const { t: tr, language } = useLanguage();
   const [dragging, setDragging] = useState<string | null>(null);
   const [choice, setChoice] = useState<Record<string, string>>({});
   const [decision, setDecision] = useState<{
@@ -121,25 +123,27 @@ export function ProspectKanban({
   return (
     <section
       className="mt-6 min-w-0 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7"
-      aria-label="Kanban de prospection"
+      aria-label={tr("Kanban de prospection")}
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-widest text-[var(--gold)]">
-            Suivi de prospection
+            {tr("Suivi de prospection")}
           </p>
-          <h2 className="mt-2 font-serif text-2xl sm:text-3xl">Suivez chaque étape</h2>
+          <h2 className="mt-2 font-serif text-2xl sm:text-3xl">{tr("Suivez chaque étape")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Une vue claire de vos prospects, du premier échange à leur décision.
+            {tr("Une vue claire de vos prospects, du premier échange à leur décision.")}
           </p>
         </div>
         <span className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
-          {prospects.length} prospect{prospects.length !== 1 ? "s" : ""}
+          {prospects.length} {tr("prospect")}
+          {language !== "ar" && prospects.length !== 1 ? "s" : ""}
         </span>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        Glissez une fiche vers une phase ou utilisez le bouton « Déplacer ». Les changements de
-        phase ne créent pas de compte ni de rendez-vous.
+        {tr(
+          "Glissez une fiche vers une phase ou utilisez le bouton « Déplacer ». Les changements de phase ne créent pas de compte ni de rendez-vous.",
+        )}
       </p>
       {error && !decision && (
         <p role="alert" className="mt-3 text-sm text-red-500">
@@ -172,7 +176,7 @@ export function ProspectKanban({
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h3 className="min-w-0 pt-0.5 text-sm font-semibold leading-snug">
-                      {column.label}
+                      {tr(column.label)}
                     </h3>
                   </div>
                   <span
@@ -184,13 +188,13 @@ export function ProspectKanban({
                 </div>
                 {column.key === "legacy" && (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Ancienne étape combinée, à repositionner manuellement.
+                    {tr("Ancienne étape combinée, à repositionner manuellement.")}
                   </p>
                 )}
                 <div className="mt-3 min-h-20 space-y-3">
                   {cards.length === 0 && (
                     <div className="flex min-h-20 items-center justify-center rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                      Aucun prospect à cette étape
+                      {tr("Aucun prospect à cette étape")}
                     </div>
                   )}
                   {cards.map((item) => (
@@ -227,15 +231,16 @@ export function ProspectKanban({
                         </div>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        {prospectStatusLabel(item.status)}
+                        {tr(prospectStatusLabel(item.status))}
                       </p>
                       {item.status === "Sans commande" && (
                         <p className="mt-2 break-words text-xs">
-                          Motif : {item.extra?.refusal_reason || "Non renseigné (historique)"}
+                          {tr("Motif :")}{" "}
+                          {item.extra?.refusal_reason || tr("Non renseigné (historique)")}
                         </p>
                       )}
                       <label className="mt-3 block text-xs">
-                        Déplacer vers
+                        {tr("Déplacer vers")}
                         <select
                           aria-label={`Déplacer ${item.title} vers`}
                           className="mt-1 w-full rounded-md border border-border bg-background p-2 text-xs"
@@ -243,7 +248,7 @@ export function ProspectKanban({
                           disabled={busy}
                           onChange={(e) => setChoice({ ...choice, [item.id]: e.target.value })}
                         >
-                          <option value="">Choisir une phase</option>
+                          <option value="">{tr("Choisir une phase")}</option>
                           {columns
                             .filter(
                               (c) =>
@@ -254,7 +259,7 @@ export function ProspectKanban({
                             )
                             .map((c) => (
                               <option key={c.key} value={c.key}>
-                                {c.label}
+                                {tr(c.label)}
                               </option>
                             ))}
                         </select>
@@ -265,7 +270,7 @@ export function ProspectKanban({
                         onClick={() => move(item, choice[item.id])}
                         className="mt-2 w-full rounded-md border border-border px-3 py-2 text-xs font-medium transition-colors enabled:hover:border-[var(--gold)] enabled:hover:text-[var(--gold)] disabled:opacity-50"
                       >
-                        Déplacer
+                        {tr("Déplacer")}
                       </button>
                     </article>
                   ))}
@@ -304,6 +309,7 @@ function DecisionDialog({
   onCancel: () => void;
   onSave: (status: string, reason?: string) => void;
 }) {
+  const { t: tr } = useLanguage();
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const [kind, setKind] = useState("");
@@ -344,26 +350,28 @@ function DecisionDialog({
           ref={heading}
           className="font-serif text-2xl outline-none"
         >
-          {decision.column === "joined" ? "Comment rejoint-il ?" : "Pourquoi ne rejoint-il pas ?"}
+          {tr(
+            decision.column === "joined" ? "Comment rejoint-il ?" : "Pourquoi ne rejoint-il pas ?",
+          )}
         </h3>
         <p className="text-sm text-muted-foreground">{decision.item.title}</p>
         {decision.column === "joined" ? (
           <label className="block text-sm">
-            Type de participation *
+            {tr("Type de participation *")}
             <select
               required
               value={kind}
               onChange={(e) => setKind(e.target.value)}
               className="mt-2 w-full rounded-md border border-border bg-background p-2"
             >
-              <option value="">Sélectionner</option>
-              <option value="Candidat networker">Networker</option>
-              <option value="Consommateur">Consommateur</option>
+              <option value="">{tr("Sélectionner")}</option>
+              <option value="Candidat networker">{tr("Networker")}</option>
+              <option value="Consommateur">{tr("Consommateur")}</option>
             </select>
           </label>
         ) : (
           <label className="block text-sm">
-            Motif du refus *
+            {tr("Motif du refus *")}
             <textarea
               required
               maxLength={500}
@@ -383,10 +391,10 @@ function DecisionDialog({
             disabled={busy || (decision.column === "refused" && !reason.trim())}
             className="rounded-md bg-gradient-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
           >
-            {busy ? "Enregistrement…" : "Confirmer"}
+            {tr(busy ? "Enregistrement…" : "Confirmer")}
           </button>
           <button type="button" disabled={busy} onClick={onCancel} className="text-sm">
-            Annuler
+            {tr("Annuler")}
           </button>
         </div>
       </form>
