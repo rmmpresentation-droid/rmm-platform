@@ -1078,6 +1078,20 @@ rows.push(
     "تُزال الوسائط المحلية عند تغيير العرض.",
   ],
 );
+rows.push(
+  ["Indicateurs de prospection", "Prospecting indicators", "مؤشرات متابعة العملاء المحتملين"],
+  [
+    "Indicateurs calculés sur les prospects auxquels vous avez accès. Cliquez pour filtrer la liste.",
+    "Indicators count prospects you can access. Click to filter the list.",
+    "تُحسب المؤشرات للعملاء المحتملين المتاحين لك. اضغط لتصفية القائمة.",
+  ],
+  ["Tous les prospects", "All prospects", "جميع العملاء المحتملين"],
+  ["Non commencés", "Not started", "لم تبدأ متابعتهم"],
+  ["En cours de suivi", "In progress", "قيد المتابعة"],
+  ["Consommateurs", "Consumers", "المستهلكون"],
+  ["Candidats networkers", "Networker candidates", "المرشحون للشبكة"],
+  ["Sans commande", "No order", "دون طلب"],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
