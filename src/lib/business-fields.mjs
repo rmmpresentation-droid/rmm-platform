@@ -16,6 +16,8 @@ export const businessForms = {
     { key: 'end_date', label: 'Fin du rendez-vous', type: 'text' },
     { key: 'networker_id', label: 'Networker', type: 'text' },
     { key: 'additional_networker_ids', label: 'Networkers supplémentaires', type: 'text' },
+    { key: 'additional_prospect_ids', label: 'Prospects participants', type: 'text' },
+    { key: 'request_kind', label: 'Objet de la demande', type: 'text' },
     { key: 'admin_id', label: 'Administrateur participant', type: 'text' },
     { key: 'prospect_id', label: 'Prospect', type: 'text' },
     { key: 'participant', label: 'Prospect ou participant', type: 'text' },

@@ -47,13 +47,13 @@ test('parcours métier, droits, affectations, confidentialité et données liée
   assert.equal((await n2.agent.get(notesUrl)).body.length,2);
   assert.equal((await root.put(`/api/entries/prospects/${prospect.body.id}`).send(prospect.body)).status,200);
   const meeting={...base,title:'Données privées',date:'2026-12-01T10:00',status:'Demandé',extra:{category:'Prospection',kind:'Closing',end_date:'2026-12-01T11:00',prospect_id:prospect.body.id}};
-  const rdv=await n.agent.post('/api/entries/rendezvous').send(meeting);assert.equal(rdv.status,201);
+  const rdv=await root.post('/api/entries/rendezvous').send({...meeting,extra:{...meeting.extra,networker_id:n.id}});assert.equal(rdv.status,201);
   const confirmed={...rdv.body,status:'Confirmé',extra:{...rdv.body.extra,admin_id:a.id},assigned_to:p.id};
   assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send(confirmed)).status,200);
   assert.equal((await n2.agent.get('/api/entries/rendezvous')).body.length,0);
   assert.deepEqual((await n2.agent.get('/api/appointments/busy')).body,[{start:'2026-12-01T10:00',end:'2026-12-01T11:00'}]);
   assert.equal((await n2.agent.get(`/api/appointments/${rdv.body.id}/reports`)).status,404);
-  const conflict=await n2.agent.post('/api/entries/rendezvous').send({...meeting,extra:{category:'Networker',kind:'Suivi',end_date:'2026-12-01T11:00'}});assert.equal(conflict.status,201);
+  const conflict=await root.post('/api/entries/rendezvous').send({...meeting,extra:{networker_id:n2.id,category:'Networker',kind:'Suivi',end_date:'2026-12-01T11:00'}});assert.equal(conflict.status,201);
   assert.equal((await root.put(`/api/entries/rendezvous/${conflict.body.id}`).send({...conflict.body,status:'Confirmé',extra:{...conflict.body.extra,admin_id:a.id}})).status,409);
   assert.equal((await n.agent.put(`/api/appointments/${rdv.body.id}/report`).send({report:'Prématuré'})).status,403);
   assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...confirmed,status:'Réalisé'})).status,200);

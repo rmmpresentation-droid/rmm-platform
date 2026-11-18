@@ -182,7 +182,10 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const additional = parseAdditionalNetworkers(x.additional_networker_ids);
     if (!additional || additional.some(id => id.toLowerCase() === (x.networker_id || '').toLowerCase())) return 'Liste des networkers supplémentaires invalide.';
     for (const id of additional) if (!(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[id])).rows[0]) return 'Networker supplémentaire invalide.';
-    if (!x.category && legacy) return null;
+    const otherProspects = parseAdditionalNetworkers(x.additional_prospect_ids);
+    if (!otherProspects) return 'Liste des prospects participants invalide.';
+    for (const id of otherProspects) if (!(await pool.query("SELECT id FROM entries WHERE id=$1 AND section='prospects'",[id])).rows[0]) return 'Prospect participant introuvable.';
+    if (!x.category && legacy) return ['Confirmé','Réalisé'].includes(body.status) && x.request_kind ? 'L’administration doit renseigner la catégorie, le type et la durée.' : null;
     if (x.source === 'site' && x.category !== 'Prospection') return 'Une demande du site est une demande de prospection.';
     // Public requests carry only a preferred start. Administration supplies type and end before confirmation.
     const incompletePublicRequest = x.source === 'site' && ['Demandé','Proposé','Annulé'].includes(body.status);
@@ -320,10 +323,30 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const result=await pool.query(`SELECT id,title,detail,status,owner,date,created_by,extra,assigned_to FROM entries WHERE section=$1 ${filter} ORDER BY created_at DESC`, unrestricted ? [req.params.section] : [req.params.section,req.user.id]); res.json(result.rows.map(unpack));
   }catch(e){next(e);}});
   const validate = (section, body) => typeof body.title==='string' && body.title.trim().length>0 && body.title.length<=160 && typeof body.detail==='string' && body.detail.length<=1000 && typeof body.owner==='string' && body.owner.length<=160 && typeof body.date==='string' && body.date.length<=32 && statuses[section]?.includes(body.status);
+  app.post('/api/appointment-requests', auth, async(req,res,next)=>{try{
+    if(req.user.role !== 'networker') return res.status(403).json({error:'Réservé aux networkers.'});
+    const {title,detail,date,request_kind,networker_ids,prospect_ids,new_prospects}=req.body || {};
+    if(typeof title!=='string' || !title.trim() || title.length>160 || typeof detail!=='string' || detail.length>1000 || !validLocalDate(date) || !['Présentation','Closing','Premier contact','Suivi'].includes(request_kind) || !Array.isArray(networker_ids) || !Array.isArray(prospect_ids) || !Array.isArray(new_prospects) || new_prospects.length>10 || prospect_ids.length+new_prospects.length>10) return res.status(400).json({error:'Vérifiez la demande et les participants.'});
+    const networkers=parseAdditionalNetworkers(JSON.stringify(networker_ids)), prospects=parseAdditionalNetworkers(JSON.stringify(prospect_ids));
+    if(!networkers || !prospects || networkers.includes(req.user.id.toLowerCase())) return res.status(400).json({error:'Participants invalides ou en double.'});
+    for(const id of networkers) if(!(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker' AND is_active=TRUE",[id])).rows[0]) return res.status(400).json({error:'Networker participant invalide.'});
+    for(const id of prospects) {const p=(await pool.query("SELECT id,assigned_to,created_by FROM entries WHERE id=$1 AND section='prospects'",[id])).rows[0];if(!p || (p.assigned_to || p.created_by)!==req.user.id) return res.status(400).json({error:'Prospect participant inaccessible.'});}
+    for(const p of new_prospects) if(!p || typeof p.name!=='string' || !p.name.trim() || p.name.length>160 || typeof p.phone!=='string' || !p.phone.trim() || p.phone.length>100 || typeof p.email!=='string' || p.email.length>254 || (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email))) return res.status(400).json({error:'Nom et téléphone requis pour chaque nouveau prospect ; e-mail facultatif valide.'});
+    const client=await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const allProspects=[...prospects];
+      for(const p of new_prospects) {const id=randomUUID();await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[id,'prospects',p.name.trim(),'','','','',req.user.id,JSON.stringify({phone:p.phone.trim(),email:p.email.trim(),interest:'À préciser'}),req.user.id]);allProspects.push(id);}
+      const extra={request_kind,networker_id:req.user.id,additional_networker_ids:JSON.stringify(networkers),additional_prospect_ids:JSON.stringify(allProspects),category:'',kind:'',end_date:''};
+      const result=await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id,title,detail,status,owner,date,created_by,extra,assigned_to',[randomUUID(),'rendezvous',title.trim(),detail.trim(),'Demandé','',date,req.user.id,JSON.stringify(extra),null]);
+      await client.query('COMMIT'); return res.status(201).json(unpack(result.rows[0]));
+    } catch(e) {await client.query('ROLLBACK');throw e;} finally {client.release();}
+  }catch(e){next(e);}});
   app.post('/api/entries/:section',auth,sectionAccess,async(req,res,next)=>{try{
     const section=req.params.section;
     if (section === 'rendezvous' && (req.body.extra?.source || req.body.extra?.consent)) return res.status(400).json({error:'Origine invalide.'});
     if (section === 'taches' && !admin(req.user.role)) return res.status(403).json({error:'Seule l’administration peut créer des tâches.'});
+    if (section === 'rendezvous' && req.user.role === 'networker') return res.status(403).json({error:'Utilisez le formulaire de demande de rendez-vous.'});
     if (section === 'rendezvous' && req.user.role === 'presentateur') return res.status(403).json({error:'Les séances sont organisées par l’administration.'});
     if (!admin(req.user.role) && ['formations','ressources'].includes(section)) return res.status(403).json({error:'Accès en lecture seule'});
     if (!validate(section,req.body)) return res.status(400).json({error:'Données invalides'});
@@ -351,10 +374,11 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (!existing.rows[0]) return res.status(404).json({error:'Élément introuvable'});
     const previous = existing.rows[0];
     if (section === 'rendezvous' && !admin(req.user.role) && (req.user.role !== 'networker' || !['Demandé','Annulé'].includes(req.body.status) || !['Demandé','Annulé'].includes(previous.status))) return res.status(403).json({error:'Seule l’administration peut fixer ou confirmer un rendez-vous.'});
+    if (section === 'rendezvous' && req.user.role === 'networker') { const before=JSON.parse(previous.extra || '{}'); if (req.body.title !== previous.title || req.body.detail !== previous.detail || req.body.owner !== previous.owner || req.body.date !== previous.date || JSON.stringify(req.body.extra) !== JSON.stringify(before)) return res.status(403).json({error:'Seule l’administration peut modifier la demande.'}); }
     const extra = req.body.extra ?? JSON.parse(previous.extra || '{}');
     if (section === 'rendezvous' && ((extra.source || '') !== (JSON.parse(previous.extra || '{}').source || '') || (extra.consent || '') !== (JSON.parse(previous.extra || '{}').consent || ''))) return res.status(400).json({error:'L’origine de la demande ne peut pas être modifiée.'});
     // Legacy entries remain editable; structured entries are fully validated.
-    const isIncompletePublicRequest = section === 'rendezvous' && extra.source === 'site' && ['Demandé','Proposé','Annulé'].includes(req.body.status);
+    const isIncompletePublicRequest = section === 'rendezvous' && (extra.source === 'site' || extra.request_kind) && ['Demandé','Proposé','Annulé'].includes(req.body.status);
     const extraError = validateExtra(section,extra,{required:!isIncompletePublicRequest && (Object.keys(JSON.parse(previous.extra || '{}')).length > 0 || Object.keys(extra).length > 0)});
     if (extraError) return res.status(400).json({error:extraError});
     if (section === 'prospects' && req.body.status === 'Sans commande' && !extra.refusal_reason?.trim() && (previous.status !== 'Sans commande' || JSON.parse(previous.extra || '{}').refusal_reason?.trim())) return res.status(400).json({error:'Indiquez le motif du refus.'});
@@ -380,7 +404,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if(req.params.section === 'rendezvous' && !admin(req.user.role)) return res.status(403).json({error:'Seul un administrateur peut supprimer un rendez-vous.'});
     if(!admin(req.user.role) && ['formations','ressources','taches'].includes(req.params.section)) return res.status(403).json({error:'Accès en lecture seule'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM prospect_notes WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect possède des notes et ne peut pas être supprimé.'});
-    if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>JSON.parse(m.extra||'{}').prospect_id===req.params.id)) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}
+    if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>{const x=JSON.parse(m.extra||'{}');return x.prospect_id===req.params.id || (parseAdditionalNetworkers(x.additional_prospect_ids)||[]).includes(req.params.id.toLowerCase());})) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}
     if(req.params.section==='stock' && (await pool.query('SELECT id FROM commerce_variants WHERE product_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce produit possède des références de stock et ne peut pas être supprimé.'});
     if(req.params.section==='stock') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===req.params.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
     const result=await pool.query(`DELETE FROM entries WHERE id=$1 AND section=$2 ${admin(req.user.role)?'':'AND created_by=$3'} RETURNING id`,[req.params.id,req.params.section,...(admin(req.user.role)?[]:[req.user.id])]); if(!result.rows[0]) return res.status(404).json({error:'Élément introuvable'}); res.json({ok:true});

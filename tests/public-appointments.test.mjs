@@ -35,7 +35,7 @@ test('demandes publiques et demandes internes restent distinctes et contrôlées
   const member=request.agent(app);await member.post('/api/login').send({email:'member@example.test',password:'password12345'});
   assert.equal((await member.get('/api/entries/rendezvous')).body.length,0);
   assert.equal((await member.put(`/api/entries/rendezvous/${meeting.id}`).send({...meeting,status:'Confirmé'})).status,404);
-  const networkRequest=await member.post('/api/entries/rendezvous').send({title:'Suivi',detail:'',owner:'',date:'2026-12-02T10:00',status:'Demandé',extra:{category:'Networker',kind:'Suivi',end_date:'2026-12-02T11:00'}});
+  const networkRequest=await member.post('/api/appointment-requests').send({title:'Suivi',detail:'',date:'2026-12-02T10:00',request_kind:'Suivi',networker_ids:[],prospect_ids:[],new_prospects:[]});
   assert.equal(networkRequest.status,201);assert.equal(networkRequest.body.extra.networker_id,networker.body.id);
   assert.equal((await member.put(`/api/entries/rendezvous/${networkRequest.body.id}`).send({...networkRequest.body,status:'Confirmé'})).status,403);
   assert.equal((await request(app).post('/api/public/appointment-requests').send(sample)).status,201);

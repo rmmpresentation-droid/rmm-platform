@@ -44,15 +44,15 @@ test('connexion, autorisations, isolation et analytique', async () => {
   await stranger.post('/api/login').send({email:'presenter2@example.test',password:'longpassword123'});
   const meeting = {title:'Présentation',detail:'',owner:'',date:'2026-12-01T10:00',status:'Demandé',extra:{category:'Prospection',kind:'Présentation',prospect_id:created.body.id,end_date:'2026-12-01T11:00',participant:'Test'}};
   assert.equal((await member.post('/api/entries/rendezvous').send({...meeting,status:'Confirmé'})).status, 403);
-  const rdv = await member.post('/api/entries/rendezvous').send(meeting); assert.equal(rdv.status,201);
+  const rdv = await member.post('/api/appointment-requests').send({title:meeting.title,detail:'',date:meeting.date,request_kind:'Présentation',networker_ids:[],prospect_ids:[created.body.id],new_prospects:[]}); assert.equal(rdv.status,201);
   assert.equal((await member.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,status:'Confirmé'})).status,403);
   const rootId=(await root.get('/api/me')).body.id;
-  assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,extra:{...rdv.body.extra,admin_id:rootId},status:'Confirmé',assigned_to:p.body.id})).status,200);
+  assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,extra:{...rdv.body.extra,category:'Prospection',kind:'Présentation',prospect_id:created.body.id,end_date:'2026-12-01T11:00',admin_id:rootId},status:'Confirmé',assigned_to:p.body.id})).status,200);
   assert.equal((await presenter.get('/api/entries/rendezvous')).body.length,1);
   assert.equal((await stranger.get('/api/entries/rendezvous')).body.length,0);
   assert.equal((await presenter.put(`/api/entries/rendezvous/${rdv.body.id}`).send(meeting)).status,404);
   assert.equal((await member.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,status:'Annulé'})).status,403);
-  assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,extra:{...rdv.body.extra,admin_id:rootId},status:'Confirmé',assigned_to:''})).status,200);
+  assert.equal((await root.put(`/api/entries/rendezvous/${rdv.body.id}`).send({...rdv.body,extra:{...rdv.body.extra,category:'Prospection',kind:'Présentation',prospect_id:created.body.id,end_date:'2026-12-01T11:00',admin_id:rootId},status:'Confirmé',assigned_to:''})).status,200);
   assert.equal((await presenter.get('/api/entries/rendezvous')).body.length,0);
   assert.equal((await member.post('/api/logout')).status, 200);
   assert.equal((await member.get('/api/me')).status, 401);

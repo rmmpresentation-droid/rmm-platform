@@ -1115,6 +1115,29 @@ rows.push(
     "أي تعديل يؤدي إلى تسجيل خروج الحساب.",
   ],
 );
+rows.push(
+  ["Objet de la demande", "Request purpose", "موضوع الطلب"],
+  [
+    "Prospects existants participants",
+    "Existing prospect participants",
+    "العملاء المحتملون المشاركون المسجلون",
+  ],
+  [
+    "Sélectionnez uniquement parmi vos prospects accessibles. Maximum 10 prospects au total.",
+    "Select only from prospects you can access. Maximum 10 prospects in total.",
+    "اختر فقط من العملاء المحتملين المتاحين لك. الحد الأقصى 10 عملاء محتملين إجمالاً.",
+  ],
+  [
+    "Nouveaux prospects participants",
+    "New prospect participants",
+    "العملاء المحتملون المشاركون الجدد",
+  ],
+  ["E-mail (facultatif)", "Email (optional)", "البريد الإلكتروني (اختياري)"],
+  ["+ Ajouter un prospect", "+ Add a prospect", "+ إضافة عميل محتمل"],
+  ["Prospects participants", "Prospect participants", "العملاء المحتملون المشاركون"],
+  ["Prospect non accessible", "Prospect not accessible", "عميل محتمل غير متاح"],
+  ["Annuler la demande", "Cancel request", "إلغاء الطلب"],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
