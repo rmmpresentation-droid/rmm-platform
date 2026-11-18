@@ -34,6 +34,7 @@ export async function initialize(pool, email, password) {
   // Additive migration: preserve existing entries and keep their extra fields empty.
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
   await pool.query('ALTER TABLE entries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)');
+  await pool.query('CREATE TABLE IF NOT EXISTS networker_followup_notes (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query('CREATE TABLE IF NOT EXISTS prospect_notes (id UUID PRIMARY KEY, prospect_id UUID NOT NULL REFERENCES entries(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
@@ -150,6 +151,21 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (!update.rows.length) await pool.query('INSERT INTO training_attendance (training_id,user_id,attended,quiz_score) VALUES ($1,$2,$3,$4)',[req.params.id,req.params.userId,req.body.attended,score]);
     res.json({ok:true});
   }catch(e){next(e);}});
+  app.get('/api/networkers',auth,async(req,res,next)=>{try{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    const people=(await pool.query("SELECT id,name,email,is_active,sponsor_id,created_at FROM users WHERE role='networker' ORDER BY name")).rows;
+    const prospects=(await pool.query("SELECT assigned_to,created_by FROM entries WHERE section='prospects'")).rows;
+    const counts=new Map();for(const p of prospects){const id=p.assigned_to || p.created_by;counts.set(id,(counts.get(id)||0)+1);}
+    res.json(people.map(p=>({...p,prospect_count:counts.get(p.id)||0})));
+  }catch(e){next(e);}});
+  app.post('/api/networkers/:id/notes',auth,async(req,res,next)=>{try{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    if(!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof req.body.content!=='string' || !req.body.content.trim() || req.body.content.length>3000) return res.status(400).json({error:'Note requise (3 000 caractères maximum).'});
+    const target=(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[req.params.id])).rows[0];
+    if(!target) return res.status(404).json({error:'Networker introuvable.'});
+    const note=(await pool.query('INSERT INTO networker_followup_notes (id,networker_id,author_id,content) VALUES ($1,$2,$3,$4) RETURNING id,content,created_at',[randomUUID(),target.id,req.user.id,req.body.content.trim()])).rows[0];
+    res.status(201).json({...note,author:req.user.name});
+  }catch(e){next(e);}});
   app.put('/api/networkers/:id/sponsor',auth,async(req,res,next)=>{try{
     if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
     const id=req.params.id, sponsor=req.body.sponsor_id || null;
@@ -161,14 +177,21 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
   }catch(e){next(e);}});
   app.get('/api/networkers/:id/profile',auth,async(req,res,next)=>{try{
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id) || !(admin(req.user.role) || req.user.id===req.params.id)) return res.status(403).json({error:'Accès interdit'});
-    const person=(await pool.query("SELECT id,name,email,role,created_at,sponsor_id FROM users WHERE id=$1 AND role='networker'",[req.params.id])).rows[0];
+    const person=(await pool.query("SELECT id,name,email,role,created_at,sponsor_id,is_active,is_presenter FROM users WHERE id=$1 AND role='networker'",[req.params.id])).rows[0];
     if(!person) return res.status(404).json({error:'Networker introuvable'});
     const prospects=(await pool.query("SELECT id,title,status,assigned_to,created_by FROM entries WHERE section='prospects'")).rows.filter(p=>p.assigned_to===person.id || (!p.assigned_to && p.created_by===person.id));
     const tasks=(await pool.query("SELECT id,title,status,created_by,extra FROM entries WHERE section='taches'")).rows.map(unpack).filter(t=>taskAssigned(t.extra,person) || (!t.extra.audience && t.created_by===person.id));
     const progress=(await pool.query('SELECT task_id,status FROM task_progress WHERE user_id=$1',[person.id])).rows;const byId=new Map(progress.map(p=>[p.task_id,p.status]));
     const formations=(await pool.query("SELECT a.training_id,a.attended,a.quiz_score,e.title,e.date FROM training_attendance a JOIN entries e ON e.id=a.training_id WHERE a.user_id=$1",[person.id])).rows;
     const network=(await pool.query("SELECT id,name,sponsor_id FROM users WHERE role='networker'")).rows; const sponsor=network.find(p=>p.id===person.sponsor_id) || null; const downlines=network.filter(p=>p.sponsor_id===person.id).map(({id,name})=>({id,name}));
-    res.json({person,sponsor:sponsor ? {id:sponsor.id,name:sponsor.name} : null,downlines,prospects:prospects.map(({id,title,status})=>({id,title,status})),tasks:tasks.map(t=>({id:t.id,title:t.title,status:byId.get(t.id) || (t.extra.audience ? 'À faire' : t.status)})),formations});
+    const additional = {};
+    if(admin(req.user.role)) {
+      additional.notes=(await pool.query('SELECT n.id,n.content,n.created_at,u.name AS author FROM networker_followup_notes n JOIN users u ON u.id=n.author_id WHERE n.networker_id=$1 ORDER BY n.created_at DESC,n.id DESC',[person.id])).rows;
+      const meetings=(await pool.query("SELECT id,title,status,date,created_by,assigned_to,extra FROM entries WHERE section='rendezvous' ORDER BY created_at DESC")).rows.map(unpack);
+      additional.meetings=meetings.filter(m=>meetingVisible(m,{...person,is_presenter:presenter(person)})).map(({id,title,status,date})=>({id,title,status,date}));
+      additional.orders=(await pool.query('SELECT id,kind,status,created_at FROM commerce_orders WHERE buyer_id=$1 ORDER BY created_at DESC',[person.id])).rows;
+    }
+    res.json({person,sponsor:sponsor ? {id:sponsor.id,name:sponsor.name} : null,downlines,prospects:prospects.map(({id,title,status})=>({id,title,status})),tasks:tasks.map(t=>({id:t.id,title:t.title,status:byId.get(t.id) || (t.extra.audience ? 'À faire' : t.status)})),formations,...additional});
   }catch(e){next(e);}});
   async function validateCommerce(section, extra, legacy = false) {
     if (section === 'stock') {

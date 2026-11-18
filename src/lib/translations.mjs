@@ -1311,6 +1311,37 @@ rows.push(
     "إدارة المقدّمين في المستخدمين ←",
   ],
 );
+rows.push(
+  ["Tableau des networkers", "Networkers table", "جدول أعضاء الشبكة"],
+  ["Rechercher par nom ou e-mail", "Search by name or email", "البحث بالاسم أو البريد الإلكتروني"],
+  ["Compte", "Account", "الحساب"],
+  ["Actions", "Actions", "الإجراءات"],
+  ["Aucun networker trouvé.", "No networkers found.", "لم يتم العثور على أعضاء شبكة."],
+  ["← Retour au tableau", "← Back to table", "← العودة إلى الجدول"],
+  ["Commandes internes", "Internal orders", "الطلبات الداخلية"],
+  ["Notes de suivi internes", "Internal follow-up notes", "ملاحظات المتابعة الداخلية"],
+  [
+    "Visibles uniquement par l’administration.",
+    "Visible only to administrators.",
+    "مرئية للإدارة فقط.",
+  ],
+  ["Ajouter une note", "Add a note", "إضافة ملاحظة"],
+  ["Ajouter la note", "Add note", "حفظ الملاحظة"],
+  ["Attribuer une tâche", "Assign a task", "إسناد مهمة"],
+  [
+    "Cette tâche sera visible par le networker.",
+    "The networker will be able to see this task.",
+    "ستكون هذه المهمة مرئية لعضو الشبكة.",
+  ],
+  ["Échéance (facultative)", "Due date (optional)", "تاريخ الاستحقاق (اختياري)"],
+  ["Créer la tâche", "Create task", "إنشاء المهمة"],
+  ["Modification enregistrée.", "Change saved.", "تم حفظ التغيير."],
+  [
+    "Modification enregistrée, actualisation impossible. Rechargez la page.",
+    "Change saved; refresh failed. Reload the page.",
+    "تم حفظ التغيير وتعذر التحديث. أعد تحميل الصفحة.",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
