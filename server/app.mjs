@@ -17,6 +17,7 @@ const roles = ['superadmin', 'admin', 'presentateur', 'networker'];
 const availableSections = sectionNames.filter(section => section !== 'ressources');
 const allowed = { superadmin: availableSections, admin: availableSections, presentateur: ['rendezvous', 'formations'], networker: ['prospects', 'taches', 'rendezvous', 'formations'] };
 const admin = (role) => role === 'admin' || role === 'superadmin';
+const presenter = (user) => user.role === 'presentateur' || (['admin','networker'].includes(user.role) && user.is_presenter);
 const hash = (token) => createHash('sha256').update(token).digest('hex');
 const cookieToken = (req) => (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith('rmm_session='))?.slice(12);
 const sessionCookie = (token, maxAge) => `rmm_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
@@ -28,6 +29,7 @@ export async function initialize(pool, email, password) {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS sponsor_id UUID REFERENCES users(id)');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_version INTEGER NOT NULL DEFAULT 0');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_presenter BOOLEAN NOT NULL DEFAULT FALSE');
   await pool.query('ALTER TABLE sessions ADD COLUMN IF NOT EXISTS auth_version INTEGER NOT NULL DEFAULT 0');
   // Additive migration: preserve existing entries and keep their extra fields empty.
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
@@ -72,22 +74,22 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const token = randomBytes(32).toString('hex');
     await pool.query("INSERT INTO sessions (token_hash,user_id,expires_at,auth_version) VALUES ($1,$2,NOW() + INTERVAL '12 hours',$3)", [hash(token), user.id, user.auth_version]);
     res.setHeader('Set-Cookie', sessionCookie(token, 43200));
-    res.json({id:user.id,email:user.email,name:user.name,role:user.role});
+    res.json({id:user.id,email:user.email,name:user.name,role:user.role,is_presenter:presenter(user)});
   } catch (err) { next(err); } });
   async function auth(req, res, next) { try {
     const token = cookieToken(req); if (!token || !/^[a-f0-9]{64}$/.test(token)) return res.status(401).json({error:'Connexion requise'});
-    const result = await pool.query('SELECT u.id,u.email,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at > NOW() AND u.is_active=TRUE AND s.auth_version=u.auth_version', [hash(token)]);
+    const result = await pool.query('SELECT u.id,u.email,u.name,u.role,u.is_presenter FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at > NOW() AND u.is_active=TRUE AND s.auth_version=u.auth_version', [hash(token)]);
     if (!result.rows[0]) return res.status(401).json({error:'Session expirée'});
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   mountAccounting(app, pool, {auth, admin});
-  app.get('/api/me', auth, (req,res) => res.json(req.user));
+  app.get('/api/me', auth, (req,res) => res.json({...req.user,is_presenter:presenter(req.user)}));
   app.post('/api/logout', auth, async (req,res,next) => { try { await pool.query('DELETE FROM sessions WHERE token_hash=$1',[hash(req.token)]); res.setHeader('Set-Cookie', sessionCookie('',0)); res.json({ok:true}); } catch(e) {next(e);} });
-  app.get('/api/users', auth, async (req,res,next) => { try { if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result=await pool.query(req.user.role === 'superadmin' ? 'SELECT id,email,name,role,is_active,created_at FROM users ORDER BY created_at DESC' : "SELECT id,email,name,role,is_active,created_at FROM users WHERE role='presentateur' ORDER BY created_at DESC"); res.json(result.rows); } catch(e){next(e);} });
+  app.get('/api/users', auth, async (req,res,next) => { try { if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result=await pool.query(req.user.role === 'superadmin' ? 'SELECT id,email,name,role,is_active,is_presenter,created_at FROM users ORDER BY created_at DESC' : "SELECT id,email,name,role,is_active,is_presenter,created_at FROM users WHERE role='presentateur' ORDER BY created_at DESC"); res.json(result.rows); } catch(e){next(e);} });
   app.post('/api/users', auth, async (req,res,next) => { try {
     const {email,name,role,password}=req.body;
-    if(req.user.role !== 'superadmin' && !(req.user.role === 'admin' && role === 'presentateur')) return res.status(403).json({error:'Accès interdit'});
+    if(req.user.role !== 'superadmin') return res.status(403).json({error:'Accès interdit'});
     if(typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof name !== 'string' || !name.trim() || name.length > 100 || !roles.includes(role) || typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) return res.status(400).json({error:'Nom, email valide, rôle et mot de passe de 12 caractères minimum requis.'});
     const result=await pool.query('INSERT INTO users (id,email,name,role,password_hash) VALUES ($1,$2,$3,$4,$5) RETURNING id,email,name,role,created_at',[randomUUID(),email.trim().toLowerCase(),name.trim(),role,await bcrypt.hash(password,12)]); res.status(201).json(result.rows[0]);
   } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
@@ -106,7 +108,17 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (!result.rows[0]) return res.status(409).json({error:'Le compte a changé ; actualisez la liste.'});
     res.json(result.rows[0]);
   } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
-  app.get('/api/presenters', auth, async(req,res,next)=>{ try { if (!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result = await pool.query("SELECT id,name FROM users WHERE role='presentateur' ORDER BY name"); res.json(result.rows); } catch(e){next(e);} });
+  // Only the superadmin can grant or revoke the additive title; existing legacy presenter roles remain unchanged.
+  app.put('/api/users/:id/presenter',auth,async(req,res,next)=>{try{
+    if(req.user.role!=='superadmin') return res.status(403).json({error:'Seul le superadministrateur peut attribuer ce titre.'});
+    if(!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof req.body.is_presenter!=='boolean') return res.status(400).json({error:'Titre invalide.'});
+    const target=(await pool.query('SELECT id,role,is_presenter FROM users WHERE id=$1',[req.params.id])).rows[0];
+    if(!target) return res.status(404).json({error:'Compte introuvable.'});
+    if(!['admin','networker'].includes(target.role)) return res.status(400).json({error:'Titre complémentaire réservé aux administrateurs et networkers.'});
+    if(target.is_presenter!==req.body.is_presenter) await pool.query('UPDATE users SET is_presenter=$1,auth_version=auth_version+1 WHERE id=$2',[req.body.is_presenter,target.id]);
+    res.json({id:target.id,is_presenter:req.body.is_presenter});
+  }catch(e){next(e);}});
+  app.get('/api/presenters', auth, async(req,res,next)=>{ try { if (!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result = await pool.query("SELECT id,name FROM users WHERE is_active=TRUE AND (role='presentateur' OR (is_presenter=TRUE AND (role='admin' OR role='networker'))) ORDER BY name"); res.json(result.rows); } catch(e){next(e);} });
   app.get('/api/network-directory', auth, async(req,res,next)=>{ try { if (!roles.includes(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result = await pool.query(req.user.role === 'presentateur' ? "SELECT id,name,role FROM users WHERE role='networker' ORDER BY name" : "SELECT id,name,role FROM users ORDER BY name"); res.json(result.rows); } catch(e){next(e);} });
   function unpack(row) { return { ...row, extra: JSON.parse(row.extra || '{}') }; }
   const taskAssigned = (extra, user) => extra.audience === 'Tous les admins' ? admin(user.role) : extra.audience === 'Tous les networkers' ? user.role === 'networker' : ['Admin spécifique','Networker spécifique'].includes(extra.audience) && extra.target === user.id;
@@ -123,13 +135,13 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
   app.get('/api/trainings/:id/attendance',auth,async(req,res,next)=>{try{
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.status(400).json({error:'Identifiant invalide'});
     const result=await pool.query("SELECT * FROM entries WHERE id=$1 AND section='formations'",[req.params.id]); const training=result.rows[0] && unpack(result.rows[0]);
-    if(!training || !(admin(req.user.role) || training.extra.presenter_id === req.user.id)) return res.status(403).json({error:'Accès interdit'});
+    if(!training || !(admin(req.user.role) || (presenter(req.user) && training.extra.presenter_id === req.user.id))) return res.status(403).json({error:'Accès interdit'});
     const rows=await pool.query('SELECT a.user_id,a.attended,a.quiz_score,u.name FROM training_attendance a JOIN users u ON u.id=a.user_id WHERE a.training_id=$1',[req.params.id]);res.json(rows.rows);
   }catch(e){next(e);}});
   app.put('/api/trainings/:id/attendance/:userId',auth,async(req,res,next)=>{try{
     if(!/^[0-9a-f-]{36}$/i.test(req.params.id) || !/^[0-9a-f-]{36}$/i.test(req.params.userId) || typeof req.body.attended!=='boolean' || typeof req.body.quiz_score!=='string' || req.body.quiz_score.length>40) return res.status(400).json({error:'Données invalides'});
     const result=await pool.query("SELECT * FROM entries WHERE id=$1 AND section='formations'",[req.params.id]);const training=result.rows[0] && unpack(result.rows[0]);
-    if(!training || !(admin(req.user.role) || (req.user.role==='presentateur' && training.extra.presenter_id===req.user.id))) return res.status(403).json({error:'Accès interdit'});
+    if(!training || !(admin(req.user.role) || (presenter(req.user) && training.extra.presenter_id===req.user.id))) return res.status(403).json({error:'Accès interdit'});
     if(training.status !== 'Terminée') return res.status(400).json({error:'Enregistrez les présences après la formation terminée.'});
     const target=await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[req.params.userId]);if(!target.rows.length) return res.status(400).json({error:'Networker invalide'});
     const old=await pool.query('SELECT quiz_score FROM training_attendance WHERE training_id=$1 AND user_id=$2',[req.params.id,req.params.userId]);
@@ -173,9 +185,9 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     }
     return null;
   }
-  async function validatePresenter(section, extra) {
-    if (section !== 'formations' || !extra.presenter_id) return null;
-    if (!/^[0-9a-f-]{36}$/i.test(extra.presenter_id) || !(await pool.query("SELECT id FROM users WHERE id=$1 AND role='presentateur'",[extra.presenter_id])).rows[0]) return 'Présentateur invalide';
+  async function validatePresenter(section, extra, previousPresenter = null) {
+    if (section !== 'formations' || !extra.presenter_id || extra.presenter_id === previousPresenter) return null;
+    if (!/^[0-9a-f-]{36}$/i.test(extra.presenter_id) || !(await pool.query("SELECT id FROM users WHERE id=$1 AND is_active=TRUE AND (role='presentateur' OR (is_presenter=TRUE AND (role='admin' OR role='networker')))",[extra.presenter_id])).rows[0]) return 'Présentateur invalide';
     return null;
   }
   const validLocalDate = value => { if (!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(value || '')) return false; const d = new Date(value + ':00Z'); return !Number.isNaN(d.getTime()) && d.toISOString().slice(0,16) === value; };
@@ -235,7 +247,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const rows=(await pool.query("SELECT id,date,extra FROM entries WHERE section='rendezvous' AND status='Confirmé'")).rows;
     return rows.some(row=>row.id !== excludeId && row.date && JSON.parse(row.extra || '{}').end_date && row.date < body.extra.end_date && JSON.parse(row.extra).end_date > body.date);
   }
-  const meetingVisible = (row, user) => admin(user.role) || (user.role === 'presentateur' && row.assigned_to === user.id) || (user.role === 'networker' && (row.extra.networker_id === user.id || (parseAdditionalNetworkers(row.extra.additional_networker_ids) || []).includes(user.id) || (!row.extra.networker_id && row.created_by === user.id)));
+  const meetingVisible = (row, user) => admin(user.role) || (presenter(user) && row.assigned_to === user.id) || (user.role === 'networker' && (row.extra.networker_id === user.id || (parseAdditionalNetworkers(row.extra.additional_networker_ids) || []).includes(user.id) || (!row.extra.networker_id && row.created_by === user.id)));
   app.get('/api/appointments/busy',auth,async(req,res,next)=>{try{
     if (req.user.role !== 'networker') return res.status(403).json({error:'Accès interdit'});
     const result=await pool.query("SELECT id,date,extra,created_by,assigned_to FROM entries WHERE section='rendezvous' AND status='Confirmé'");
@@ -251,7 +263,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const report=req.body.report;
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof report!=='string' || !report.trim() || report.length>3000) return res.status(400).json({error:'Compte rendu requis (3000 caractères maximum).'});
     const result=await pool.query("SELECT * FROM entries WHERE id=$1 AND section='rendezvous'",[req.params.id]); const row=result.rows[0] && unpack(result.rows[0]);
-    if (!row || row.status!=='Réalisé' || ![row.extra.networker_id,row.extra.admin_id,row.assigned_to,...(parseAdditionalNetworkers(row.extra.additional_networker_ids) || [])].includes(req.user.id)) return res.status(403).json({error:'Seuls les participants affectés peuvent remplir un compte rendu après la séance.'});
+    if (!row || !meetingVisible(row,req.user) || row.status!=='Réalisé' || ![row.extra.networker_id,row.extra.admin_id,row.assigned_to,...(parseAdditionalNetworkers(row.extra.additional_networker_ids) || [])].includes(req.user.id)) return res.status(403).json({error:'Seuls les participants affectés peuvent remplir un compte rendu après la séance.'});
     const updated=await pool.query('UPDATE appointment_reports SET report=$1 WHERE appointment_id=$2 AND user_id=$3 RETURNING appointment_id',[report.trim(),row.id,req.user.id]);
     if (!updated.rows.length) await pool.query('INSERT INTO appointment_reports (appointment_id,user_id,report) VALUES ($1,$2,$3)',[row.id,req.user.id,report.trim()]);
     res.json({ok:true});
@@ -363,7 +375,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (section === 'rendezvous') {if(req.user.role==='networker') {req.body.extra.networker_id=req.user.id;} const problem=await validateMeeting(req.body,req.user); if(problem) return res.status(400).json({error:problem});}
     const assigned = section === 'prospects' && req.user.role === 'networker' ? req.user.id : (req.body.assigned_to || null);
     if (section === 'prospects' && !assigned) return res.status(400).json({error:'Sélectionnez le membre ayant contacté le prospect.'});
-    if (assigned && (!/^[0-9a-f-]{36}$/i.test(assigned) || !['prospects','rendezvous'].includes(section) || (section === 'rendezvous' && !admin(req.user.role)) || !(await pool.query(section === 'prospects' ? 'SELECT id FROM users WHERE id=$1' : "SELECT id FROM users WHERE id=$1 AND role='presentateur'", [assigned])).rows[0])) return res.status(400).json({error:'Compte affecté invalide'});
+    if (assigned && (!/^[0-9a-f-]{36}$/i.test(assigned) || !['prospects','rendezvous'].includes(section) || (section === 'rendezvous' && !admin(req.user.role)) || !(await pool.query(section === 'prospects' ? 'SELECT id FROM users WHERE id=$1' : "SELECT id FROM users WHERE id=$1 AND is_active=TRUE AND (role='presentateur' OR (is_presenter=TRUE AND (role='admin' OR role='networker')))", [assigned])).rows[0])) return res.status(400).json({error:'Compte affecté invalide'});
     if (section === 'rendezvous' && await meetingConflict(req.body,null)) return res.status(409).json({error:'Ce créneau est déjà réservé.'});
     const {title,detail,status,owner,date,extra}=req.body;
     const result=await pool.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id,title,detail,status,owner,date,created_by,extra,assigned_to',[randomUUID(),section,title.trim(),detail,status,owner,date,req.user.id,JSON.stringify(extra),assigned]);res.status(201).json(unpack(result.rows[0]));
@@ -388,7 +400,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const commerceError=await validateCommerce(section,extra,!JSON.parse(previous.extra || '{}').item_type && !JSON.parse(previous.extra || '{}').pack_id && !extra.item_type && !extra.pack_id); if(commerceError) return res.status(400).json({error:commerceError});
     if (section==='stock' && extra.item_type!=='Produit' && (await pool.query('SELECT id FROM commerce_variants WHERE product_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce produit possède des références de stock ; son type ne peut pas être modifié.'});
     if (section==='stock' && JSON.parse(previous.extra || '{}').item_type==='Pack' && extra.item_type!=='Pack') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===previous.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}
-    const presenterError=await validatePresenter(section,extra); if(presenterError) return res.status(400).json({error:presenterError});
+    const presenterError=await validatePresenter(section,extra,JSON.parse(previous.extra || '{}').presenter_id); if(presenterError) return res.status(400).json({error:presenterError});
     if (section === 'formations' && JSON.parse(previous.extra || '{}').presenter_id && !extra.presenter_id) return res.status(400).json({error:'Présentateur requis'});
     if (section === 'rendezvous' && !admin(req.user.role)) { extra.networker_id=previous.extra ? JSON.parse(previous.extra).networker_id : req.user.id;  }
     if (section === 'rendezvous') {const problem=await validateMeeting({...req.body,extra},req.user,!JSON.parse(previous.extra || '{}').category && !extra.category,JSON.parse(previous.extra || '{}').kind || ''); if(problem) return res.status(400).json({error:problem});}
@@ -397,7 +409,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (section === 'rendezvous' && await meetingConflict({...req.body,extra},req.params.id)) return res.status(409).json({error:'Ce créneau est déjà réservé.'});
     const assigned = admin(req.user.role) && ['rendezvous','prospects'].includes(section) ? (req.body.assigned_to === '' ? null : (req.body.assigned_to ?? previous.assigned_to)) : previous.assigned_to;
     if (section === 'prospects' && previous.assigned_to && !assigned) return res.status(400).json({error:'Le membre ayant contacté le prospect est requis.'});
-    if (assigned && (!/^[0-9a-f-]{36}$/i.test(assigned) || !(await pool.query(section === 'prospects' ? 'SELECT id FROM users WHERE id=$1' : "SELECT id FROM users WHERE id=$1 AND role='presentateur'", [assigned])).rows[0])) return res.status(400).json({error:'Compte affecté invalide'});
+    if (assigned && (section !== 'rendezvous' || assigned !== previous.assigned_to) && (!/^[0-9a-f-]{36}$/i.test(assigned) || !(await pool.query(section === 'prospects' ? 'SELECT id FROM users WHERE id=$1' : "SELECT id FROM users WHERE id=$1 AND is_active=TRUE AND (role='presentateur' OR (is_presenter=TRUE AND (role='admin' OR role='networker')))", [assigned])).rows[0])) return res.status(400).json({error:'Compte affecté invalide'});
     const {title,detail,status,owner,date}=req.body;
     const result=await pool.query(`UPDATE entries SET title=$1,detail=$2,status=$3,owner=$4,date=$5,extra=$6,assigned_to=$7,updated_at=NOW() WHERE id=$8 AND section=$9 ${admin(req.user.role)?'': section === 'prospects' ? 'AND (assigned_to=$10 OR (assigned_to IS NULL AND created_by=$10))' : 'AND created_by=$10'} RETURNING id,title,detail,status,owner,date,created_by,extra,assigned_to`, [title.trim(),detail,status,owner,date,JSON.stringify(extra),assigned,req.params.id,section,...(admin(req.user.role)?[]:[req.user.id])]); if(!result.rows[0]) return res.status(404).json({error:'Élément introuvable'}); res.json(unpack(result.rows[0]));
   }catch(e){next(e);}});

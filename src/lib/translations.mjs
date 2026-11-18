@@ -1292,6 +1292,25 @@ rows.push([
   "Order saved, but refresh failed. Reload the page before trying again.",
   "تم حفظ الطلب لكن تعذر التحديث. أعد تحميل الصفحة قبل إعادة المحاولة.",
 ]);
+rows.push(
+  ["Attribuer le titre de présentateur", "Grant presenter title", "منح صفة المقدّم"],
+  ["Retirer le titre de présentateur", "Remove presenter title", "إزالة صفة المقدّم"],
+  [
+    "Attribuer le titre de présentateur ?",
+    "Grant the presenter title?",
+    "هل تريد منح صفة المقدّم؟",
+  ],
+  [
+    "Retirer le titre de présentateur ?",
+    "Remove the presenter title?",
+    "هل تريد إزالة صفة المقدّم؟",
+  ],
+  [
+    "Gestion des présentateurs dans Utilisateurs →",
+    "Manage presenters in Users →",
+    "إدارة المقدّمين في المستخدمين ←",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {

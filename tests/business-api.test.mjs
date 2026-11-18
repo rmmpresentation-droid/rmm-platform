@@ -11,7 +11,7 @@ test('parcours métier, droits, affectations, confidentialité et données liée
   const rootId=(await root.get('/api/me')).body.id;
   async function create(name,role) {const r=await root.post('/api/users').send({name,email:`${name}@example.test`,role,password:'password12345'});assert.equal(r.status,201);const agent=request.agent(app);await agent.post('/api/login').send({email:`${name}@example.test`,password:'password12345'});return {id:r.body.id,agent};}
   const n=await create('n','networker'), n2=await create('n2','networker'), a=await create('a','admin'), p=await create('p','presentateur');
-  assert.equal((await a.agent.post('/api/users').send({name:'P2',email:'p2@example.test',role:'presentateur',password:'password12345'})).status,201);
+  assert.equal((await a.agent.post('/api/users').send({name:'P2',email:'p2@example.test',role:'presentateur',password:'password12345'})).status,403);
   assert.equal((await a.agent.post('/api/users').send({name:'A2',email:'a2@example.test',role:'admin',password:'password12345'})).status,403);
   assert.equal((await root.get('/api/entries/ressources')).status,403);
   const base={title:'Test',detail:'',owner:'',date:'',status:'À faire'};

@@ -2,7 +2,14 @@ import { useState, type FormEvent } from "react";
 import { useLanguage } from "@/lib/i18n";
 
 type Role = "superadmin" | "admin" | "presentateur" | "networker";
-type Account = { id: string; name: string; email: string; role: Role; is_active: boolean };
+type Account = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+  is_presenter: boolean;
+};
 const roles: Record<Role, string> = {
   superadmin: "Superadministrateur",
   admin: "Administrateur",
@@ -53,6 +60,34 @@ export function UsersManagement({
       setBusy(false);
     }
   }
+  async function togglePresenter(account: Account) {
+    if (
+      !window.confirm(
+        t(
+          account.is_presenter
+            ? "Retirer le titre de présentateur ?"
+            : "Attribuer le titre de présentateur ?",
+        ),
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/users/${encodeURIComponent(account.id)}/presenter`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_presenter: !account.is_presenter }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Impossible de modifier le titre.");
+      await onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible de modifier le titre.");
+    } finally {
+      setBusy(false);
+    }
+  }
   function submit(event: FormEvent) {
     event.preventDefault();
     if (editing) void save(editing);
@@ -76,8 +111,26 @@ export function UsersManagement({
           <p className="text-muted-foreground">
             {account.email} · {t(roles[account.role])} ·{" "}
             {t(account.is_active ? "Actif" : "Désactivé")}
+            {(account.role === "presentateur" || account.is_presenter) && (
+              <> · {t("Présentateur")}</>
+            )}
           </p>
           <div className="mt-2 flex flex-wrap gap-3">
+            {actorRole === "superadmin" &&
+              (account.role === "admin" || account.role === "networker") && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="text-[var(--gold)] underline disabled:opacity-50"
+                  onClick={() => void togglePresenter(account)}
+                >
+                  {t(
+                    account.is_presenter
+                      ? "Retirer le titre de présentateur"
+                      : "Attribuer le titre de présentateur",
+                  )}
+                </button>
+              )}
             <button
               type="button"
               className="text-[var(--gold)] underline"
