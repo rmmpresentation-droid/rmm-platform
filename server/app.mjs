@@ -25,6 +25,9 @@ export async function initialize(pool, email, password) {
   await pool.query(`CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at TIMESTAMPTZ NOT NULL)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS entries (id UUID PRIMARY KEY, section TEXT NOT NULL, title TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', status TEXT NOT NULL, owner TEXT NOT NULL DEFAULT '', date TEXT NOT NULL DEFAULT '', created_by UUID NOT NULL REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS sponsor_id UUID REFERENCES users(id)');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_version INTEGER NOT NULL DEFAULT 0');
+  await pool.query('ALTER TABLE sessions ADD COLUMN IF NOT EXISTS auth_version INTEGER NOT NULL DEFAULT 0');
   // Additive migration: preserve existing entries and keep their extra fields empty.
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
   await pool.query('ALTER TABLE entries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)');
@@ -62,28 +65,43 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const found = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
     const user = found.rows[0];
     if (Buffer.byteLength(password, 'utf8') > 72) return res.status(401).json({error:'Identifiants incorrects'});
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({error:'Identifiants incorrects'});
+    if (!user || !user.is_active || !(await bcrypt.compare(password, user.password_hash))) return res.status(401).json({error:'Identifiants incorrects'});
     attempts.delete(ip);
     const token = randomBytes(32).toString('hex');
-    await pool.query("INSERT INTO sessions (token_hash,user_id,expires_at) VALUES ($1,$2,NOW() + INTERVAL '12 hours')", [hash(token), user.id]);
+    await pool.query("INSERT INTO sessions (token_hash,user_id,expires_at,auth_version) VALUES ($1,$2,NOW() + INTERVAL '12 hours',$3)", [hash(token), user.id, user.auth_version]);
     res.setHeader('Set-Cookie', sessionCookie(token, 43200));
     res.json({id:user.id,email:user.email,name:user.name,role:user.role});
   } catch (err) { next(err); } });
   async function auth(req, res, next) { try {
     const token = cookieToken(req); if (!token || !/^[a-f0-9]{64}$/.test(token)) return res.status(401).json({error:'Connexion requise'});
-    const result = await pool.query('SELECT u.id,u.email,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at > NOW()', [hash(token)]);
+    const result = await pool.query('SELECT u.id,u.email,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at > NOW() AND u.is_active=TRUE AND s.auth_version=u.auth_version', [hash(token)]);
     if (!result.rows[0]) return res.status(401).json({error:'Session expirée'});
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   app.get('/api/me', auth, (req,res) => res.json(req.user));
   app.post('/api/logout', auth, async (req,res,next) => { try { await pool.query('DELETE FROM sessions WHERE token_hash=$1',[hash(req.token)]); res.setHeader('Set-Cookie', sessionCookie('',0)); res.json({ok:true}); } catch(e) {next(e);} });
-  app.get('/api/users', auth, async (req,res,next) => { try { if(req.user.role !== 'superadmin') return res.status(403).json({error:'Accès interdit'}); const result=await pool.query('SELECT id,email,name,role,created_at FROM users ORDER BY created_at DESC'); res.json(result.rows); } catch(e){next(e);} });
+  app.get('/api/users', auth, async (req,res,next) => { try { if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result=await pool.query(req.user.role === 'superadmin' ? 'SELECT id,email,name,role,is_active,created_at FROM users ORDER BY created_at DESC' : "SELECT id,email,name,role,is_active,created_at FROM users WHERE role='presentateur' ORDER BY created_at DESC"); res.json(result.rows); } catch(e){next(e);} });
   app.post('/api/users', auth, async (req,res,next) => { try {
     const {email,name,role,password}=req.body;
     if(req.user.role !== 'superadmin' && !(req.user.role === 'admin' && role === 'presentateur')) return res.status(403).json({error:'Accès interdit'});
     if(typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof name !== 'string' || !name.trim() || name.length > 100 || !roles.includes(role) || typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) return res.status(400).json({error:'Nom, email valide, rôle et mot de passe de 12 caractères minimum requis.'});
     const result=await pool.query('INSERT INTO users (id,email,name,role,password_hash) VALUES ($1,$2,$3,$4,$5) RETURNING id,email,name,role,created_at',[randomUUID(),email.trim().toLowerCase(),name.trim(),role,await bcrypt.hash(password,12)]); res.status(201).json(result.rows[0]);
+  } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
+  // Disable rather than delete: business records and authorship remain intact.
+  app.put('/api/users/:id', auth, async (req,res,next) => { try {
+    if (!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    const {name,email,role,is_active}=req.body;
+    if (typeof name !== 'string' || !name.trim() || name.length > 100 || typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || !roles.includes(role) || typeof is_active !== 'boolean') return res.status(400).json({error:'Nom, e-mail, rôle et état valides requis.'});
+    const found=await pool.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1',[req.params.id]);
+    const target=found.rows[0];
+    if (!target) return res.status(404).json({error:'Compte introuvable'});
+    if (req.user.role !== 'superadmin' && (target.role !== 'presentateur' || role !== 'presentateur')) return res.status(403).json({error:'Accès interdit'});
+    // Avoid losing administrative access, including concurrent changes to multiple superadmins.
+    if (target.role === 'superadmin' && (!is_active || role !== 'superadmin')) return res.status(400).json({error:'Un superadministrateur ne peut pas être désactivé ou rétrogradé.'});
+    const result=await pool.query("UPDATE users SET name=$1,email=$2,role=$3,is_active=$4,auth_version=auth_version+1 WHERE id=$5 AND (role <> 'superadmin' OR ($3 = 'superadmin' AND $4 = TRUE)) AND ($6 = 'superadmin' OR role = 'presentateur') RETURNING id,email,name,role,is_active,created_at", [name.trim(),email.trim().toLowerCase(),role,is_active,target.id,req.user.role]);
+    if (!result.rows[0]) return res.status(409).json({error:'Le compte a changé ; actualisez la liste.'});
+    res.json(result.rows[0]);
   } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
   app.get('/api/presenters', auth, async(req,res,next)=>{ try { if (!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result = await pool.query("SELECT id,name FROM users WHERE role='presentateur' ORDER BY name"); res.json(result.rows); } catch(e){next(e);} });
   app.get('/api/network-directory', auth, async(req,res,next)=>{ try { if (!roles.includes(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result = await pool.query(req.user.role === 'presentateur' ? "SELECT id,name,role FROM users WHERE role='networker' ORDER BY name" : "SELECT id,name,role FROM users ORDER BY name"); res.json(result.rows); } catch(e){next(e);} });

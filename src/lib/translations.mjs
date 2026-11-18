@@ -1092,6 +1092,29 @@ rows.push(
   ["Candidats networkers", "Networker candidates", "المرشحون للشبكة"],
   ["Sans commande", "No order", "دون طلب"],
 );
+rows.push(
+  ["Comptes", "Accounts", "الحسابات"],
+  [
+    "La désactivation bloque l’accès sans supprimer l’historique.",
+    "Deactivation blocks access without deleting history.",
+    "يمنع التعطيل الوصول دون حذف السجل.",
+  ],
+  ["Désactivé", "Disabled", "معطّل"],
+  ["Désactiver", "Deactivate", "تعطيل"],
+  ["Réactiver", "Reactivate", "إعادة التفعيل"],
+  [
+    "Désactiver ce compte ? Les données seront conservées.",
+    "Deactivate this account? Its data will be retained.",
+    "هل تريد تعطيل الحساب؟ ستُحفظ بياناته.",
+  ],
+  ["Réactiver ce compte ?", "Reactivate this account?", "هل تريد إعادة تفعيل الحساب؟"],
+  ["Modifier le compte", "Edit account", "تعديل الحساب"],
+  [
+    "Toute modification déconnecte le compte concerné.",
+    "Any change signs the account out.",
+    "أي تعديل يؤدي إلى تسجيل خروج الحساب.",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
