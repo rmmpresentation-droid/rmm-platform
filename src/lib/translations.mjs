@@ -1461,6 +1461,11 @@ rows.push(
     "هل تؤكد النقل؟ سيتم استبدال الراعي الحالي لعضو الشبكة وفرعه.",
   ],
 );
+rows.push([
+  "De l’investissement au partenariat",
+  "From investment to partnership",
+  "من الاستثمار إلى الشراكة",
+]);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {

@@ -1,4 +1,5 @@
 import { ArabicJourney } from "@/components/workspace/ArabicJourney";
+import { PartnershipPresentation } from "@/components/workspace/PartnershipPresentation";
 import { useLanguage } from "@/lib/i18n";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
@@ -81,7 +82,7 @@ const chapterIcons = [Sparkles, HeartPulse, Building2, Layers3, Orbit];
 type Medium = { url: string; type: "image" | "video"; name: string };
 
 export function PresentationStudio() {
-  const [journey, setJourney] = useState(true);
+  const [journey, setJourney] = useState<"partnership" | "arabic" | "legacy">("partnership");
   const { t } = useLanguage();
   return (
     <div>
@@ -92,17 +93,25 @@ export function PresentationStudio() {
       >
         <button
           type="button"
-          aria-pressed={journey}
-          onClick={() => setJourney(true)}
-          className={`rounded-full border px-4 py-2 text-sm ${journey ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+          aria-pressed={journey === "partnership"}
+          onClick={() => setJourney("partnership")}
+          className={`rounded-full border px-4 py-2 text-sm ${journey === "partnership" ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+        >
+          {t("De l’investissement au partenariat")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={journey === "arabic"}
+          onClick={() => setJourney("arabic")}
+          className={`rounded-full border px-4 py-2 text-sm ${journey === "arabic" ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
         >
           {t("Parcours arabe interactif")}
         </button>
         <button
           type="button"
-          aria-pressed={!journey}
-          onClick={() => setJourney(false)}
-          className={`rounded-full border px-4 py-2 text-sm ${!journey ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+          aria-pressed={journey === "legacy"}
+          onClick={() => setJourney("legacy")}
+          className={`rounded-full border px-4 py-2 text-sm ${journey === "legacy" ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
         >
           {t("Studio précédent")}
         </button>
@@ -110,7 +119,13 @@ export function PresentationStudio() {
       <p className="mt-2 text-xs text-muted-foreground">
         {t("Les médias locaux sont effacés en changeant de présentation.")}
       </p>
-      {journey ? <ArabicJourney /> : <LegacyPresentationStudio />}
+      {journey === "partnership" ? (
+        <PartnershipPresentation />
+      ) : journey === "arabic" ? (
+        <ArabicJourney />
+      ) : (
+        <LegacyPresentationStudio />
+      )}
     </div>
   );
 }
