@@ -35,6 +35,8 @@ export async function initialize(pool, email, password) {
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
   await pool.query('ALTER TABLE entries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)');
   await pool.query('CREATE TABLE IF NOT EXISTS networker_followup_notes (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
+  await pool.query("CREATE TABLE IF NOT EXISTS networker_goals (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), title TEXT NOT NULL, created_by UUID NOT NULL REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("CREATE TABLE IF NOT EXISTS networker_goal_tasks (goal_id UUID NOT NULL REFERENCES networker_goals(id), task_id UUID NOT NULL REFERENCES entries(id), active BOOLEAN NOT NULL DEFAULT TRUE, PRIMARY KEY (goal_id,task_id))");
   await pool.query('CREATE TABLE IF NOT EXISTS prospect_notes (id UUID PRIMARY KEY, prospect_id UUID NOT NULL REFERENCES entries(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
@@ -166,6 +168,51 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const note=(await pool.query('INSERT INTO networker_followup_notes (id,networker_id,author_id,content) VALUES ($1,$2,$3,$4) RETURNING id,content,created_at',[randomUUID(),target.id,req.user.id,req.body.content.trim()])).rows[0];
     res.status(201).json({...note,author:req.user.name});
   }catch(e){next(e);}});
+  // Goals and their links are administrative; the task itself retains its existing visibility.
+  app.post('/api/networkers/:id/goals',auth,async(req,res,next)=>{try{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    if(!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof req.body.title!=='string' || !req.body.title.trim() || req.body.title.length>160) return res.status(400).json({error:'Intitulé de l’objectif requis (160 caractères maximum).'});
+    const person=(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[req.params.id])).rows[0];
+    if(!person) return res.status(404).json({error:'Networker introuvable.'});
+    const result=await pool.query('INSERT INTO networker_goals (id,networker_id,title,created_by) VALUES ($1,$2,$3,$4) RETURNING id,title,created_at',[randomUUID(),person.id,req.body.title.trim(),req.user.id]);
+    res.status(201).json(result.rows[0]);
+  }catch(e){next(e);}});
+  app.post('/api/networkers/:id/goals/:goalId/tasks',auth,async(req,res,next)=>{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    const {id,goalId}=req.params, {task_id,title}=req.body || {};
+    if(!/^[0-9a-f-]{36}$/i.test(id) || !/^[0-9a-f-]{36}$/i.test(goalId) || (task_id ? (typeof task_id!=='string' || !/^[0-9a-f-]{36}$/i.test(task_id) || title!==undefined) : (typeof title!=='string' || !title.trim() || title.length>160))) return res.status(400).json({error:'Tâche invalide.'});
+    const client=await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const goal=(await client.query('SELECT id FROM networker_goals WHERE id=$1 AND networker_id=$2 FOR UPDATE',[goalId,id])).rows[0];
+      const person=(await client.query("SELECT id,role FROM users WHERE id=$1 AND role='networker'",[id])).rows[0];
+      if(!goal || !person) {await client.query('ROLLBACK');return res.status(404).json({error:'Objectif ou networker introuvable.'});}
+      let taskId=task_id;
+      if(taskId){
+        const row=(await client.query("SELECT * FROM entries WHERE id=$1 AND section='taches' FOR UPDATE",[taskId])).rows[0];
+        const task=row && unpack(row);
+        if(!task || !(taskAssigned(task.extra,person) || (!task.extra.audience && task.created_by===person.id))) {await client.query('ROLLBACK');return res.status(400).json({error:'Cette tâche n’est pas attribuée à ce networker.'});}
+        const link=(await client.query('SELECT active FROM networker_goal_tasks WHERE goal_id=$1 AND task_id=$2',[goalId,taskId])).rows[0];
+        if(link?.active) {await client.query('ROLLBACK');return res.status(409).json({error:'Tâche déjà liée à cet objectif.'});}
+      } else {
+        taskId=randomUUID();
+        const extra=JSON.stringify({priority:'Normale',audience:'Networker spécifique',target:id});
+        await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',[taskId,'taches',title.trim(),'','À faire','','',req.user.id,extra]);
+      }
+      const restored=await client.query('UPDATE networker_goal_tasks SET active=TRUE WHERE goal_id=$1 AND task_id=$2 RETURNING goal_id',[goalId,taskId]);
+      if(!restored.rows.length) await client.query('INSERT INTO networker_goal_tasks (goal_id,task_id) VALUES ($1,$2)',[goalId,taskId]);
+      await client.query('COMMIT');res.status(201).json({id:taskId});
+    }catch(e){try{await client.query('ROLLBACK');}catch{} if(e.code==='23505') return res.status(409).json({error:'Tâche déjà liée à cet objectif.'});next(e);}finally{client.release();}
+  });
+  app.put('/api/networkers/:id/goals/:goalId/tasks/:taskId/unlink',auth,async(req,res,next)=>{try{
+    if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
+    if([req.params.id,req.params.goalId,req.params.taskId].some(id=>!/^[0-9a-f-]{36}$/i.test(id))) return res.status(400).json({error:'Identifiant invalide.'});
+    const goal=(await pool.query('SELECT id FROM networker_goals WHERE id=$1 AND networker_id=$2',[req.params.goalId,req.params.id])).rows[0];
+    if(!goal) return res.status(404).json({error:'Objectif introuvable.'});
+    const link=await pool.query('UPDATE networker_goal_tasks SET active=FALSE WHERE goal_id=$1 AND task_id=$2 AND active=TRUE RETURNING task_id',[goal.id,req.params.taskId]);
+    if(!link.rows.length) return res.status(404).json({error:'Lien introuvable.'});
+    res.json({ok:true});
+  }catch(e){next(e);}});
   app.put('/api/networkers/:id/sponsor',auth,async(req,res,next)=>{try{
     if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
     const id=req.params.id, sponsor=req.body.sponsor_id || null;
@@ -190,6 +237,10 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
       const meetings=(await pool.query("SELECT id,title,status,date,created_by,assigned_to,extra FROM entries WHERE section='rendezvous' ORDER BY created_at DESC")).rows.map(unpack);
       additional.meetings=meetings.filter(m=>meetingVisible(m,{...person,is_presenter:presenter(person)})).map(({id,title,status,date})=>({id,title,status,date}));
       additional.orders=(await pool.query('SELECT id,kind,status,created_at FROM commerce_orders WHERE buyer_id=$1 ORDER BY created_at DESC',[person.id])).rows;
+      const goals=(await pool.query('SELECT id,title,created_at FROM networker_goals WHERE networker_id=$1 ORDER BY created_at DESC',[person.id])).rows;
+      const links=(await pool.query('SELECT goal_id,task_id FROM networker_goal_tasks WHERE active=TRUE')).rows;
+      const byTask=new Map(tasks.map(t=>[t.id,{id:t.id,title:t.title,status:byId.get(t.id) || (t.extra.audience ? 'À faire' : t.status)}]));
+      additional.goals=goals.map(g=>{const items=links.filter(l=>l.goal_id===g.id).map(l=>byTask.get(l.task_id)).filter(Boolean);const completed=items.filter(t=>t.status==='Terminée').length;return {...g,tasks:items,completed,total:items.length,progress:items.length ? Math.round(completed*100/items.length) : 0};});
     }
     res.json({person,sponsor:sponsor ? {id:sponsor.id,name:sponsor.name} : null,downlines,prospects:prospects.map(({id,title,status})=>({id,title,status})),tasks:tasks.map(t=>({id:t.id,title:t.title,status:byId.get(t.id) || (t.extra.audience ? 'À faire' : t.status)})),formations,...additional});
   }catch(e){next(e);}});
@@ -427,6 +478,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (section === 'formations' && JSON.parse(previous.extra || '{}').presenter_id && !extra.presenter_id) return res.status(400).json({error:'Présentateur requis'});
     if (section === 'rendezvous' && !admin(req.user.role)) { extra.networker_id=previous.extra ? JSON.parse(previous.extra).networker_id : req.user.id;  }
     if (section === 'rendezvous') {const problem=await validateMeeting({...req.body,extra},req.user,!JSON.parse(previous.extra || '{}').category && !extra.category,JSON.parse(previous.extra || '{}').kind || ''); if(problem) return res.status(400).json({error:problem});}
+    if (section === 'taches' && (await pool.query('SELECT goal_id FROM networker_goal_tasks WHERE task_id=$1',[previous.id])).rows.length && (extra.audience !== JSON.parse(previous.extra || '{}').audience || extra.target !== JSON.parse(previous.extra || '{}').target)) return res.status(409).json({error:'Une tâche liée à un objectif ne peut pas changer de destinataire.'});
     if (section === 'taches' && JSON.parse(previous.extra || '{}').audience && (extra.audience !== JSON.parse(previous.extra).audience || extra.target !== JSON.parse(previous.extra).target)) return res.status(400).json({error:'Les destinataires ne peuvent pas être modifiés ; créez une nouvelle tâche.'});
     if (section === 'taches' && extra.audience) {const problem = await taskValidation(extra); if (problem) return res.status(400).json({error:problem});}
     if (section === 'rendezvous' && await meetingConflict({...req.body,extra},req.params.id)) return res.status(409).json({error:'Ce créneau est déjà réservé.'});
@@ -441,6 +493,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if(req.params.section === 'prospects' && !admin(req.user.role)) return res.status(403).json({error:'Seul un administrateur peut supprimer un prospect.'});
     if(req.params.section === 'rendezvous' && !admin(req.user.role)) return res.status(403).json({error:'Seul un administrateur peut supprimer un rendez-vous.'});
     if(!admin(req.user.role) && ['formations','ressources','taches'].includes(req.params.section)) return res.status(403).json({error:'Accès en lecture seule'});
+    if(req.params.section==='taches' && (await pool.query('SELECT goal_id FROM networker_goal_tasks WHERE task_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Cette tâche est liée à un objectif et ne peut pas être supprimée.'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM prospect_notes WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect possède des notes et ne peut pas être supprimé.'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM commerce_consumer_orders WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect est lié à une commande consommateur.'});
     if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>{const x=JSON.parse(m.extra||'{}');return x.prospect_id===req.params.id || (parseAdditionalNetworkers(x.additional_prospect_ids)||[]).includes(req.params.id.toLowerCase());})) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}

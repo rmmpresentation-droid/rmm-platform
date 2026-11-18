@@ -1342,6 +1342,37 @@ rows.push(
     "تم حفظ التغيير وتعذر التحديث. أعد تحميل الصفحة.",
   ],
 );
+rows.push(
+  ["Objectifs et progression", "Goals and progress", "الأهداف والتقدم"],
+  [
+    "Les objectifs sont réservés à l’administration. Les tâches restent visibles par le networker.",
+    "Goals are private to administrators. Tasks remain visible to the networker.",
+    "الأهداف مخصصة للإدارة، وتبقى المهام مرئية لعضو الشبكة.",
+  ],
+  ["Nouvel objectif", "New goal", "هدف جديد"],
+  ["Créer l’objectif", "Create goal", "إنشاء الهدف"],
+  ["Objectif créé.", "Goal created.", "تم إنشاء الهدف."],
+  ["Aucun objectif défini.", "No goals defined.", "لا توجد أهداف محددة."],
+  ["Progression", "Progress", "التقدم"],
+  ["tâches terminées", "tasks completed", "مهام مكتملة"],
+  [
+    "Aucune tâche liée : progression à 0 %.",
+    "No linked tasks: progress is 0%.",
+    "لا توجد مهام مرتبطة: التقدم ٠٪.",
+  ],
+  ["Nouvelle tâche pour cet objectif", "New task for this goal", "مهمة جديدة لهذا الهدف"],
+  ["Créer et lier la tâche", "Create and link task", "إنشاء المهمة وربطها"],
+  ["Tâche déjà attribuée", "Already assigned task", "مهمة مسندة مسبقاً"],
+  ["Lier la tâche existante", "Link existing task", "ربط المهمة الموجودة"],
+  ["Tâche liée à l’objectif.", "Task linked to the goal.", "تم ربط المهمة بالهدف."],
+  ["Délier", "Unlink", "إلغاء الربط"],
+  [
+    "Délier cette tâche de l’objectif ? Elle restera attribuée au networker.",
+    "Unlink this task from the goal? It will remain assigned to the networker.",
+    "هل تريد إلغاء ربط المهمة بالهدف؟ ستبقى مسندة لعضو الشبكة.",
+  ],
+  ["Tâche déliée de l’objectif.", "Task unlinked from the goal.", "تم إلغاء ربط المهمة بالهدف."],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {

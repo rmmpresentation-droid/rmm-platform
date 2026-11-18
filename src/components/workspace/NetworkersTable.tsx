@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
+import { NetworkerGoals, type Goal } from "@/components/workspace/NetworkerGoals";
 
 type Person = {
   id: string;
@@ -24,6 +25,7 @@ type Profile = {
   }[];
   meetings: { id: string; title: string; status: string; date: string }[];
   orders: { id: string; kind: string; status: string; created_at: string }[];
+  goals: Goal[];
   notes: { id: string; content: string; author: string; created_at: string }[];
 };
 const field = "w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
@@ -239,6 +241,13 @@ export function NetworkersTable() {
                   </button>
                 </form>
               </div>
+              <NetworkerGoals
+                key={selected}
+                networker={selected}
+                goals={profile.goals}
+                tasks={profile.tasks}
+                reload={refresh}
+              />
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div className="rounded-xl bg-card hairline p-5">
                   <h3 className="font-semibold">
