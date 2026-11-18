@@ -1433,6 +1433,34 @@ rows.push(
     "استكمل الأهداف السابقة في مساحة الأهداف.",
   ],
 );
+rows.push(
+  ["Arbres des networkers", "Networker trees", "أشجار أعضاء الشبكة"],
+  ["Mon arbre réseau", "My network tree", "شجرة شبكتي"],
+  [
+    "Tous les arbres et leurs liens de parrainage.",
+    "All trees and their sponsorship links.",
+    "جميع الأشجار وروابط الرعاية.",
+  ],
+  [
+    "Votre parrain direct et tous vos descendants.",
+    "Your direct sponsor and all your descendants.",
+    "راعيك المباشر وجميع أعضاء شبكتك التابعين.",
+  ],
+  ["Consulter tous les arbres", "View all trees", "عرض جميع الأشجار"],
+  ["Hiérarchie de parrainage", "Sponsorship hierarchy", "تسلسل الرعاية"],
+  ["Niveau", "Level", "المستوى"],
+  ["Lien à vérifier", "Link needs review", "الرابط بحاجة إلى مراجعة"],
+  [
+    "Anomalie de parrainage détectée : un lien ou un cycle nécessite une vérification par l’administration.",
+    "Sponsorship anomaly detected: a link or cycle requires administrator review.",
+    "تم اكتشاف خلل في الرعاية: يجب على الإدارة مراجعة الرابط أو الحلقة.",
+  ],
+  [
+    "Confirmer le transfert ? Le parrain actuel sera remplacé pour ce networker et sa branche.",
+    "Confirm the transfer? The current sponsor will be replaced for this networker and their branch.",
+    "هل تؤكد النقل؟ سيتم استبدال الراعي الحالي لعضو الشبكة وفرعه.",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {

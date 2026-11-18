@@ -35,6 +35,7 @@ export async function initialize(pool, email, password) {
   // Additive migration: preserve existing entries and keep their extra fields empty.
   await pool.query("ALTER TABLE entries ADD COLUMN IF NOT EXISTS extra TEXT NOT NULL DEFAULT '{}'");
   await pool.query('ALTER TABLE entries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)');
+  await pool.query('CREATE TABLE IF NOT EXISTS networker_sponsor_history (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), old_sponsor_id UUID REFERENCES users(id), new_sponsor_id UUID REFERENCES users(id), actor_id UUID NOT NULL REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query('CREATE TABLE IF NOT EXISTS networker_followup_notes (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), author_id UUID NOT NULL REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
   await pool.query("CREATE TABLE IF NOT EXISTS networker_goals (id UUID PRIMARY KEY, networker_id UUID NOT NULL REFERENCES users(id), title TEXT NOT NULL, created_by UUID NOT NULL REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS networker_goal_tasks (goal_id UUID NOT NULL REFERENCES networker_goals(id), task_id UUID NOT NULL REFERENCES entries(id), active BOOLEAN NOT NULL DEFAULT TRUE, PRIMARY KEY (goal_id,task_id))");
@@ -100,20 +101,24 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const result=await pool.query('INSERT INTO users (id,email,name,role,password_hash) VALUES ($1,$2,$3,$4,$5) RETURNING id,email,name,role,created_at',[randomUUID(),email.trim().toLowerCase(),name.trim(),role,await bcrypt.hash(password,12)]); res.status(201).json(result.rows[0]);
   } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
   // Disable rather than delete: business records and authorship remain intact.
-  app.put('/api/users/:id', auth, async (req,res,next) => { try {
+  app.put('/api/users/:id', auth, async (req,res,next) => {
     if (!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
     const {name,email,role,is_active}=req.body;
-    if (typeof name !== 'string' || !name.trim() || name.length > 100 || typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || !roles.includes(role) || typeof is_active !== 'boolean') return res.status(400).json({error:'Nom, e-mail, rôle et état valides requis.'});
-    const found=await pool.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1',[req.params.id]);
-    const target=found.rows[0];
-    if (!target) return res.status(404).json({error:'Compte introuvable'});
-    if (req.user.role !== 'superadmin' && (target.role !== 'presentateur' || role !== 'presentateur')) return res.status(403).json({error:'Accès interdit'});
-    // Avoid losing administrative access, including concurrent changes to multiple superadmins.
-    if (target.role === 'superadmin' && (!is_active || role !== 'superadmin')) return res.status(400).json({error:'Un superadministrateur ne peut pas être désactivé ou rétrogradé.'});
-    const result=await pool.query("UPDATE users SET name=$1,email=$2,role=$3,is_active=$4,auth_version=auth_version+1 WHERE id=$5 AND (role <> 'superadmin' OR ($3 = 'superadmin' AND $4 = TRUE)) AND ($6 = 'superadmin' OR role = 'presentateur') RETURNING id,email,name,role,is_active,created_at", [name.trim(),email.trim().toLowerCase(),role,is_active,target.id,req.user.role]);
-    if (!result.rows[0]) return res.status(409).json({error:'Le compte a changé ; actualisez la liste.'});
-    res.json(result.rows[0]);
-  } catch(e){ if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'}); next(e); } });
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id) || typeof name !== 'string' || !name.trim() || name.length > 100 || typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || !roles.includes(role) || typeof is_active !== 'boolean') return res.status(400).json({error:'Nom, e-mail, rôle et état valides requis.'});
+    const client=await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const users=(await client.query('SELECT id,name,email,role,is_active,sponsor_id FROM users ORDER BY id FOR UPDATE')).rows;
+      const target=users.find(u=>u.id===req.params.id);
+      if (!target) {await client.query('ROLLBACK');return res.status(404).json({error:'Compte introuvable'});}
+      if (req.user.role !== 'superadmin' && (target.role !== 'presentateur' || role !== 'presentateur')) {await client.query('ROLLBACK');return res.status(403).json({error:'Accès interdit'});}
+      if (target.role === 'superadmin' && (!is_active || role !== 'superadmin')) {await client.query('ROLLBACK');return res.status(400).json({error:'Un superadministrateur ne peut pas être désactivé ou rétrogradé.'});}
+      if(role!==target.role && (target.role==='networker' || role==='networker') && (target.sponsor_id || users.some(u=>u.role==='networker' && u.sponsor_id===target.id))) {await client.query('ROLLBACK');return res.status(409).json({error:'Ce compte possède des liens de parrainage. Détachez ou transférez-les avant de changer son rôle.'});}
+      const result=await client.query("UPDATE users SET name=$1,email=$2,role=$3,is_active=$4,auth_version=auth_version+1 WHERE id=$5 AND (role <> 'superadmin' OR ($3 = 'superadmin' AND $4 = TRUE)) AND ($6 = 'superadmin' OR role = 'presentateur') RETURNING id,email,name,role,is_active,created_at", [name.trim(),email.trim().toLowerCase(),role,is_active,target.id,req.user.role]);
+      if (!result.rows[0]) {await client.query('ROLLBACK');return res.status(409).json({error:'Le compte a changé ; actualisez la liste.'});}
+      await client.query('COMMIT');res.json(result.rows[0]);
+    }catch(e){try{await client.query('ROLLBACK');}catch{}if(e.code==='23505') return res.status(409).json({error:'Email déjà utilisé'});next(e);}finally{client.release();}
+  });
   // Only the superadmin can grant or revoke the additive title; existing legacy presenter roles remain unchanged.
   app.put('/api/users/:id/presenter',auth,async(req,res,next)=>{try{
     if(req.user.role!=='superadmin') return res.status(403).json({error:'Seul le superadministrateur peut attribuer ce titre.'});
@@ -162,6 +167,23 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const prospects=(await pool.query("SELECT assigned_to,created_by FROM entries WHERE section='prospects'")).rows;
     const counts=new Map();for(const p of prospects){const id=p.assigned_to || p.created_by;counts.set(id,(counts.get(id)||0)+1);}
     res.json(people.map(p=>({...p,prospect_count:counts.get(p.id)||0})));
+  }catch(e){next(e);}});
+  app.get('/api/networkers/tree',auth,async(req,res,next)=>{try{
+    if(!admin(req.user.role) && req.user.role!=='networker') return res.status(403).json({error:'Accès interdit'});
+    const all=(await pool.query("SELECT id,name,sponsor_id FROM users WHERE role='networker' ORDER BY name,id")).rows;
+    const byId=new Map(all.map(u=>[u.id,u])), children=new Map();
+    for(const u of all){if(u.sponsor_id){if(!children.has(u.sponsor_id)) children.set(u.sponsor_id,[]);children.get(u.sponsor_id).push(u);}}
+    if(admin(req.user.role)) {
+      const visited=new Set(), stack=all.filter(u=>!u.sponsor_id || !byId.has(u.sponsor_id));
+      const incomplete=all.some(u=>u.sponsor_id && !byId.has(u.sponsor_id));
+      while(stack.length){const node=stack.pop();if(visited.has(node.id)) continue;visited.add(node.id);for(const child of children.get(node.id)||[]) stack.push(child);}
+      return res.json({nodes:all,integrity_warning:incomplete || visited.size!==all.length});
+    }
+    const me=byId.get(req.user.id);if(!me) return res.status(404).json({error:'Networker introuvable.'});
+    const parent=byId.get(me.sponsor_id);const ancestors=new Set();let ancestor=me.sponsor_id;while(ancestor && !ancestors.has(ancestor) && ancestor!==me.id){ancestors.add(ancestor);ancestor=byId.get(ancestor)?.sponsor_id;}
+    const seen=new Set(), stack=[me], nodes=[];let warning=(!!me.sponsor_id && !parent) || ancestor===me.id || (!!ancestor && ancestors.has(ancestor));
+    while(stack.length){const node=stack.pop();if(seen.has(node.id)){warning=true;continue;}seen.add(node.id);nodes.push({id:node.id,name:node.name,sponsor_id:node.id===me.id?null:node.sponsor_id});for(const child of children.get(node.id)||[]) {if(ancestors.has(child.id)){warning=true;continue;}stack.push(child);}}
+    res.json({nodes,parent:parent ? {name:parent.name} : null,integrity_warning:warning});
   }catch(e){next(e);}});
   app.post('/api/networkers/:id/notes',auth,async(req,res,next)=>{try{
     if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
@@ -216,15 +238,25 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if(!link.rows.length) return res.status(404).json({error:'Lien introuvable.'});
     res.json({ok:true});
   }catch(e){next(e);}});
-  app.put('/api/networkers/:id/sponsor',auth,async(req,res,next)=>{try{
+  app.put('/api/networkers/:id/sponsor',auth,async(req,res,next)=>{
     if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'});
-    const id=req.params.id, sponsor=req.body.sponsor_id || null;
-    if(!/^[0-9a-f-]{36}$/i.test(id) || (sponsor && !/^[0-9a-f-]{36}$/i.test(sponsor))) return res.status(400).json({error:'Identifiant invalide'});
-    const target=(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[id])).rows[0]; if(!target) return res.status(404).json({error:'Networker introuvable'});
-    let current=sponsor; const seen=new Set([id]);
-    while(current) {if(seen.has(current)) return res.status(400).json({error:'Cette affectation créerait un cycle de parrainage.'});seen.add(current);const row=(await pool.query("SELECT sponsor_id FROM users WHERE id=$1 AND role='networker'",[current])).rows[0];if(!row) return res.status(400).json({error:'Parrain invalide'});current=row.sponsor_id;}
-    await pool.query('UPDATE users SET sponsor_id=$1 WHERE id=$2',[sponsor,id]);res.json({ok:true});
-  }catch(e){next(e);}});
+    const id=req.params.id, sponsor=req.body.sponsor_id || null, previous=req.body.previous_sponsor_id;
+    if(!/^[0-9a-f-]{36}$/i.test(id) || (sponsor && (typeof sponsor!=='string' || !/^[0-9a-f-]{36}$/i.test(sponsor))) || (previous!==undefined && previous!==null && (typeof previous!=='string' || !/^[0-9a-f-]{36}$/i.test(previous)))) return res.status(400).json({error:'Identifiant invalide'});
+    const client=await pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Lock in a stable order so simultaneous reparentings cannot validate incompatible graphs.
+      const network=(await client.query("SELECT id,role,sponsor_id FROM users ORDER BY id FOR UPDATE")).rows.filter(u=>u.role==='networker');
+      const byId=new Map(network.map(u=>[u.id,u])), target=byId.get(id);
+      if(!target){await client.query('ROLLBACK');return res.status(404).json({error:'Networker introuvable'});}
+      if(target.sponsor_id && sponsor!==target.sponsor_id && previous!==target.sponsor_id){await client.query('ROLLBACK');return res.status(409).json({error:'Confirmez le transfert depuis le parrain actuel et actualisez si nécessaire.'});}
+      if(previous!==undefined && previous!==target.sponsor_id){await client.query('ROLLBACK');return res.status(409).json({error:'Le parrain a changé ; actualisez la fiche.'});}
+      let current=sponsor;const seen=new Set([id]);
+      while(current){if(seen.has(current)){await client.query('ROLLBACK');return res.status(400).json({error:'Cette affectation créerait un cycle de parrainage.'});}seen.add(current);const row=byId.get(current);if(!row){await client.query('ROLLBACK');return res.status(400).json({error:'Parrain invalide'});}current=row.sponsor_id;}
+      if(sponsor!==target.sponsor_id) {await client.query('UPDATE users SET sponsor_id=$1 WHERE id=$2',[sponsor,id]);await client.query('INSERT INTO networker_sponsor_history (id,networker_id,old_sponsor_id,new_sponsor_id,actor_id) VALUES ($1,$2,$3,$4,$5)',[randomUUID(),id,target.sponsor_id,sponsor,req.user.id]);}
+      await client.query('COMMIT');res.json({ok:true});
+    }catch(e){try{await client.query('ROLLBACK');}catch{}next(e);}finally{client.release();}
+  });
   app.get('/api/networkers/:id/profile',auth,async(req,res,next)=>{try{
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id) || !(admin(req.user.role) || req.user.id===req.params.id)) return res.status(403).json({error:'Accès interdit'});
     const person=(await pool.query("SELECT id,name,email,role,created_at,sponsor_id,is_active,is_presenter FROM users WHERE id=$1 AND role='networker'",[req.params.id])).rows[0];

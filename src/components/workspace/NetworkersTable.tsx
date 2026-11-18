@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
 import type { Goal } from "@/components/workspace/NetworkerGoals";
+import { NetworkTree } from "@/components/workspace/NetworkTree";
 
 type Person = {
   id: string;
@@ -88,6 +89,17 @@ export function NetworkersTable() {
   }
   async function send(e: FormEvent, kind: "note" | "task" | "sponsor") {
     e.preventDefault();
+    if (
+      kind === "sponsor" &&
+      profile?.person.sponsor_id &&
+      sponsor !== profile.person.sponsor_id &&
+      !window.confirm(
+        t(
+          "Confirmer le transfert ? Le parrain actuel sera remplacé pour ce networker et sa branche.",
+        ),
+      )
+    )
+      return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -112,7 +124,10 @@ export function NetworkersTable() {
       if (kind === "sponsor")
         await api(`/api/networkers/${selected}/sponsor`, {
           method: "PUT",
-          body: JSON.stringify({ sponsor_id: sponsor }),
+          body: JSON.stringify({
+            sponsor_id: sponsor,
+            previous_sponsor_id: profile?.person.sponsor_id ?? null,
+          }),
         });
       setNote("");
       setTask("");
@@ -143,6 +158,14 @@ export function NetworkersTable() {
         <p role="status" className="text-sm">
           {message}
         </p>
+      )}
+      {!selected && (
+        <details className="rounded-xl border border-border">
+          <summary className="cursor-pointer p-4 font-semibold">
+            {t("Consulter tous les arbres")}
+          </summary>
+          <NetworkTree isAdmin />
+        </details>
       )}
       {!selected ? (
         <div className="rounded-xl bg-card hairline p-6">

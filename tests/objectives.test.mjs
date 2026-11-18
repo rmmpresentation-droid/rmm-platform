@@ -80,7 +80,14 @@ test("objectifs planifiés, groupes figés, progression individuelle et reprise 
   assert.equal(all.total, 6);
   assert.equal(all.completed, 1);
   assert.equal(all.progress, 17);
-  await root.put(`/api/networkers/${child.id}/sponsor`).send({ sponsor_id: "" });
+  assert.equal(
+    (
+      await root
+        .put(`/api/networkers/${child.id}/sponsor`)
+        .send({ sponsor_id: "", previous_sponsor_id: n.id })
+    ).status,
+    200,
+  );
   all = (await root.get("/api/objectives")).body.plans[0];
   assert.equal(all.people.length, 3);
   const custom = await root
