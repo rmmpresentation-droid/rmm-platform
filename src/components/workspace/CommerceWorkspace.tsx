@@ -1,3 +1,4 @@
+import { ConsumerOrders } from "@/components/workspace/ConsumerOrders";
 import { useLanguage } from "@/lib/i18n";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
@@ -36,12 +37,27 @@ type Data =
         approval: string;
         packs: Pack[];
         options: Option[];
-        hydro: { priceMillimes: number };
+        hydro: { priceMillimes: number; variant: string };
       };
       variants: Variant[];
       products: Product[];
       custom: Option[];
       orders: Order[];
+      consumerOrders: {
+        id: string;
+        prospect_id: string;
+        kind: string;
+        status: string;
+        rules_version: string;
+        snapshot: {
+          consumer: { name: string; phone: string; email: string };
+          pack?: Pack;
+          options?: { name: string }[];
+          lines: Line[];
+          priceMillimes: number;
+          pp: number | null;
+        };
+      }[];
       profiles: { user_id: string; rank: string }[];
       movements: { variant_id: string; delta: number; reason: string; created_at: string }[];
     };
@@ -138,14 +154,17 @@ export function CommerceWorkspace({
   view,
   directory,
   onCatalogueImported,
+  prospects,
 }: {
   view: "stock" | "commandes";
   directory: Person[];
   onCatalogueImported: () => Promise<void>;
+  prospects: { id: string; title: string; extra: Record<string, string> }[];
 }) {
   const { t: tr } = useLanguage();
   const { t } = useLanguage();
   const [data, setData] = useState<Data | null>(null);
+  const [buyerMode, setBuyerMode] = useState<"networker" | "consumer">("networker");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -214,7 +233,7 @@ export function CommerceWorkspace({
         </button>
       </section>
     );
-  const { rules, variants, products, custom, orders, profiles, movements } = data;
+  const { rules, variants, products, custom, orders, consumerOrders, profiles, movements } = data;
   const variantName = (id: string) => {
     const v = variants.find((x) => x.id === id);
     return v
@@ -270,6 +289,26 @@ export function CommerceWorkspace({
         <p role="status" className="rounded-md border border-green-500/40 p-3 text-sm">
           {message}
         </p>
+      )}
+      {view === "commandes" && (
+        <div role="group" aria-label={t("Type de client")} className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-pressed={buyerMode === "networker"}
+            onClick={() => setBuyerMode("networker")}
+            className={`rounded-md border px-4 py-2 text-sm ${buyerMode === "networker" ? "border-[var(--gold)] text-[var(--gold)]" : "border-border"}`}
+          >
+            {t("Networker")}
+          </button>
+          <button
+            type="button"
+            aria-pressed={buyerMode === "consumer"}
+            onClick={() => setBuyerMode("consumer")}
+            className={`rounded-md border px-4 py-2 text-sm ${buyerMode === "consumer" ? "border-[var(--gold)] text-[var(--gold)]" : "border-border"}`}
+          >
+            {t("Consommateur")}
+          </button>
+        </div>
       )}
       {view === "stock" ? (
         <>
@@ -552,6 +591,20 @@ export function CommerceWorkspace({
             </form>
           )}
         </>
+      ) : buyerMode === "consumer" ? (
+        <ConsumerOrders
+          prospects={prospects}
+          variants={variants}
+          products={products}
+          packs={rules.packs}
+          options={allOptions}
+          orders={consumerOrders}
+          hydroVariant={rules.hydro.variant}
+          onRefresh={async () => {
+            await load();
+            await onCatalogueImported();
+          }}
+        />
       ) : (
         <div className="space-y-5">
           <form className={`${card} space-y-4`} onSubmit={submitOrder}>

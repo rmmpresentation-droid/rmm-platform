@@ -1235,6 +1235,63 @@ rows.push([
   "Backup and restore for this module have not been verified.",
   "لم يتم التحقق من النسخ الاحتياطي واستعادة هذا القسم.",
 ]);
+rows.push(
+  ...[
+    ["Type de client", "Customer type", "نوع العميل"],
+    ["Commande consommateur", "Consumer order", "طلب مستهلك"],
+    [
+      "Choisissez un prospect existant ou créez sa fiche, puis sélectionnez un pack ou des produits individuels.",
+      "Choose an existing prospect or create a record, then select a pack or individual products.",
+      "اختر عميلاً محتملاً مسجلاً أو أنشئ ملفاً، ثم اختر باقة أو منتجات فردية.",
+    ],
+    ["Client", "Customer", "العميل"],
+    ["Prospect existant", "Existing prospect", "عميل محتمل مسجل"],
+    ["Nouveau consommateur", "New consumer", "مستهلك جديد"],
+    ["Sélectionner un prospect", "Select a prospect", "اختر عميلاً محتملاً"],
+    [
+      "Une fiche prospect sera créée avec la commande, sans compte utilisateur.",
+      "A prospect record will be created with the order, without a user account.",
+      "سيتم إنشاء ملف عميل محتمل مع الطلب دون حساب مستخدم.",
+    ],
+    ["Type de commande", "Order type", "نوع الطلب"],
+    ["Pack et options", "Pack and options", "باقة وخيارات"],
+    ["Produits individuels", "Individual products", "منتجات فردية"],
+    [
+      "Choisissez les options du pack ; elles peuvent être répétées.",
+      "Choose the pack options; they can be repeated.",
+      "اختر خيارات الباقة؛ يمكن تكرارها.",
+    ],
+    [
+      "Saisissez le prix unitaire de chaque produit en dinars.",
+      "Enter each product’s unit price in dinars.",
+      "أدخل السعر الفردي لكل منتج بالدينار.",
+    ],
+    ["Produit et format", "Product and size", "المنتج والحجم"],
+    ["Quantité", "Quantity", "الكمية"],
+    ["Prix unitaire (DT)", "Unit price (TND)", "السعر الفردي (د.ت)"],
+    [
+      "S Hydro reste réservé à une commande séparée avec profil Silver vérifié.",
+      "S Hydro remains restricted to a separate order with a verified Silver profile.",
+      "يبقى S Hydro مخصصاً لطلب منفصل مع التحقق من الملف الفضي.",
+    ],
+    ["Commandes consommateurs", "Consumer orders", "طلبات المستهلكين"],
+    [
+      "Indiquez un prix unitaire valide en dinars.",
+      "Enter a valid unit price in dinars.",
+      "أدخل سعراً فردياً صالحاً بالدينار.",
+    ],
+    [
+      "Valider cette commande et déduire le stock ?",
+      "Validate this order and deduct stock?",
+      "هل تريد تأكيد الطلب وخصم المخزون؟",
+    ],
+  ],
+);
+rows.push([
+  "Commande enregistrée, mais actualisation impossible. Rechargez la page avant de réessayer.",
+  "Order saved, but refresh failed. Reload the page before trying again.",
+  "تم حفظ الطلب لكن تعذر التحديث. أعد تحميل الصفحة قبل إعادة المحاولة.",
+]);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {

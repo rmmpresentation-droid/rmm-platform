@@ -28,6 +28,9 @@ export async function initializeCommerce(pool) {
   await pool.query(
     "CREATE TABLE IF NOT EXISTS commerce_orders (id UUID PRIMARY KEY, buyer_id UUID NOT NULL REFERENCES users(id), kind TEXT NOT NULL, status TEXT NOT NULL, rules_version TEXT NOT NULL REFERENCES commerce_rules(version), snapshot TEXT NOT NULL, created_by UUID NOT NULL REFERENCES users(id), validated_by UUID REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), validated_at TIMESTAMPTZ)",
   );
+  await pool.query(
+    "CREATE TABLE IF NOT EXISTS commerce_consumer_orders (id UUID PRIMARY KEY, prospect_id UUID NOT NULL REFERENCES entries(id), kind TEXT NOT NULL, status TEXT NOT NULL, rules_version TEXT NOT NULL REFERENCES commerce_rules(version), snapshot TEXT NOT NULL, created_by UUID NOT NULL REFERENCES users(id), validated_by UUID REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), validated_at TIMESTAMPTZ)",
+  );
 }
 
 export function mountCommerce(app, pool, { auth, admin, catalogueEntryId }) {
@@ -173,6 +176,7 @@ export function mountCommerce(app, pool, { auth, admin, catalogueEntryId }) {
           "SELECT id,buyer_id,kind,status,rules_version,snapshot,created_at,validated_at FROM commerce_orders ORDER BY created_at DESC",
         )
       ).rows.map((o) => ({ ...o, snapshot: json(o.snapshot) }));
+      const consumerOrders = (await pool.query("SELECT id,prospect_id,kind,status,rules_version,snapshot,created_at,validated_at FROM commerce_consumer_orders ORDER BY created_at DESC")).rows.map(o=>({...o,snapshot:json(o.snapshot)}));
       const profiles = (await pool.query("SELECT user_id,rank FROM commerce_profiles")).rows;
       const movements = (
         await pool.query(
@@ -186,6 +190,7 @@ export function mountCommerce(app, pool, { auth, admin, catalogueEntryId }) {
         products: entries,
         custom,
         orders,
+        consumerOrders,
         profiles,
         movements,
       });
@@ -367,6 +372,67 @@ export function mountCommerce(app, pool, { auth, admin, catalogueEntryId }) {
       res.status(201).json({ id });
     }),
   );
+  // Separate consumer orders preserve the existing non-null networker foreign key and all historical orders.
+  app.post("/api/commerce/consumer-orders", ...gate, wrap(async(req,res)=>{
+    const {consumer,kind}=req.body || {};
+    if(!consumer || !['existing','new'].includes(consumer.type) || !['pack','retail'].includes(kind)) throw bad(400,'Client ou commande invalide.');
+    const id=await tx(async db=>{
+      const rules=await currentRules(db);
+      let snapshot;
+      if(kind==='pack') {
+        const pack=rules.packs.find(p=>p.id===req.body.packId);
+        if(!pack || !Array.isArray(req.body.options) || req.body.options.length!==pack.optionCount) throw bad(400,'Le nombre d’options doit correspondre au pack.');
+        const custom=(await db.query('SELECT id,name,lines FROM commerce_custom_options')).rows.map(o=>({...o,lines:json(o.lines)}));
+        const choices=req.body.options.map(id=>[...rules.options,...custom].find(o=>o.id===id));
+        if(choices.some(o=>!o)) throw bad(400,'Option inconnue.');
+        const lines=await resolveLines(db,choices.flatMap(o=>o.lines));
+        if(lines.some(isHydro)) throw bad(400,'S Hydro est vendu uniquement séparément.');
+        snapshot={pack:{...pack},options:choices.map(o=>({id:o.id,name:o.name})),lines,priceMillimes:pack.priceMillimes,pp:pack.pp};
+      } else {
+        if(!Array.isArray(req.body.lines) || !req.body.lines.length || req.body.lines.length>100 || req.body.lines.some(l=>!l || typeof l.variant!=='string' || !isInt(l.quantity,1,10000) || !isInt(l.unitPriceMillimes,0,1000000000)) || new Set(req.body.lines.map(l=>l.variant)).size!==req.body.lines.length) throw bad(400,'Références, quantités et prix unitaires valides requis, sans doublon.');
+        const lines=await resolveLines(db,req.body.lines);
+        if(lines.some(isHydro)) throw bad(400,'S Hydro est vendu uniquement séparément et réservé aux profils Silver.');
+        const prices=new Map(req.body.lines.map(l=>[l.variant,l.unitPriceMillimes]));
+        const priced=lines.map(l=>({...l,unitPriceMillimes:prices.get(l.variant)}));
+        const total=priced.reduce((sum,l)=>sum+l.quantity*l.unitPriceMillimes,0);
+        if(!Number.isSafeInteger(total) || total>1000000000) throw bad(400,'Montant total invalide.');
+        snapshot={lines:priced,priceMillimes:total,pp:null};
+      }
+      let prospect;
+      if(consumer.type==='existing') {
+        if(!uuid.test(consumer.prospectId || '')) throw bad(400,'Sélectionnez un prospect.');
+        prospect=(await db.query("SELECT id,title,extra FROM entries WHERE id=$1 AND section='prospects'",[consumer.prospectId])).rows[0];
+        if(!prospect) throw bad(400,'Prospect introuvable.');
+      } else {
+        const {name,phone,email}=consumer;
+        if(!safeString(name,160) || !safeString(phone,100) || typeof email!=='string' || email.length>254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) throw bad(400,'Nom et téléphone requis, e-mail facultatif valide.');
+        prospect={id:randomUUID(),title:name.trim(),extra:JSON.stringify({phone:phone.trim(),email:email.trim(),interest:'À préciser'})};
+        await db.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[prospect.id,'prospects',prospect.title,'','','','',req.user.id,prospect.extra,req.user.id]);
+      }
+      const fields=json(prospect.extra || '{}');
+      snapshot.consumer={name:prospect.title,phone:fields.phone || '',email:fields.email || ''};
+      const id=randomUUID();await db.query('INSERT INTO commerce_consumer_orders (id,prospect_id,kind,status,rules_version,snapshot,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7)',[id,prospect.id,kind,'Brouillon',rules.version,JSON.stringify(snapshot),req.user.id]);return id;
+    });res.status(201).json({id});
+  }));
+  app.post("/api/commerce/consumer-orders/:id/validate", ...gate, wrap(async(req,res)=>{
+    if(!uuid.test(req.params.id)) throw bad(400,'Commande invalide.');
+    await tx(async db=>{
+      const order=(await db.query('SELECT id,status,snapshot FROM commerce_consumer_orders WHERE id=$1 FOR UPDATE',[req.params.id])).rows[0];
+      if(!order) throw bad(404,'Commande introuvable.');
+      if(order.status!=='Brouillon') throw bad(409,'Commande déjà traitée.');
+      const snapshot=json(order.snapshot), locked=[];
+      for(const line of snapshot.lines) {
+        const row=(await db.query('SELECT id,quantity,active FROM commerce_variants WHERE id=$1 FOR UPDATE',[line.variant])).rows[0];
+        if(!row || !row.active || row.quantity<line.quantity) throw bad(409,`Stock insuffisant pour ${line.product} (${line.format}).`);
+        locked.push({line,quantity:row.quantity});
+      }
+      for(const {line,quantity} of locked) {
+        await db.query('UPDATE commerce_variants SET quantity=$1 WHERE id=$2',[quantity-line.quantity,line.variant]);
+        await db.query('INSERT INTO commerce_stock_movements (id,variant_id,delta,reason,actor_id) VALUES ($1,$2,$3,$4,$5)',[randomUUID(),line.variant,-line.quantity,`Validation commande consommateur ${order.id}`,req.user.id]);
+      }
+      await db.query("UPDATE commerce_consumer_orders SET status='Validée',validated_by=$1,validated_at=NOW() WHERE id=$2",[req.user.id,order.id]);
+    });res.json({ok:true});
+  }));
   app.post(
     "/api/commerce/orders/:id/validate",
     ...gate,
