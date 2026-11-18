@@ -7,6 +7,7 @@ import { validateExtra } from '../src/lib/business-fields.mjs';
 import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
 import { initializeCommerce, mountCommerce } from './commerce.mjs';
 import { initializeAccounting, mountAccounting } from './accounting.mjs';
+import { initializeObjectives, mountObjectives } from './objectives.mjs';
 
 const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
 const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
@@ -41,6 +42,7 @@ export async function initialize(pool, email, password) {
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS training_attendance (training_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, attended BOOLEAN NOT NULL, quiz_score TEXT NOT NULL DEFAULT \'\', PRIMARY KEY (training_id,user_id))');
+  await initializeObjectives(pool);
   await initializeCommerce(pool);
   await initializeAccounting(pool);
   const count = await pool.query('SELECT COUNT(*)::int AS count FROM users');
@@ -87,6 +89,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
   } catch (err) { next(err); } }
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   mountAccounting(app, pool, {auth, admin});
+  mountObjectives(app, pool, {auth, admin});
   app.get('/api/me', auth, (req,res) => res.json({...req.user,is_presenter:presenter(req.user)}));
   app.post('/api/logout', auth, async (req,res,next) => { try { await pool.query('DELETE FROM sessions WHERE token_hash=$1',[hash(req.token)]); res.setHeader('Set-Cookie', sessionCookie('',0)); res.json({ok:true}); } catch(e) {next(e);} });
   app.get('/api/users', auth, async (req,res,next) => { try { if(!admin(req.user.role)) return res.status(403).json({error:'Accès interdit'}); const result=await pool.query(req.user.role === 'superadmin' ? 'SELECT id,email,name,role,is_active,is_presenter,created_at FROM users ORDER BY created_at DESC' : "SELECT id,email,name,role,is_active,is_presenter,created_at FROM users WHERE role='presentateur' ORDER BY created_at DESC"); res.json(result.rows); } catch(e){next(e);} });

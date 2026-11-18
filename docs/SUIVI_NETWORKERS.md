@@ -15,3 +15,5 @@ La progression est le nombre de tâches liées terminées pour **ce networker**,
 Une tâche peut être déliée sans être supprimée ou désattribuée, puis reliée à nouveau ; le lien est conservé sous forme inactive. Les tâches liées ou anciennement liées ne peuvent pas être supprimées ou changer de destinataire afin de préserver les relations historiques. Aucune modification ou suppression d'objectif n'est encore proposée. Aucun audit complet des opérations de liaison n'est prévu.
 
 Les tables additives `networker_goals` et `networker_goal_tasks` ne sont pas couvertes par la sauvegarde applicative historique. Transactions, concurrence et migrations PostgreSQL réelles, restauration et navigateur ne sont pas vérifiés : préproduction et données fictives uniquement, pas de GO PROD implicite.
+
+**Évolution :** la section précédente décrit le fonctionnement historique des objectifs privés. Les nouveaux objectifs planifiés et la reprise des anciens brouillons sont décrits dans [ADR 006](ADR/006-objectifs-planifies.md) ; ils sont visibles par leurs networkers après activation.

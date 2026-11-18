@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
-import { NetworkerGoals, type Goal } from "@/components/workspace/NetworkerGoals";
+import type { Goal } from "@/components/workspace/NetworkerGoals";
 
 type Person = {
   id: string;
@@ -241,13 +241,9 @@ export function NetworkersTable() {
                   </button>
                 </form>
               </div>
-              <NetworkerGoals
-                key={selected}
-                networker={selected}
-                goals={profile.goals}
-                tasks={profile.tasks}
-                reload={refresh}
-              />
+              <p className="text-sm text-muted-foreground">
+                {t("Les anciens objectifs sont à compléter dans l’espace Objectifs.")}
+              </p>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div className="rounded-xl bg-card hairline p-5">
                   <h3 className="font-semibold">

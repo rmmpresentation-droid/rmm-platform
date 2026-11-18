@@ -1373,6 +1373,66 @@ rows.push(
   ],
   ["Tâche déliée de l’objectif.", "Task unlinked from the goal.", "تم إلغاء ربط المهمة بالهدف."],
 );
+rows.push(
+  ["Objectifs", "Goals", "الأهداف"],
+  ["Définir un objectif", "Define a goal", "تحديد هدف"],
+  [
+    "Reprendre un ancien objectif (facultatif)",
+    "Resume an earlier goal (optional)",
+    "استكمال هدف سابق (اختياري)",
+  ],
+  ["Nouvel objectif", "New goal", "هدف جديد"],
+  [
+    "Les tâches déjà liées deviennent des tâches uniques sans échéance inventée et conservent leur progression.",
+    "Previously linked tasks become one-off tasks without an invented due date and retain their progress.",
+    "تصبح المهام المرتبطة مهام فردية دون اختلاق موعد مع الحفاظ على تقدمها.",
+  ],
+  ["Objectif", "Goal", "الهدف"],
+  ["Date de début", "Start date", "تاريخ البداية"],
+  ["Durée en jours (1 à 366)", "Duration in days (1 to 366)", "المدة بالأيام (١ إلى ٣٦٦)"],
+  ["Destinataires", "Recipients", "المستفيدون"],
+  ["Networker ou groupe personnalisé", "Networker or custom group", "عضو شبكة أو مجموعة مخصصة"],
+  [
+    "Networker et son réseau descendant",
+    "Networker and their downline",
+    "عضو الشبكة وشبكته التابعة",
+  ],
+  ["Destinataire", "Recipient", "المستفيد"],
+  [
+    "Les destinataires actifs sont figés à la création. Chaque personne a sa propre progression.",
+    "Active recipients are fixed when created. Each person has their own progress.",
+    "تثبت قائمة المستفيدين النشطين عند الإنشاء، ولكل شخص تقدمه الخاص.",
+  ],
+  ["Tâches récurrentes", "Recurring tasks", "المهام المتكررة"],
+  [
+    "Quotidiennes, hebdomadaires ou mensuelles depuis le début ; la dernière période est limitée à la fin de l’objectif.",
+    "Daily, weekly or monthly from the start; the last period ends with the goal.",
+    "مهام يومية أو أسبوعية أو شهرية من تاريخ البداية؛ وتنتهي الفترة الأخيرة مع الهدف.",
+  ],
+  ["Tâche", "Task", "مهمة"],
+  ["Fréquence", "Frequency", "التكرار"],
+  ["Chaque jour", "Every day", "كل يوم"],
+  ["Chaque semaine", "Every week", "كل أسبوع"],
+  ["Chaque mois", "Every month", "كل شهر"],
+  ["Retirer", "Remove", "إزالة"],
+  ["Ajouter une tâche récurrente", "Add a recurring task", "إضافة مهمة متكررة"],
+  ["Objectif enregistré.", "Goal saved.", "تم حفظ الهدف."],
+  ["Aucun objectif planifié.", "No scheduled goals.", "لا توجد أهداف مجدولة."],
+  ["jours", "days", "أيام"],
+  ["Progression globale", "Overall progress", "التقدم الإجمالي"],
+  ["Tâche unique", "One-off task", "مهمة فردية"],
+  ["Sans échéance", "No due date", "دون موعد استحقاق"],
+  [
+    "Anciennes tâches uniques (historique)",
+    "Earlier one-off tasks (history)",
+    "المهام الفردية السابقة (السجل)",
+  ],
+  [
+    "Les anciens objectifs sont à compléter dans l’espace Objectifs.",
+    "Complete earlier goals in the Goals workspace.",
+    "استكمل الأهداف السابقة في مساحة الأهداف.",
+  ],
+);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
