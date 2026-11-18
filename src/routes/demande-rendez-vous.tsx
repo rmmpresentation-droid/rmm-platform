@@ -13,14 +13,11 @@ export const Route = createFileRoute("/demande-rendez-vous")({
 });
 const input = "mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 function AppointmentRequestPage() {
-  const { t: tr } = useLanguage();
   const { t } = useLanguage();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [kind, setKind] = useState("");
   const [date, setDate] = useState("");
-  const [end, setEnd] = useState("");
   const [detail, setDetail] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -30,16 +27,12 @@ function AppointmentRequestPage() {
     event.preventDefault();
     if (busy) return;
     setError("");
-    if (end <= date || end.slice(0, 10) !== date.slice(0, 10)) {
-      setError("La fin doit être après le début, le même jour.");
-      return;
-    }
     setBusy(true);
     try {
       const response = await fetch("/api/public/appointment-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, kind, date, end_date: end, detail, consent }),
+        body: JSON.stringify({ name, phone, email, date, detail, consent }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Impossible d’envoyer la demande.");
@@ -48,7 +41,6 @@ function AppointmentRequestPage() {
       setPhone("");
       setEmail("");
       setDate("");
-      setEnd("");
       setDetail("");
       setConsent(false);
     } catch (error) {
@@ -88,7 +80,6 @@ function AppointmentRequestPage() {
             type="button"
             onClick={() => {
               setSent(false);
-              setKind("");
             }}
             className="mt-5 text-sm text-[var(--gold)] underline"
           >
@@ -146,41 +137,15 @@ function AppointmentRequestPage() {
             </label>
           </div>
           <label className="block text-sm">
-            {t("Type de demande de prospection *")}
-            <select
+            {t("Début souhaité · heure de Tunis *")}
+            <input
               required
-              value={kind}
-              onChange={(e) => setKind(e.target.value)}
+              type="datetime-local"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className={input}
-            >
-              <option value="">{t("Sélectionner")}</option>
-              <option value="Premier contact">{tr("Premier contact")}</option>
-              <option value="Présentation">{tr("Présentation")}</option>
-              <option value="Closing">{tr("Closing")}</option>
-            </select>
+            />
           </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm">
-              {t("Début souhaité · heure de Tunis *")}
-              <input
-                required
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={input}
-              />
-            </label>
-            <label className="block text-sm">
-              {t("Fin souhaitée · heure de Tunis *")}
-              <input
-                required
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className={input}
-              />
-            </label>
-          </div>
           <label className="block text-sm">
             {t("Précisions facultatives")}
             <textarea

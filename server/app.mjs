@@ -184,8 +184,10 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     for (const id of additional) if (!(await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[id])).rows[0]) return 'Networker supplémentaire invalide.';
     if (!x.category && legacy) return null;
     if (x.source === 'site' && x.category !== 'Prospection') return 'Une demande du site est une demande de prospection.';
-    if (!(meetingTypes[x.category]?.includes(x.kind) || (x.category === 'Networker' && x.kind === 'Formation' && existingKind === 'Formation'))) return 'Choisissez une catégorie et un type de rendez-vous valides.';
-    if (!validLocalDate(body.date) || !validLocalDate(x.end_date) || x.end_date <= body.date || x.end_date.slice(0,10) !== body.date.slice(0,10)) return 'Indiquez une heure de début et de fin le même jour, la fin après le début.';
+    // Public requests carry only a preferred start. Administration supplies type and end before confirmation.
+    const incompletePublicRequest = x.source === 'site' && ['Demandé','Proposé','Annulé'].includes(body.status);
+    if ((!incompletePublicRequest || x.kind) && !(meetingTypes[x.category]?.includes(x.kind) || (x.category === 'Networker' && x.kind === 'Formation' && existingKind === 'Formation'))) return 'Choisissez une catégorie et un type de rendez-vous valides.';
+    if (!validLocalDate(body.date) || ((!incompletePublicRequest || x.end_date) && (!validLocalDate(x.end_date) || x.end_date <= body.date || x.end_date.slice(0,10) !== body.date.slice(0,10)))) return 'Indiquez une heure de début et de fin le même jour, la fin après le début.';
     if (x.networker_id || x.source !== 'site') {
       if (!/^[0-9a-f-]{36}$/i.test(x.networker_id || '')) return 'Sélectionnez un networker.';
       const networker = (await pool.query("SELECT id FROM users WHERE id=$1 AND role='networker'",[x.networker_id])).rows[0];
@@ -208,16 +210,16 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const attempt=publicAttempts.get(req.ip) || {count:0,until:now+60000};
     if(attempt.count>=5) return res.status(429).json({error:'Trop de demandes. Réessayez plus tard.'});
     attempt.count++;publicAttempts.set(req.ip,attempt);
-    const {name,phone,email,kind,date,end_date,detail,consent}=req.body || {};
-    if(typeof name!=='string' || !name.trim() || name.length>160 || typeof phone!=='string' || !phone.trim() || phone.length>100 || typeof email!=='string' || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !meetingTypes.Prospection.includes(kind) || typeof detail!=='string' || detail.length>1000 || consent!==true || !validLocalDate(date) || !validLocalDate(end_date) || end_date<=date || end_date.slice(0,10)!==date.slice(0,10)) return res.status(400).json({error:'Vérifiez les coordonnées, le type et les dates de la demande.'});
-    const owner=(await pool.query("SELECT id,name FROM users WHERE id=$1 AND role IN ('admin','superadmin')",[publicRequestAdminId])).rows[0];
+    const {name,phone,email,date,detail,consent}=req.body || {};
+    if(typeof name!=='string' || !name.trim() || name.length>160 || typeof phone!=='string' || !phone.trim() || phone.length>100 || typeof email!=='string' || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof detail!=='string' || detail.length>1000 || consent!==true || !validLocalDate(date)) return res.status(400).json({error:'Vérifiez les coordonnées et la date de la demande.'});
+    const owner=(await pool.query("SELECT id,name FROM users WHERE id=$1 AND role IN ('admin','superadmin') AND is_active=TRUE",[publicRequestAdminId])).rows[0];
     if(!owner) return res.status(503).json({error:'Les demandes en ligne ne sont pas configurées.'});
     const client=await pool.connect();
     try {
       await client.query('BEGIN');
       const prospectId=randomUUID();
       await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[prospectId,'prospects',name.trim(),'','', '', '', owner.id,JSON.stringify({phone:phone.trim(),email:email.trim(),interest:'À préciser'}),owner.id]);
-      await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[randomUUID(),'rendezvous',`${kind} · ${name.trim()}`.slice(0,160),detail.trim(),'Demandé','',date,owner.id,JSON.stringify({source:'site',consent:'oui',category:'Prospection',kind,end_date,prospect_id:prospectId}),null]);
+      await client.query('INSERT INTO entries (id,section,title,detail,status,owner,date,created_by,extra,assigned_to) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[randomUUID(),'rendezvous',`Demande de rendez-vous · ${name.trim()}`.slice(0,160),detail.trim(),'Demandé','',date,owner.id,JSON.stringify({source:'site',consent:'oui',category:'Prospection',kind:'',end_date:'',prospect_id:prospectId}),null]);
       await client.query('COMMIT');
     } catch(e) { await client.query('ROLLBACK'); throw e; } finally {client.release();}
     res.status(201).json({ok:true});
@@ -352,7 +354,8 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     const extra = req.body.extra ?? JSON.parse(previous.extra || '{}');
     if (section === 'rendezvous' && ((extra.source || '') !== (JSON.parse(previous.extra || '{}').source || '') || (extra.consent || '') !== (JSON.parse(previous.extra || '{}').consent || ''))) return res.status(400).json({error:'L’origine de la demande ne peut pas être modifiée.'});
     // Legacy entries remain editable; structured entries are fully validated.
-    const extraError = validateExtra(section,extra,{required:Object.keys(JSON.parse(previous.extra || '{}')).length > 0 || Object.keys(extra).length > 0});
+    const isIncompletePublicRequest = section === 'rendezvous' && extra.source === 'site' && ['Demandé','Proposé','Annulé'].includes(req.body.status);
+    const extraError = validateExtra(section,extra,{required:!isIncompletePublicRequest && (Object.keys(JSON.parse(previous.extra || '{}')).length > 0 || Object.keys(extra).length > 0)});
     if (extraError) return res.status(400).json({error:extraError});
     if (section === 'prospects' && req.body.status === 'Sans commande' && !extra.refusal_reason?.trim() && (previous.status !== 'Sans commande' || JSON.parse(previous.extra || '{}').refusal_reason?.trim())) return res.status(400).json({error:'Indiquez le motif du refus.'});
     const commerceError=await validateCommerce(section,extra,!JSON.parse(previous.extra || '{}').item_type && !JSON.parse(previous.extra || '{}').pack_id && !extra.item_type && !extra.pack_id); if(commerceError) return res.status(400).json({error:commerceError});
