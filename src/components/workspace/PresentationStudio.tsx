@@ -1,5 +1,6 @@
 import { ArabicJourney } from "@/components/workspace/ArabicJourney";
 import { PartnershipPresentation } from "@/components/workspace/PartnershipPresentation";
+import { OriginalPresentation } from "@/components/workspace/OriginalPresentation";
 import { useLanguage } from "@/lib/i18n";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
@@ -82,7 +83,9 @@ const chapterIcons = [Sparkles, HeartPulse, Building2, Layers3, Orbit];
 type Medium = { url: string; type: "image" | "video"; name: string };
 
 export function PresentationStudio() {
-  const [journey, setJourney] = useState<"partnership" | "arabic" | "legacy">("partnership");
+  const [journey, setJourney] = useState<"original" | "partnership" | "arabic" | "legacy">(
+    "original",
+  );
   const { t } = useLanguage();
   return (
     <div>
@@ -93,11 +96,19 @@ export function PresentationStudio() {
       >
         <button
           type="button"
+          aria-pressed={journey === "original"}
+          onClick={() => setJourney("original")}
+          className={`rounded-full border px-4 py-2 text-sm ${journey === "original" ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
+        >
+          {t("Présentation originale intégrale")}
+        </button>
+        <button
+          type="button"
           aria-pressed={journey === "partnership"}
           onClick={() => setJourney("partnership")}
           className={`rounded-full border px-4 py-2 text-sm ${journey === "partnership" ? "border-[var(--gold)] bg-[var(--gold)] text-black" : "border-border"}`}
         >
-          {t("De l’investissement au partenariat")}
+          {t("Version adaptée")}
         </button>
         <button
           type="button"
@@ -119,7 +130,9 @@ export function PresentationStudio() {
       <p className="mt-2 text-xs text-muted-foreground">
         {t("Les médias locaux sont effacés en changeant de présentation.")}
       </p>
-      {journey === "partnership" ? (
+      {journey === "original" ? (
+        <OriginalPresentation />
+      ) : journey === "partnership" ? (
         <PartnershipPresentation />
       ) : journey === "arabic" ? (
         <ArabicJourney />

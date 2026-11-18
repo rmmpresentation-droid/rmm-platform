@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>من الاستثمار إلى الشراكة – RMM × Swisderm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Reem+Kufi:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F7F8;--fg:#10303F;--mut:#4F6A73;--card:#fff;--line:#cfe0e4;--aqua:#1E8F9D;--gold:#C98A12;--coral:#C2453A;--water:rgba(47,167,181,.16);--wave:rgba(47,167,181,.35);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0C2230;--fg:#EAF4F5;--mut:#9CBBC2;--card:#133446;--line:#21495c;--aqua:#4FD0DE;--gold:#F0B94A;--coral:#F0847A;--water:rgba(79,208,222,.14);--wave:rgba(79,208,222,.3)}}
+:root[data-theme="dark"]{--bg:#0C2230;--fg:#EAF4F5;--mut:#9CBBC2;--card:#133446;--line:#21495c;--aqua:#4FD0DE;--gold:#F0B94A;--coral:#F0847A;--water:rgba(79,208,222,.14);--wave:rgba(79,208,222,.3)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:Cairo,Tahoma,"Segoe UI",sans-serif;font-size:clamp(15px,1.5vw,19px);line-height:1.7}
+h1,h2,.num{font-family:"Reem Kufi",Cairo,Tahoma,sans-serif}
+#water{position:fixed;inset:auto 0 0 0;height:6%;background:var(--water);transition:height 1s cubic-bezier(.3,.7,.2,1);pointer-events:none;z-index:0}
+#water svg{position:absolute;top:-22px;width:200%;height:24px;animation:wv 7s linear infinite}
+@keyframes wv{to{transform:translateX(50%)}}
+.deck{position:relative;height:100%;z-index:1}
+.slide{position:absolute;inset:0;padding:clamp(18px,4vw,56px) clamp(18px,6vw,90px) 84px;overflow-y:auto;opacity:0;visibility:hidden;transform:translateX(-40px);transition:opacity .6s,transform .6s,visibility .6s}
+.slide.on{opacity:1;visibility:visible;transform:none}
+.slide.past{transform:translateX(40px)}
+.in{max-width:1100px;margin:auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:18px}
+h2{font-size:clamp(26px,4.4vw,52px);line-height:1.3;font-weight:700}
+.lead{color:var(--mut);max-width:62ch}
+.rv{opacity:0;transform:translateY(14px)}
+.on .rv{animation:up .7s forwards;animation-delay:var(--d,0s)}
+@keyframes up{to{opacity:1;transform:none}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.st{border-top:3px solid var(--gold);padding:10px 4px}
+.num{font-size:clamp(34px,5vw,60px);color:var(--aqua);line-height:1.1}
+.st small,.src{color:var(--mut);font-size:.8em;display:block}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:6px 18px;transition:.25s}
+.chip:hover{border-color:var(--aqua)}
+.chip[aria-pressed=true]{background:var(--aqua);border-color:var(--aqua);color:#fff;transform:scale(1.05)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--aqua)}
+.big{font-size:clamp(30px,5vw,56px);font-family:"Reem Kufi",sans-serif;color:var(--coral)}
+.sw{transition:opacity .3s,transform .3s}.sw.out{opacity:0;transform:translateY(8px)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+ul.cl{list-style:none;padding:0}ul.cl li{padding:7px 0;border-bottom:1px solid var(--line)}
+ul.cl b{color:var(--aqua)}
+.bad li b{color:var(--coral)}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;animation:up .5s both}
+.pc h3{font-size:1.05em;color:var(--aqua)}.pc p{font-size:.88em;color:var(--mut)}.pc em{font-style:normal;font-size:.88em;display:block;margin-top:6px}
+.note{border-right:5px solid var(--coral);background:var(--card);padding:10px 16px;border-radius:8px;font-size:.92em}
+.hero{font-size:clamp(34px,7.5vw,92px);line-height:1.2}
+.cta{background:var(--gold);color:#10303F;border:0;border-radius:999px;padding:12px 34px;font-weight:800;align-self:flex-start;transition:transform .25s}
+.cta:hover{transform:translateY(-3px)}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#nav{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));inset-inline:0;display:flex;justify-content:center;align-items:center;gap:12px;z-index:5}
+#nav button{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--card)}
+#dots{display:flex;gap:7px}#dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--line);padding:0;transition:.3s}
+#dots button.on{background:var(--aqua);width:26px;border-radius:6px}
+button.pc{text-align:start;width:100%;cursor:pointer;font:inherit;color:inherit;transition:transform .25s,border-color .25s}button.pc:hover{transform:translateY(-4px);border-color:var(--aqua)}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--bg);color:var(--fg);width:min(720px,92vw);max-height:88vh;padding:26px;overflow:auto}dialog::backdrop{background:rgba(8,26,36,.65);backdrop-filter:blur(3px)}dialog[open]{animation:up .35s both}
+.x{position:absolute;top:10px;inset-inline-start:12px;border:0;background:none;font-size:22px}#dc h3{font-family:"Reem Kufi",sans-serif;font-size:1.7em;color:var(--aqua)}#dc h4{margin:14px 0 4px;color:var(--gold)}.tag{display:inline-block;background:var(--water);border-radius:999px;padding:2px 14px;font-size:.85em}.say{border-right:5px solid var(--aqua);background:var(--card);padding:10px 14px;border-radius:8px}
+@media(max-width:700px){.two{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style></head><body>
+<canvas id="bub" aria-hidden="true"></canvas>
+<div id="water" aria-hidden="true"><svg viewBox="0 0 400 24" preserveAspectRatio="none"><path d="M0 12 Q50 0 100 12 T200 12 T300 12 T400 12 V24 H0Z" fill="var(--wave)"/></svg></div>
+<main class="deck" id="deck">
+
+<section class="slide on"><div class="in">
+<p class="lead rv" style="--d:.1s">RMM – Rise Mindset Master</p>
+<h1 class="hero rv" style="--d:.25s">من الاستثمار<br>إلى الشراكة</h1>
+<p class="lead rv" style="--d:.45s">كيف نبني مصدر دخل ثانٍ في تونس عبر التسويق الشبكي، ومعه منتجات Swisderm للعافية والعناية.</p>
+<button class="cta rv" style="--d:.65s" onclick="go(1)">لنبدأ</button></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">دخل واحد لم يعد يكفي</h2>
+<div class="stats">
+<div class="st rv" style="--d:.1s"><div class="num" data-to="15" data-suf="%">0</div>بطالة عامة<small>الثلاثي 3 / 2026</small></div>
+<div class="st rv" style="--d:.2s"><div class="num" data-to="24.6" data-dec="1" data-suf="%">0</div>بطالة حاملي الشهادات العليا<small>الثلاثي 3 / 2026</small></div>
+<div class="st rv" style="--d:.3s"><div class="num" data-to="35.4" data-dec="1" data-suf="%">0</div>بطالة الشباب 15–24<small>الثلاثي 2 / 2026</small></div>
+<div class="st rv" style="--d:.4s"><div class="num" data-to="5.6" data-dec="1" data-suf="%">0</div>التضخم، وأسعار الغذاء 8.5%<small>أكتوبر 2026</small></div></div>
+<div class="panel rv" style="--d:.55s"><div class="row" style="justify-content:space-between;align-items:center"><b>ماذا يفعل التضخم بألف دينار مدّخرة؟</b><span id="yl">بعد 5 سنوات</span></div>
+<input id="yr" type="range" min="1" max="10" value="5" aria-label="عدد السنوات">
+<div class="big" id="yv">761 د</div><small class="src" id="yd">فقدت نحو 24% من قدرتها الشرائية (افتراض: بقاء التضخم عند 5.6%)</small></div>
+<span class="src">المصادر: المعهد الوطني للإحصاء (INS) عبر الصحافة التونسية، نوفمبر 2026.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">التسويق الشبكي: صناعة عالمية، بشروطها</h2>
+<div class="stats">
+<div class="st rv" style="--d:.1s"><div class="num" data-to="167.3" data-dec="1" data-suf=" مليار $">0</div>مبيعات البيع المباشر 2025</div>
+<div class="st rv" style="--d:.2s"><div class="num" data-to="98.8" data-dec="1" data-suf=" مليون">0</div>موزّع مستقل</div>
+<div class="st rv" style="--d:.3s"><div class="num" data-to="70" data-suf="%">0</div>منهم نساء</div>
+<div class="st rv" style="--d:.4s"><div class="num" data-to="57" data-suf="%">0</div>من الأسواق نمت في 2025</div></div>
+<div class="panel rv" style="--d:.5s"><div class="row"><button class="chip" aria-pressed="true" data-k="ok">تسويق شبكي سليم</button><button class="chip" aria-pressed="false" data-k="bad">نظام هرمي</button></div>
+<ul class="cl sw" id="cmp"></ul></div>
+<p class="note rv" style="--d:.65s">الصدق أولاً: تحليل FTC (2024) لـ70 بيان دخل أظهر أن أغلب المشاركين في شركات MLM يربحون القليل أو يخسرون. لذلك نبيع منتجاً حقيقياً ولا نعد بالثراء.</p>
+<span class="src">المصادر: WFDSA STATS 2025؛ FTC Staff Report 2024.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">Swisderm: ما نعرفه وما نتحقق منه</h2>
+<p class="lead rv" style="--d:.1s">اضغط على كل عنصر لترى ما يمكن قوله بدقة.</p>
+<div class="row rv" style="--d:.2s" id="fc"></div>
+<div class="panel sw" id="fd" style="min-height:130px"></div>
+<span class="src">المصادر: ملفات الشركة؛ Malaysia4u؛ Mibelle Biochemistry. أرفق دائماً الوثائق الحالية.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">ثلاث فئات منتجات</h2>
+<p class="lead rv" style="--d:.05s">اضغط على أي منتج لتفتح بطاقته التفصيلية.</p>
+<div class="row rv" style="--d:.1s" id="pt"></div>
+<div class="pg" id="pl"></div>
+<p class="note rv" style="--d:.3s">منتجات عناية وعافية، وليست أدوية. لا نقول «يعالج» ولا «بدون آثار جانبية».</p></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">خطة الأرباح: اختر باقة لترى الأرقام</h2>
+<div class="row rv" style="--d:.1s" id="pk"></div>
+<div class="stats" id="pv"></div>
+<div class="panel rv" style="--d:.3s"><b>مثال حسابي، لا وعد:</b> لو ضاعف كل شريك فريقه كل شهر
+<input id="mo" type="range" min="1" max="13" value="6" aria-label="الأشهر">
+<div class="row" style="justify-content:space-between"><span id="ml">الشهر 6</span><span id="mv"></span></div>
+<small class="src">جدول الشركة (عمولة توازن 10%). في الواقع يتوقف أغلب الناس قبل ذلك بكثير، والدخل يختلف ويتطلب بيعاً حقيقياً.</small></div>
+<span class="src">المصدر: عرض Swisderm الرسمي. الأسعار بالدينار دون ضريبة.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">قبل أن تقرّر</h2>
+<div class="two">
+<ul class="cl rv" style="--d:.15s"><li><b>جرّب</b> منتجاً واحداً لنفسك أولاً.</li><li><b>اقرأ</b> العقد وسياسة الاسترجاع.</li><li><b>تحقق</b> من التراخيص والوثائق الحالية.</li><li><b>اسأل</b> عن نتيجة المشاركين النموذجية لا الأفضل.</li></ul>
+<ul class="cl bad rv" style="--d:.3s"><li><b>لا دخل مضمون:</b> النتائج متفاوتة وقد تكون صفراً.</li><li><b>ليست أدوية:</b> للمرض استشر الطبيب.</li><li><b>لا ضغط:</b> القرار قرارك، خذ وقتك.</li></ul></div>
+<button class="cta rv" style="--d:.5s" onclick="go(0)">العودة إلى البداية</button></div></section>
+</main>
+
+<dialog id="dlg"><button class="x" onclick="dlg.close()" aria-label="إغلاق">✕</button><div id="dc"></div></dialog>
+<nav id="nav"><button onclick="go(i-1)" aria-label="السابق">›</button><div id="dots"></div><button onclick="go(i+1)" aria-label="التالي">‹</button></nav>
+
+<script>
+const S=[...document.querySelectorAll('.slide')];let i=0;
+const dots=document.getElementById('dots'),wt=document.getElementById('water');
+S.forEach((_,k)=>{const b=document.createElement('button');b.setAttribute('aria-label','شريحة '+(k+1));b.onclick=()=>go(k);dots.append(b)});
+function count(el){const to=+el.dataset.to,d=+(el.dataset.dec||0),suf=el.dataset.suf||'';let t0=null;
+ const f=t=>{t0??=t;const p=Math.min((t-t0)/1400,1),e=1-Math.pow(1-p,3);el.textContent=(to*e).toFixed(d)+suf;if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function go(n){n=Math.max(0,Math.min(S.length-1,n));S.forEach((s,k)=>{s.classList.toggle('on',k===n);s.classList.toggle('past',k<n)});
+ i=n;[...dots.children].forEach((b,k)=>b.classList.toggle('on',k===n));wt.style.height=(6+n/(S.length-1)*34)+'%';
+ S[n].scrollTop=0;S[n].querySelectorAll('.num').forEach(count)}
+addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(e.key==='ArrowLeft'||e.key==='PageDown')go(i+1);if(e.key==='ArrowRight'||e.key==='PageUp')go(i-1)});
+let x0=null;addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(x0==null||document.querySelector('dialog[open]'))return;const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>70)go(i+(d<0?1:-1));x0=null});
+function swap(el,fn){el.classList.add('out');setTimeout(()=>{fn();el.classList.remove('out')},250)}
+// slide 2
+const yr=document.getElementById('yr');function yy(){const y=+yr.value,v=1000/Math.pow(1.056,y);
+ document.getElementById('yl').textContent='بعد '+y+(y>10?' سنة':' سنوات');document.getElementById('yv').textContent=Math.round(v)+' د';
+ document.getElementById('yd').textContent='فقدت نحو '+Math.round(100-v/10)+'% من قدرتها الشرائية (افتراض: بقاء التضخم عند 5.6%)'}
+yr.oninput=yy;yy();
+// slide 3
+const C={ok:['الأرباح من مبيعات منتجات لمستهلكين','منتج حقيقي بسعر معقول وسياسة استرجاع','التركيز على الزبائن وإعادة الشراء','أرقام شفافة ونتائج متفاوتة'],
+ bad:['الأرباح من رسوم انضمام الأعضاء الجدد','منتج ثانوي أو وهمي','التركيز على التجنيد فقط','وعود «ثراء سريع» وشهادات مبالغ فيها']};
+const cmp=document.getElementById('cmp');function showC(k){cmp.innerHTML=C[k].map(t=>'<li>'+(k==='ok'?'<b>✓</b> ':'<b>✕</b> ')+t+'</li>').join('')}
+showC('ok');cmp.parentElement.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{cmp.parentElement.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));
+ swap(cmp,()=>showC(b.dataset.k));cmp.parentElement.parentElement.classList.toggle('bad',b.dataset.k==='bad')});
+// slide 4
+const F=[['الشركة','Swisderm International (M) Sdn Bhd، المقر في ماليزيا، تأسست فيفري 2013 حسب عرضها. لا نقول «شركة سويسرية».'],
+['الانتماء','عضو في جمعية البيع المباشر الماليزية (DSAM) 2025، وتحمل رخصة بيع مباشر ماليزية. اطلب النسخة الحالية.'],
+['تونس','انطلقت في تونس سنة 2019، وحصل S Factor على ترخيص عرض للاستهلاك من وزارة الصحة سنة 2023.'],
+['العلم','مكوّنات PhytoCellTec من Mibelle Biochemistry السويسرية: خلايا جذعية نباتية لحماية خلايا البشرة تجميلياً. جوائزها للمكوّن لا للمنتجات.'],
+['لا نقول','إن الخلايا الجذعية تعالج السكري أو الضغط أو السرطان أو العقم. لا يوجد دليل على ذلك في ملفات الشركة.']];
+const fc=document.getElementById('fc'),fd=document.getElementById('fd');
+F.forEach((f,k)=>{const b=document.createElement('button');b.className='chip';b.textContent=f[0];b.onclick=()=>{[...fc.children].forEach(c=>c.setAttribute('aria-pressed',c===b));swap(fd,()=>fd.textContent=f[1])};fc.append(b);if(!k)b.click()});
+// slide 5
+const P={'مكملات غذائية':[['S Factor','كولاجين السمك، توت أسود، مانغوستين، كركم أبيض، فيتامين C','يدعم العناية بالبشرة من الداخل بمضادات الأكسدة والكولاجين'],['S Xtra Caffe','أرابيكا وروبوستا مع Tongkat Ali وGalangal، حلال','قهوة بدون سكر مضاف تساعد على اليقظة']],
+'العناية بالبشرة':[['3S Capsule','خلايا جذعية نباتية وزيت الجوجوبا','ترطيب وملمس أنعم'],['B’tox Cream','فيتامين E ومستخلص اللبلاب','يحسّن مظهر الخطوط الدقيقة'],['HTL بخاخ','هاماميليس وكولاجين وألانتوين','انتعاش وترطيب'],['Bio White','فيتامين C وE، SPF25','يساعد على توحيد لون البشرة'],['Sun Protector','SPF 30 وأربوتين وأرغان','واقٍ من الشمس مرطّب'],['S Fem Serum','غوارانا ولبلاب','عناية بملمس الجسم وترطيبه'],['Gentle Cleansing','شاي أخضر وألوفيرا وبابونج','تنظيف لطيف'],['Revitalizing Foundation','جوجوبا ولوز حلو، SPF30','يوحّد اللون ويرطّب']],
+'تكنولوجيا صحية':[['SHYDRO','زجاجة هيدروجين بتقنية PEM/SPE','ماء مُغنّى بالهيدروجين. مراجعة 2024 (25 دراسة) ترى أن الأدلة واعدة لكنها أولية.']]};
+const pt=document.getElementById('pt'),pl=document.getElementById('pl');
+Object.keys(P).forEach((k,n)=>{const b=document.createElement('button');b.className='chip';b.textContent=k;b.onclick=()=>{[...pt.children].forEach(c=>c.setAttribute('aria-pressed',c===b));
+ pl.innerHTML=P[k].map((p,j)=>'<button class="pc" data-n="'+p[0]+'" style="animation-delay:'+j*.07+'s"><h3>'+p[0]+'</h3><p>'+p[1]+'</p><em>'+p[2]+' ◂ التفاصيل</em></button>').join('');pl.querySelectorAll('.pc').forEach(c=>c.onclick=()=>openD(c.dataset.n))};pt.append(b);if(!n)b.click()});
+const D={
+'S Factor':{f:'20 كيساً · مشروب بودرة نباتي',d:'مشروب يومي غني بالكولاجين ومضادات الأكسدة للعناية بالبشرة من الداخل.',a:[['كولاجين السمك','يدعم مرونة البشرة وترطيبها'],['توت أسود','غني بفيتامين C ومضادات الأكسدة'],['مانغوستين، أساي، توت بري','مضادات أكسدة نباتية'],['كركم أبيض','خصائص مضادة للأكسدة'],['خلية جذعية التفاح','مكوّن لحماية خلايا البشرة تجميلياً'],['Q10، أوميغا 3، أستازانتين، لوتين','ضمن مزيج مضادات الأكسدة']],u:'راجع طريقة التحضير على العلبة. عرض الشركة يُظهر وضع محتوى الكيس تحت اللسان.',s:'مشروب يومي بمضادات الأكسدة والكولاجين يدعم عنايتك ببشرتك.',c:'يحتوي كولاجين السمك: لا يناسب من عنده حساسية من الأسماك. الحامل والمرضع والمريض يستشيرون الطبيب.',g:'شهادة حلال (JAKIM) وترخيص عرض بتونس 2023؛ أرفق النسخ الحالية.'},
+'S Xtra Caffe':{f:'12 كيساً × 23 غ (276 غ)',d:'قهوة ذائبة مجفّفة بالتجميد بنكهة غنية، بلا سكر مضاف.',a:[['أرابيكا وروبوستا','مزيج متوازن بين العطر والمرارة'],['Galangal (enXtra)','تقول الشركة إنه يدعم اليقظة والتركيز'],['Tongkat Ali','مستخلص نباتي تقول الشركة إنه يدعم الحيوية']],u:'تُحضَّر كأي قهوة فورية حسب إرشادات العلبة.',s:'قهوة لذيذة بدون سكر مضاف، تبدأ بها يومك بيقظة.',c:'تحتوي كافيين: يتجنبها أو يستشير الطبيب الحامل ومرضى الضغط والقلب. لا تقل «مناسبة للسكري».',g:'حلال؛ بلا دهون متحولة.'},
+'SHYDRO':{f:'زجاجة محمولة بزر تشغيل',d:'جهاز ينتج ماءً مُغنّى بالهيدروجين الجزيئي (H2) بالتحليل الكهربائي، بتقنية PEM/SPE حسب الشركة.',a:[['الهيدروجين الجزيئي','يُدرس كمضاد أكسدة ومضاد التهاب'],['تقنية PEM/SPE','تحليل كهربائي تعلنها الشركة لفصل الغاز عن الأكسجين']],u:'اتبع دليل الجهاز المرفق (الملء، التشغيل، التنظيف).',s:'طريقة عصرية للترطيب. أبحاث ماء الهيدروجين واعدة لكنها ما زالت أولية.',c:'ليس علاجاً ولا بديلاً عن الدواء. لا تعد بشفاء السكري أو الاكتئاب أو الإنجاب أو الإقلاع عن التدخين.',g:'مراجعة منهجية 2024 (25 دراسة): نتائج مشجعة لكن العينات صغيرة.'},
+'3S Capsule':{f:'كبسولات سيروم',d:'سيروم قابل للذوبان في الماء، خفيف وغير دهني، يحتوي ثلاث خلايا جذعية نباتية.',a:[['خلية جذعية التفاح','حماية خلايا البشرة تجميلياً'],['خلية جذعية البرتقال','تهدئة البشرة الحساسة'],['خلية جذعية ورد جبال الألب','دعم حيوية البشرة'],['زيت الجوجوبا','ترطيب وتوازن الإفراز الدهني']],u:'تُطبَّق الكبسولة على الوجه بعد التنظيف، حسب إرشادات العلبة.',s:'سيروم خفيف يرطب البشرة ويمنحها ملمساً أنعم.',c:'جرّب المنتج على منطقة صغيرة أولاً. لا تقل «يمحو التجاعيد» أو «يعالج الندوب».',g:''},
+'B’tox Cream':{f:'كريم في عبوة بمضخة',d:'كريم مرطّب يحسّن مظهر الخطوط الدقيقة والملمس.',a:[['فيتامين E','مضاد أكسدة ومرطّب'],['زيت دوّار الشمس','ترطيب وتنظيم رطوبة الجلد'],['زيت جوز الهند (Caprylic)','يحبس رطوبة السطح'],['مستخلص اللبلاب','يُستعمل لإنعاش البشرة']],u:'يُوضع على الوجه النظيف حسب إرشادات العلبة.',s:'كريم مرطّب يمنح البشرة مظهراً أكثر نعومة.',c:'لا تقارنه بالبوتوكس ولا تقل «بدون آثار جانبية». النسب (78%، 98%) بلا دراسة منشورة.',g:''},
+'HTL بخاخ':{f:'بخاخ 200 مل',d:'بخاخ ترطيب وتونيك، خالٍ من الزيت المعدني والكحول والبارابين حسب الكتيب.',a:[['ماء الهاماميليس','مقبض خفيف للبشرة'],['كولاجين مُحلَّل','ترطيب'],['ألانتوين','تهدئة'],['Sodium PCA وسوربيتول','عوامل ترطيب'],['مستخلص اللبلاب','إنعاش']],u:'بشرة عادية: بعد التنظيف 4–5 بخات من بعد 12 سم. حساسة: على الكف ثم على الوجه. دهنية: على قطنة مبللة.',s:'بخاخ منعش يرطب بشرتك في ثوانٍ.',c:'إذا ظهر حكّة أو تهيّج متواصل فتوقف واستشر مختصاً. لا تعد بعلاج الأكزيما أو آلام المفاصل.',g:''},
+'Bio White':{f:'أنبوب كريم · SPF25',d:'كريم لتوحيد لون البشرة ومظهرها المشرق مع حماية من الشمس.',a:[['خلاصة الليمون','تفتيح لطيف وضبط الدهون'],['فيتامين C','يساعد على إشراقة البشرة'],['فيتامين E','ترطيب وتنعيم'],['مستخلص أوراق التوت الأزرق','مكوّن تفتيح نباتي'],['مستخلص بذور اللفت','يحافظ على الرطوبة']],u:'يُوضع صباحاً حسب العلبة مع الالتزام بحماية الشمس.',s:'يساعد على توحيد لون البشرة وتقليل مظهر البقع.',c:'احذف عبارة «بديل أكثر أماناً من الهيدروكينون». حساسية الحمضيات واردة، فجرّب أولاً.',g:''},
+'Sun Protector':{f:'علبة كريم ملوّن · SPF30',d:'واقٍ من UVA وUVB بلمسة لون خفيفة وترطيب.',a:[['أربوتين','يساعد على إشراق لون البشرة'],['زيت الأرغان','مضاد أكسدة'],['زيت الزيتون وشمع النحل','ترطيب وحاجز واقٍ']],u:'مرة يومياً على الأقل حسب الشركة؛ أعد الوضع عند التعرق أو التعرض الطويل للشمس.',s:'واقٍ يومي يرطب ويوحد اللون.',c:'لا يغني عن الظل والملابس الواقية. لا تقل «يمنع التصبغ نهائياً».',g:''},
+'S Fem Serum':{f:'بخاخ نانو 30 مل',d:'بخاخ للعناية بالجسم يستهدف مناطق الذراعين والفخذين والبطن والخصر.',a:[['غوارانا','كافيين طبيعي ومضاد أكسدة'],['مستخلص اللبلاب','ترطيب وتهدئة'],['زيت دوّار الشمس','يحبس الرطوبة'],['مستخلص اللفت','سريع الامتصاص وغير دهني']],u:'يُرش على المناطق المرغوبة حسب الإرشادات.',s:'بخاخ منعش للعناية بملمس الجسم ومرونته.',c:'لا يحرق الدهون ولا يعالج السيلوليت: لا تقل ذلك. تجنب الجروح والبشرة المتهيجة.',g:''},
+'Gentle Cleansing':{f:'أنبوب 100 مل',d:'كريم تنظيف لطيف يزيل الشوائب وآثار المكياج.',a:[['الشاي الأخضر','مضاد أكسدة للبشرة الدهنية'],['الألوفيرا','ترطيب وتهدئة'],['البابونج','تهدئة'],['البابايا','تقشير لطيف'],['الغليسرين','ترطيب']],u:'يُدلَّك على البشرة المبللة ثم يُشطف.',s:'تنظيف لطيف يترك البشرة مرتاحة ونضرة.',c:'تجنب العينين. لا تعد بمنع حب الشباب.',g:''},
+'Revitalizing Foundation':{f:'أنبوب 30 مل · SPF30',d:'كريم أساس مرطّب بإشراقة طبيعية وحماية من الأشعة.',a:[['زيت الجوجوبا','نعومة وترطيب'],['زيت اللوز الحلو','غني بفيتامين A وE'],['شمع النحل','ترطيب دون سد المسام'],['فيتامين C وE','توحيد اللون ومضاد أكسدة']],u:'يُوضع على بشرة نظيفة مرطبة.',s:'أساس خفيف يوحد اللون ويحمي بشرتك.',c:'يحتوي لوزاً وشمع نحل: تأكد من عدم وجود حساسية بتجربة صغيرة.',g:''}};
+const dlg=document.getElementById('dlg');
+function openD(n){const x=D[n];if(!x)return;document.getElementById('dc').innerHTML='<h3>'+n+'</h3><span class="tag">'+x.f+'</span><p style="margin-top:10px">'+x.d+'</p><h4>المكوّنات الرئيسية</h4><ul class="cl">'+x.a.map(a=>'<li><b>'+a[0]+'</b>: '+a[1]+'</li>').join('')+'</ul><h4>طريقة الاستعمال</h4><p>'+x.u+'</p><h4>الجملة المقترحة للعرض</h4><p class="say">'+x.s+'</p><h4>انتبه</h4><p class="note">'+x.c+'</p>'+(x.g?'<small class="src">'+x.g+'</small>':'');dlg.showModal()}
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+// slide 6
+const K=[['Bronze','600','60','25','10','150'],['Silver','1800','180','82','12','300'],['Gold','4200','420','193','13','800'],['Platinum','8400','840','386','15','2000']];
+const pk=document.getElementById('pk'),pv=document.getElementById('pv');
+function showK(r){pv.innerHTML=[[r[1]+' د','السعر دون ضريبة'],[r[2]+' PP','نقاط الباقة'],[r[3]+' $','عمولة مباشرة'],[r[4]+'%','عمولة التوازن، سقفها اليومي '+r[5]+'$']].map(a=>'<div class="st"><div class="num">'+a[0]+'</div>'+a[1]+'</div>').join('')}
+K.forEach((r,n)=>{const b=document.createElement('button');b.className='chip';b.textContent=r[0];b.onclick=()=>{[...pk.children].forEach(c=>c.setAttribute('aria-pressed',c===b));showK(r)};pk.append(b);if(!n)b.click()});
+const mo=document.getElementById('mo');function mm(){const m=+mo.value;document.getElementById('ml').textContent='الشهر '+m;
+ document.getElementById('mv').textContent=Math.pow(2,m).toLocaleString('ar-TN')+' شريكاً · '+(6*Math.pow(2,m-1)).toLocaleString('ar-TN')+' $ (نظرياً)'}
+mo.oninput=mm;mm();
+// bubbles
+const cv=document.getElementById('bub'),cx=cv.getContext('2d');let B=[];
+function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();addEventListener('resize',rs);
+for(let k=0;k<38;k++)B.push({x:Math.random(),y:Math.random(),r:2+Math.random()*7,v:.0004+Math.random()*.0012});
+const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function draw(){cx.clearRect(0,0,cv.width,cv.height);const c=getComputedStyle(document.documentElement).getPropertyValue('--aqua').trim()||'#1E8F9D';
+ cx.strokeStyle=c;cx.globalAlpha=.35;B.forEach(b=>{if(!rm)b.y-=b.v;if(b.y<-.05){b.y=1.05;b.x=Math.random()}cx.beginPath();cx.arc(b.x*cv.width,b.y*cv.height,b.r,0,7);cx.stroke()});
+ if(!rm)requestAnimationFrame(draw)}draw();
+go(0);
+</script></body></html>
