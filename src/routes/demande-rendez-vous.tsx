@@ -124,9 +124,8 @@ function AppointmentRequestPage() {
               />
             </label>
             <label className="block text-sm">
-              {t("E-mail *")}
+              {t("E-mail (facultatif)")}
               <input
-                required
                 type="email"
                 maxLength={254}
                 value={email}

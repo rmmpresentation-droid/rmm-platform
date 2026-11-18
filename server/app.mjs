@@ -217,7 +217,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if(attempt.count>=5) return res.status(429).json({error:'Trop de demandes. Réessayez plus tard.'});
     attempt.count++;publicAttempts.set(req.ip,attempt);
     const {name,phone,email,date,detail,consent}=req.body || {};
-    if(typeof name!=='string' || !name.trim() || name.length>160 || typeof phone!=='string' || !phone.trim() || phone.length>100 || typeof email!=='string' || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof detail!=='string' || detail.length>1000 || consent!==true || !validLocalDate(date)) return res.status(400).json({error:'Vérifiez les coordonnées et la date de la demande.'});
+    if(typeof name!=='string' || !name.trim() || name.length>160 || typeof phone!=='string' || !phone.trim() || phone.length>100 || typeof email!=='string' || email.length>254 || (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) || typeof detail!=='string' || detail.length>1000 || consent!==true || !validLocalDate(date)) return res.status(400).json({error:'Vérifiez les coordonnées et la date de la demande.'});
     const owner=(await pool.query("SELECT id,name FROM users WHERE id=$1 AND role IN ('admin','superadmin') AND is_active=TRUE",[publicRequestAdminId])).rows[0];
     if(!owner) return res.status(503).json({error:'Les demandes en ligne ne sont pas configurées.'});
     const client=await pool.connect();
