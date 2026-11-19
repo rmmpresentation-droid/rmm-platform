@@ -50,3 +50,14 @@ test("affichage isolé : images associées à chaque produit, polices locales et
   assert.throws(() => buildOriginalPresentation("invalid", "https://example.test", font, font));
   assert.throws(() => buildOriginalPresentation(source, "javascript:alert(1)", font, font));
 });
+
+test("le studio affiche la présentation sans bouton d’ouverture et garde un contrôle de sortie", () => {
+  const component = readFileSync(
+    new URL("../src/components/workspace/OriginalPresentation.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(component, /srcDoc=\{sourceDocument\}/);
+  assert.match(component, /sandbox="allow-scripts"/);
+  assert.match(component, /Quitter le plein écran/);
+  assert.doesNotMatch(component, /Ouvrir le document original pour revue/);
+});

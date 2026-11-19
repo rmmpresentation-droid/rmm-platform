@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Expand } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Expand, Minimize2 } from "lucide-react";
 import original from "@/assets/presentation/partnership-original.html?raw";
 import cairo from "@/assets/fonts/Cairo.ttf?inline";
 import reem from "@/assets/fonts/ReemKufi.ttf?inline";
@@ -8,28 +8,50 @@ import { useLanguage } from "@/lib/i18n";
 
 export function OriginalPresentation() {
   const { t } = useLanguage();
-  const [open, setOpen] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
+  const [sourceDocument, setSourceDocument] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fallback, setFallback] = useState(false);
+  const expanded = isFullscreen || fallback;
+
   useEffect(() => {
-    const sync = () => setIsFullscreen(window.document.fullscreenElement === stage.current);
-    window.document.addEventListener("fullscreenchange", sync);
-    return () => window.document.removeEventListener("fullscreenchange", sync);
-  }, []);
-  const sourceDocument = useMemo(() => {
     try {
-      return buildOriginalPresentation(original, window.location.origin, cairo, reem);
+      setSourceDocument(buildOriginalPresentation(original, window.location.origin, cairo, reem));
     } catch {
-      return null;
+      setLoadError(true);
     }
   }, []);
+  useEffect(() => {
+    const sync = () => setIsFullscreen(document.fullscreenElement === stage.current);
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+  useEffect(() => {
+    if (!fallback) return;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFallback(false);
+    };
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      document.removeEventListener("keydown", escape);
+    };
+  }, [fallback]);
   async function fullscreen() {
+    if (fallback) {
+      setFallback(false);
+      return;
+    }
     try {
-      if (window.document.fullscreenElement === stage.current)
-        await window.document.exitFullscreen();
-      else await stage.current?.requestFullscreen();
+      if (document.fullscreenElement === stage.current) await document.exitFullscreen();
+      else if (stage.current?.requestFullscreen) await stage.current.requestFullscreen();
+      else setFallback(true);
     } catch {
-      /* Browser may deny fullscreen. */
+      // Embedded previews and some mobile browsers disallow the native API.
+      if (!document.fullscreenElement) setFallback(true);
     }
   }
   return (
@@ -43,52 +65,41 @@ export function OriginalPresentation() {
           "Il conserve les chiffres, affirmations médicales et financières et simulations fournis ; ils ne constituent pas des faits validés ni des promesses. Vérification et revue juridique nécessaires avant toute utilisation publique ou commerciale.",
         )}
       </div>
-      {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-full bg-[var(--gold)] px-5 py-3 text-sm font-semibold text-black"
-        >
-          {t("Ouvrir le document original pour revue")}
-        </button>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void fullscreen()}
-              className="rounded-full border border-border px-4 py-2 text-sm"
-            >
-              <Expand className="me-2 inline h-4 w-4" />
-              {t("Plein écran")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-full border border-border px-4 py-2 text-sm"
-            >
-              {t("Fermer le document")}
-            </button>
-          </div>
-          <div
-            ref={stage}
-            className="overflow-hidden rounded-2xl border border-border bg-card fullscreen:rounded-none"
+      <div
+        ref={stage}
+        className={`flex flex-col overflow-hidden border border-border bg-card ${fallback ? "fixed inset-0 z-[100] h-[100dvh] w-screen" : isFullscreen ? "h-[100dvh] w-screen" : "h-[min(75vh,850px)] min-h-[460px] rounded-2xl"}`}
+      >
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 py-2 text-sm">
+          <span className="text-muted-foreground">{t("Présentation originale intégrale")}</span>
+          <button
+            type="button"
+            onClick={() => void fullscreen()}
+            aria-pressed={expanded}
+            className="shrink-0 rounded-full border border-border px-4 py-2 text-sm hover:border-[var(--gold)]"
           >
-            {sourceDocument ? (
-              <iframe
-                title={t("Présentation originale arabe — document non validé")}
-                srcDoc={sourceDocument}
-                sandbox="allow-scripts"
-                className={`block w-full border-0 ${isFullscreen ? "h-screen" : "h-[min(75vh,850px)] min-h-[500px]"}`}
-              />
+            {expanded ? (
+              <Minimize2 className="me-2 inline h-4 w-4" />
             ) : (
-              <p role="alert" className="p-5 text-red-500">
-                {t("Le document original ne peut pas être chargé.")}
-              </p>
+              <Expand className="me-2 inline h-4 w-4" />
             )}
-          </div>
-        </>
-      )}
+            {t(expanded ? "Quitter le plein écran" : "Plein écran")}
+          </button>
+        </div>
+        {sourceDocument ? (
+          <iframe
+            title={t("Présentation originale arabe — document non validé")}
+            srcDoc={sourceDocument}
+            sandbox="allow-scripts"
+            className="block min-h-0 w-full flex-1 border-0"
+          />
+        ) : loadError ? (
+          <p role="alert" className="p-5 text-red-500">
+            {t("Le document original ne peut pas être chargé.")}
+          </p>
+        ) : (
+          <p className="p-5 text-muted-foreground">{t("Chargement…")}</p>
+        )}
+      </div>
     </div>
   );
 }

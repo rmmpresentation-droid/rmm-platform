@@ -1496,6 +1496,7 @@ rows.push(
     "تعذر تحميل الوثيقة الأصلية.",
   ],
 );
+rows.push(["Quitter le plein écran", "Exit full screen", "الخروج من ملء الشاشة"]);
 const dictionary = Object.fromEntries(rows.map(([fr, en, ar]) => [fr, { en, ar }]));
 for (const [fr, ar] of Object.entries(arabicAdditions)) dictionary[fr] = { ...dictionary[fr], ar };
 export function translate(locale, text) {
