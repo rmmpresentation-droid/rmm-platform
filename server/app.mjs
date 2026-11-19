@@ -8,6 +8,7 @@ import { parseAdditionalNetworkers } from '../src/lib/meeting-participants.mjs';
 import { initializeCommerce, mountCommerce } from './commerce.mjs';
 import { initializeAccounting, mountAccounting } from './accounting.mjs';
 import { initializeObjectives, mountObjectives } from './objectives.mjs';
+import { mountTrainingVideos } from './training-videos.mjs';
 
 const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
 const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
@@ -53,7 +54,7 @@ export async function initialize(pool, email, password) {
   }
 }
 
-export function createApp(pool, { publicRequestAdminId = "" } = {}) {
+export function createApp(pool, { publicRequestAdminId = "", videoDirectory = process.env.RMM_VIDEO_DIR || ".local-data/training-videos" } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '32kb' }));
@@ -88,6 +89,7 @@ export function createApp(pool, { publicRequestAdminId = "" } = {}) {
     if (!result.rows[0]) return res.status(401).json({error:'Session expirée'});
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
+  mountTrainingVideos(app, {auth, admin, presenter, directory: videoDirectory});
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   mountAccounting(app, pool, {auth, admin});
   mountObjectives(app, pool, {auth, admin});

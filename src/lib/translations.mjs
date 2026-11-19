@@ -1,5 +1,33 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
+  ["Vidéothèque de formation", "Training video library", "مكتبة فيديوهات التدريب"],
+  [
+    "Vidéos internes ; vérifiez les droits, le consentement et les allégations avant de les ajouter.",
+    "Internal videos: check rights, consent and claims before adding them.",
+    "فيديوهات داخلية: تحقّق من الحقوق والموافقة والادعاءات قبل إضافتها.",
+  ],
+  ["Marketing de réseau", "Network marketing", "التسويق الشبكي"],
+  ["Produit", "Product", "منتج"],
+  ["Témoignage", "Testimonial", "شهادة"],
+  ["Type de vidéo", "Video type", "نوع الفيديو"],
+  [
+    "Fichier MP4 ou WebM (100 Mo maximum)",
+    "MP4 or WebM file (100 MB maximum)",
+    "ملف MP4 أو WebM (بحد أقصى 100 ميغابايت)",
+  ],
+  ["Ajouter la vidéo", "Add video", "إضافة فيديو"],
+  ["La vidéo dépasse 100 Mo.", "The video exceeds 100 MB.", "حجم الفيديو يتجاوز 100 ميغابايت."],
+  ["Import impossible.", "Upload failed.", "تعذّر رفع الفيديو."],
+  ["Filtrer par type", "Filter by type", "التصفية حسب النوع"],
+  ["Tous les types", "All types", "كل الأنواع"],
+  [
+    "Aucune vidéo dans cette catégorie.",
+    "No videos in this category.",
+    "لا توجد فيديوهات في هذه الفئة.",
+  ],
+  ["Mes présences en formation", "My training attendance", "حضوري في التدريبات"],
+  ["Présences enregistrées", "Recorded attendance", "الحضور المسجل"],
+  ["Absences enregistrées", "Recorded absences", "الغياب المسجل"],
   ["Accueil", "Home", "الرئيسية"],
   ["Boutique", "Shop", "المتجر"],
   ["Devenir Networker", "Become a networker", "الانضمام إلى الشبكة"],

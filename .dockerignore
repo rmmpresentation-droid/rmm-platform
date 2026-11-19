@@ -7,3 +7,6 @@ dist
 .env
 .env.*
 *.log
+
+# Uploaded videos must not be copied into container images
+.local-data
