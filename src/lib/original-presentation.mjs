@@ -30,8 +30,10 @@ export function buildOriginalPresentation(source, origin, cairo, reem) {
       `${origin}/products/${file}`,
     ]),
   );
+  // Windows checkouts can turn LF into CRLF; normalize only the display copy.
+  const normalizedSource = source.replace(/\r\n?/g, "\n");
   let result = replaceOnce(
-    source,
+    normalizedSource,
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
     `<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src ${origin} data:; connect-src 'none'; form-action 'none'; base-uri 'none'">`,
   );

@@ -14,7 +14,7 @@ const source = readFileSync(
 const font = "data:font/ttf;base64,AA==";
 test("le fichier fourni reste inchangé, avec toutes les données et les diapositives", () => {
   assert.equal(
-    createHash("sha256").update(source).digest("hex"),
+    createHash("sha256").update(source.replace(/\r\n?/g, "\n")).digest("hex"),
     "d3a74dca99de4ac5df62d250091187db86afbb77c92d62982c59c5e4d2e0d889",
   );
   assert.equal((source.match(/<section class="slide/g) || []).length, 7);
@@ -49,6 +49,16 @@ test("affichage isolé : images associées à chaque produit, polices locales et
   assert.doesNotThrow(() => new Function(script[1]));
   assert.throws(() => buildOriginalPresentation("invalid", "https://example.test", font, font));
   assert.throws(() => buildOriginalPresentation(source, "javascript:alert(1)", font, font));
+});
+
+test("chargement identique avec les fins de ligne Windows, Unix et anciennes fins Mac", () => {
+  const normalized = source.replace(/\r\n?/g, "\n");
+  const origin = "http://127.0.0.1:8081";
+  const reference = buildOriginalPresentation(normalized, origin, font, font);
+  for (const newline of ["\r\n", "\r"]) {
+    const converted = normalized.replace(/\n/g, newline);
+    assert.equal(buildOriginalPresentation(converted, origin, font, font), reference);
+  }
 });
 
 test("le studio affiche la présentation sans bouton d’ouverture et garde un contrôle de sortie", () => {

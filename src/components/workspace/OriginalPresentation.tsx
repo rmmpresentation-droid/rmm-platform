@@ -18,7 +18,8 @@ export function OriginalPresentation() {
   useEffect(() => {
     try {
       setSourceDocument(buildOriginalPresentation(original, window.location.origin, cairo, reem));
-    } catch {
+    } catch (error) {
+      console.error("Impossible de préparer la présentation originale :", error);
       setLoadError(true);
     }
   }, []);

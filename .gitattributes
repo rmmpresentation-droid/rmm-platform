@@ -1,0 +1,2 @@
+# Preserve the supplied HTML byte-for-byte, including its original line endings.
+src/assets/presentation/partnership-original.html -text
