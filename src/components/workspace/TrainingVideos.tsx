@@ -15,7 +15,13 @@ const categories = [
 ] as const;
 const field = "w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 
-export function TrainingVideos({ canUpload }: { canUpload: boolean }) {
+export function TrainingVideos({
+  canUpload,
+  mode,
+}: {
+  canUpload: boolean;
+  mode: "view" | "manage";
+}) {
   const { t } = useLanguage();
   const [videos, setVideos] = useState<Video[]>([]);
   const [title, setTitle] = useState("");
@@ -25,6 +31,7 @@ export function TrainingVideos({ canUpload }: { canUpload: boolean }) {
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [playbackErrors, setPlaybackErrors] = useState<Record<string, boolean>>({});
   async function load() {
     const response = await fetch("/api/training-videos");
     const data = await response.json();
@@ -69,12 +76,19 @@ export function TrainingVideos({ canUpload }: { canUpload: boolean }) {
           "Vidéos internes ; vérifiez les droits, le consentement et les allégations avant de les ajouter.",
         )}
       </p>
+      {mode === "view" && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t(
+            "En cas d’écran noir, vérifiez la connexion et le codec : MP4 H.264/AAC ou WebM VP8/VP9 sont recommandés. Téléchargez le fichier pour le vérifier dans un autre lecteur.",
+          )}
+        </p>
+      )}
       {error && (
         <p role="alert" className="mt-3 text-sm text-red-500">
           {error}
         </p>
       )}
-      {canUpload && (
+      {mode === "manage" && canUpload && (
         <form onSubmit={upload} className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
             {t("Titre")}
@@ -121,44 +135,64 @@ export function TrainingVideos({ canUpload }: { canUpload: boolean }) {
           </div>
         </form>
       )}
-      <label className="mt-6 block max-w-xs text-sm">
-        {t("Filtrer par type")}
-        <select
-          className={`${field} mt-1`}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="all">{t("Tous les types")}</option>
-          {categories.map(([id, label]) => (
-            <option key={id} value={id}>
-              {t(label)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {videos
-          .filter((v) => filter === "all" || v.category === filter)
-          .map((v) => (
-            <article key={v.id} className="rounded-lg border border-border p-3">
-              <h3 className="font-semibold">{v.title}</h3>
-              <p className="my-2 text-xs text-muted-foreground">
-                {t(categories.find(([id]) => id === v.category)?.[1] || v.category)} ·{" "}
-                {v.uploaded_by}
-              </p>
-              <video
-                className="w-full"
-                controls
-                preload="metadata"
-                src={`/api/training-videos/${v.id}/content`}
-              />
-            </article>
-          ))}
-      </div>
-      {!videos.some((v) => filter === "all" || v.category === filter) && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          {t("Aucune vidéo dans cette catégorie.")}
-        </p>
+      {mode === "view" && (
+        <>
+          <label className="mt-6 block max-w-xs text-sm">
+            {t("Filtrer par type")}
+            <select
+              className={`${field} mt-1`}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">{t("Tous les types")}</option>
+              {categories.map(([id, label]) => (
+                <option key={id} value={id}>
+                  {t(label)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {videos
+              .filter((v) => filter === "all" || v.category === filter)
+              .map((v) => (
+                <article key={v.id} className="rounded-lg border border-border p-3">
+                  <h3 className="font-semibold">{v.title}</h3>
+                  <p className="my-2 text-xs text-muted-foreground">
+                    {t(categories.find(([id]) => id === v.category)?.[1] || v.category)} ·{" "}
+                    {v.uploaded_by}
+                  </p>
+                  <video
+                    className="w-full"
+                    controls
+                    preload="metadata"
+                    src={`/api/training-videos/${v.id}/content`}
+                    onError={() => setPlaybackErrors((old) => ({ ...old, [v.id]: true }))}
+                    onCanPlay={() => setPlaybackErrors((old) => ({ ...old, [v.id]: false }))}
+                  />
+                  {playbackErrors[v.id] && (
+                    <p role="alert" className="mt-2 text-sm text-red-500">
+                      {t(
+                        "Lecture impossible. Vérifiez la connexion et essayez un MP4 H.264/AAC ou un WebM VP8/VP9. Le fichier original est conservé.",
+                      )}
+                    </p>
+                  )}
+                  <a
+                    className="mt-2 inline-block text-sm text-[var(--gold)] underline"
+                    href={`/api/training-videos/${v.id}/content`}
+                    download
+                  >
+                    {t("Télécharger la vidéo")}
+                  </a>
+                </article>
+              ))}
+          </div>
+          {!videos.some((v) => filter === "all" || v.category === filter) && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t("Aucune vidéo dans cette catégorie.")}
+            </p>
+          )}
+        </>
       )}
     </section>
   );

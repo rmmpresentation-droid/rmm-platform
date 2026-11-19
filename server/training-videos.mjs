@@ -110,7 +110,7 @@ export function mountTrainingVideos(app, { auth, admin, presenter, directory }) 
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "private, no-store",
       });
-      res.sendFile(file(id), (err) => {
+      res.sendFile(file(id), { cacheControl: false }, (err) => {
         if (err && !res.headersSent) next(err);
       });
     } catch (e) {

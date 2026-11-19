@@ -1,6 +1,41 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
   [
+    "En cas d’écran noir, vérifiez la connexion et le codec : MP4 H.264/AAC ou WebM VP8/VP9 sont recommandés. Téléchargez le fichier pour le vérifier dans un autre lecteur.",
+    "If the screen is black, check your connection and codec: MP4 H.264/AAC or WebM VP8/VP9 are recommended. Download the file to try another player.",
+    "إذا كانت الشاشة سوداء، فتحقق من الاتصال والترميز: يُنصح بـ MP4 H.264/AAC أو WebM VP8/VP9. نزّل الملف لتجربته في مشغل آخر.",
+  ],
+  ["Espace présentation", "Presentation workspace", "مساحة العرض"],
+  ["Présentation et supports", "Presentation and aids", "العرض والوسائل المساعدة"],
+  ["Gestion des séances et supports", "Manage sessions and aids", "إدارة الجلسات والوسائل"],
+  [
+    "Lecture impossible. Vérifiez la connexion et essayez un MP4 H.264/AAC ou un WebM VP8/VP9. Le fichier original est conservé.",
+    "Unable to play. Check your connection and try MP4 H.264/AAC or WebM VP8/VP9. The original file is retained.",
+    "تعذّرت القراءة. تحقق من الاتصال وجرب MP4 H.264/AAC أو WebM VP8/VP9. يُحتفظ بالملف الأصلي.",
+  ],
+  ["Télécharger la vidéo", "Download video", "تنزيل الفيديو"],
+  ["Photos, témoignages et liens", "Photos, testimonials and links", "صور وشهادات وروابط"],
+  [
+    "Supports internes : vérifiez les droits, le consentement et le contenu avant utilisation.",
+    "Internal aids: check rights, consent and content before use.",
+    "وسائل داخلية: تحقق من الحقوق والموافقة والمحتوى قبل الاستخدام.",
+  ],
+  ["Type de support", "Type of aid", "نوع الوسيلة"],
+  ["Photo", "Photo", "صورة"],
+  ["Témoignage écrit", "Written testimonial", "شهادة مكتوبة"],
+  ["Lien HTTPS", "HTTPS link", "رابط HTTPS"],
+  [
+    "Image JPEG, PNG ou WebP (10 Mo maximum)",
+    "JPEG, PNG or WebP image (10 MB maximum)",
+    "صورة JPEG أو PNG أو WebP (الحد الأقصى 10 ميغابايت)",
+  ],
+  ["Adresse HTTPS", "HTTPS address", "عنوان HTTPS"],
+  ["Texte du témoignage", "Testimonial text", "نص الشهادة"],
+  ["Ajouter le support", "Add aid", "إضافة وسيلة"],
+  ["Aucun support ajouté.", "No aids added.", "لم تُضف أي وسيلة."],
+  ["Choisissez une image.", "Choose an image.", "اختر صورة."],
+  ["L’image dépasse 10 Mo.", "The image exceeds 10 MB.", "حجم الصورة يتجاوز 10 ميغابايت."],
+  [
     "Séances de présentation et présences",
     "Presentation sessions and attendance",
     "جلسات العرض والحضور",

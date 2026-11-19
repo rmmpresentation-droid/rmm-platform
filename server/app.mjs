@@ -9,6 +9,7 @@ import { initializeCommerce, mountCommerce } from './commerce.mjs';
 import { initializeAccounting, mountAccounting } from './accounting.mjs';
 import { initializeObjectives, mountObjectives } from './objectives.mjs';
 import { mountTrainingVideos } from './training-videos.mjs';
+import { mountPresentationAids } from './presentation-aids.mjs';
 import { initializePresentationSessions, mountPresentationSessions } from './presentation-sessions.mjs';
 
 const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
@@ -92,6 +93,7 @@ export function createApp(pool, { publicRequestAdminId = "", videoDirectory = pr
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
   mountTrainingVideos(app, {auth, admin, presenter, directory: videoDirectory});
+  mountPresentationAids(app, {auth, admin, presenter, directory: videoDirectory});
   mountPresentationSessions(app, pool, {auth, admin, presenter});
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   mountAccounting(app, pool, {auth, admin});

@@ -57,6 +57,8 @@ test("vidéothèque locale : droits, validation, classement et lecture protégé
     await request(app).get(`/api/training-videos/${created.body.id}/content`).expect(401);
     const content = await member.get(`/api/training-videos/${created.body.id}/content`).expect(200);
     assert.deepEqual(content.body, bytes);
+    assert.match(content.headers["content-type"], /^video\/mp4/);
+    assert.equal(content.headers["cache-control"], "private, no-store");
     await member
       .get(`/api/training-videos/${created.body.id}/content`)
       .set("Range", "bytes=0-3")
