@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { newDb } from "pg-mem";
@@ -13,7 +13,9 @@ test("vidéothèque locale : droits, validation, classement et lecture protégé
   const pool = new Pool();
   try {
     await initialize(pool, "root@example.test", "password12345");
-    const app = createApp(pool, { videoDirectory: dir });
+    const app = createApp(pool, {
+      videoDirectory: path.join(dir, ".local-data", "training-videos"),
+    });
     const root = request.agent(app);
     await root.post("/api/login").send({ email: "root@example.test", password: "password12345" });
     for (const [name, role] of [
@@ -66,6 +68,20 @@ test("vidéothèque locale : droits, validation, classement et lecture protégé
     assert.equal(diagnostic.headers["content-range"], `bytes 0-0/${bytes.length}`);
     assert.equal(diagnostic.headers["content-type"], "video/mp4");
     assert.deepEqual(diagnostic.body, bytes.subarray(0, 1));
+    await member
+      .get(`/api/training-videos/${created.body.id}/content`)
+      .set("Range", "bytes=999999-")
+      .expect(416)
+      .expect("Content-Type", /application\/json/);
+    const missingId = "12345678-1234-4123-8123-123456789abc";
+    await writeFile(
+      path.join(dir, ".local-data", "training-videos", `${missingId}.json`),
+      JSON.stringify({ type: "video/mp4" }),
+    );
+    await member
+      .get(`/api/training-videos/${missingId}/content`)
+      .expect(404)
+      .expect("Content-Type", /application\/json/);
     await member.get("/api/training-videos/../../etc/passwd/content").expect(404);
   } finally {
     await pool.end();

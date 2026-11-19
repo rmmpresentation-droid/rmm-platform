@@ -110,8 +110,14 @@ export function mountTrainingVideos(app, { auth, admin, presenter, directory }) 
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "private, no-store",
       });
-      res.sendFile(file(id), { cacheControl: false }, (err) => {
-        if (err && !res.headersSent) next(err);
+      // Only the validated UUID-derived file can be served; the storage parent is .local-data.
+      res.sendFile(file(id), { cacheControl: false, dotfiles: "allow" }, (err) => {
+        if (!err) return;
+        if (res.headersSent) return res.destroy(err);
+        res.removeHeader("Content-Type");
+        if (err.status === 404) return res.status(404).json({ error: "Vidéo introuvable" });
+        if (err.status === 416) return res.status(416).json({ error: "Plage demandée invalide" });
+        next(err);
       });
     } catch (e) {
       next(e);

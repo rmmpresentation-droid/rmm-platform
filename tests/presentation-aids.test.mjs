@@ -12,7 +12,9 @@ test("supports présentation : médias protégés, validation et droits", async 
   const pool = new Pool();
   try {
     await initialize(pool, "root@example.test", "password12345");
-    const app = createApp(pool, { videoDirectory: dir });
+    const app = createApp(pool, {
+      videoDirectory: path.join(dir, ".local-data", "training-videos"),
+    });
     const admin = request.agent(app);
     await admin.post("/api/login").send({ email: "root@example.test", password: "password12345" });
     await admin
