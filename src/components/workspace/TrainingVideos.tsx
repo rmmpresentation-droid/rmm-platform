@@ -7,7 +7,9 @@ type Video = {
   category: string;
   created_at: string;
   uploaded_by: string;
+  type?: string;
 };
+type Diagnosis = { status?: number; contentType?: string; contentRange?: string; failed?: boolean };
 const categories = [
   ["marketing", "Marketing de réseau"],
   ["produit", "Produit"],
@@ -31,7 +33,31 @@ export function TrainingVideos({
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [playbackErrors, setPlaybackErrors] = useState<Record<string, boolean>>({});
+  const [playbackErrors, setPlaybackErrors] = useState<Record<string, number | null>>({});
+  const [diagnoses, setDiagnoses] = useState<Record<string, Diagnosis>>({});
+  const [diagnosing, setDiagnosing] = useState<Record<string, boolean>>({});
+  async function diagnose(id: string) {
+    setDiagnosing((old) => ({ ...old, [id]: true }));
+    try {
+      const response = await fetch(`/api/training-videos/${id}/content`, {
+        headers: { Range: "bytes=0-0" },
+        cache: "no-store",
+      });
+      setDiagnoses((old) => ({
+        ...old,
+        [id]: {
+          status: response.status,
+          contentType: response.headers.get("content-type") || "—",
+          contentRange: response.headers.get("content-range") || "—",
+        },
+      }));
+      await response.body?.cancel();
+    } catch {
+      setDiagnoses((old) => ({ ...old, [id]: { failed: true } }));
+    } finally {
+      setDiagnosing((old) => ({ ...old, [id]: false }));
+    }
+  }
   async function load() {
     const response = await fetch("/api/training-videos");
     const data = await response.json();
@@ -167,15 +193,45 @@ export function TrainingVideos({
                     controls
                     preload="metadata"
                     src={`/api/training-videos/${v.id}/content`}
-                    onError={() => setPlaybackErrors((old) => ({ ...old, [v.id]: true }))}
-                    onCanPlay={() => setPlaybackErrors((old) => ({ ...old, [v.id]: false }))}
+                    onError={(event) => {
+                      const code = event.currentTarget.error?.code ?? 0;
+                      setPlaybackErrors((old) => ({ ...old, [v.id]: code }));
+                    }}
+                    onCanPlay={() => setPlaybackErrors((old) => ({ ...old, [v.id]: null }))}
                   />
-                  {playbackErrors[v.id] && (
+                  {playbackErrors[v.id] != null && (
                     <p role="alert" className="mt-2 text-sm text-red-500">
                       {t(
                         "Lecture impossible. Vérifiez la connexion et essayez un MP4 H.264/AAC ou un WebM VP8/VP9. Le fichier original est conservé.",
                       )}
                     </p>
+                  )}
+                  {playbackErrors[v.id] != null && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t("Code du lecteur")} : {playbackErrors[v.id]} · {t("Format enregistré")} :{" "}
+                      {v.type || "—"}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    disabled={diagnosing[v.id]}
+                    onClick={() => void diagnose(v.id)}
+                    className="mt-2 me-4 text-sm text-[var(--gold)] underline disabled:opacity-50"
+                  >
+                    {t(diagnosing[v.id] ? "Diagnostic en cours…" : "Diagnostiquer la lecture")}
+                  </button>
+                  {diagnoses[v.id] && (
+                    <div role="status" className="mt-2 text-xs text-muted-foreground">
+                      {diagnoses[v.id].failed ? (
+                        t("Le serveur n’a pas répondu au diagnostic.")
+                      ) : (
+                        <>
+                          {t("Réponse du serveur")} : HTTP {diagnoses[v.id].status} ·{" "}
+                          {t("Type reçu")} : {diagnoses[v.id].contentType} · Content-Range :{" "}
+                          {diagnoses[v.id].contentRange}
+                        </>
+                      )}
+                    </div>
                   )}
                   <a
                     className="mt-2 inline-block text-sm text-[var(--gold)] underline"

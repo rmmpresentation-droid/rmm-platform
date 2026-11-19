@@ -1,5 +1,16 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
+  ["Code du lecteur", "Player error code", "رمز خطأ المشغل"],
+  ["Format enregistré", "Stored format", "الصيغة المسجلة"],
+  ["Diagnostic en cours…", "Checking…", "جارٍ التشخيص…"],
+  ["Diagnostiquer la lecture", "Diagnose playback", "تشخيص التشغيل"],
+  [
+    "Le serveur n’a pas répondu au diagnostic.",
+    "The server did not respond to the diagnostic.",
+    "لم يستجب الخادم للتشخيص.",
+  ],
+  ["Réponse du serveur", "Server response", "استجابة الخادم"],
+  ["Type reçu", "Received type", "النوع المستلم"],
   [
     "En cas d’écran noir, vérifiez la connexion et le codec : MP4 H.264/AAC ou WebM VP8/VP9 sont recommandés. Téléchargez le fichier pour le vérifier dans un autre lecteur.",
     "If the screen is black, check your connection and codec: MP4 H.264/AAC or WebM VP8/VP9 are recommended. Download the file to try another player.",

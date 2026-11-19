@@ -59,10 +59,13 @@ test("vidéothèque locale : droits, validation, classement et lecture protégé
     assert.deepEqual(content.body, bytes);
     assert.match(content.headers["content-type"], /^video\/mp4/);
     assert.equal(content.headers["cache-control"], "private, no-store");
-    await member
+    const diagnostic = await member
       .get(`/api/training-videos/${created.body.id}/content`)
-      .set("Range", "bytes=0-3")
+      .set("Range", "bytes=0-0")
       .expect(206);
+    assert.equal(diagnostic.headers["content-range"], `bytes 0-0/${bytes.length}`);
+    assert.equal(diagnostic.headers["content-type"], "video/mp4");
+    assert.deepEqual(diagnostic.body, bytes.subarray(0, 1));
     await member.get("/api/training-videos/../../etc/passwd/content").expect(404);
   } finally {
     await pool.end();
