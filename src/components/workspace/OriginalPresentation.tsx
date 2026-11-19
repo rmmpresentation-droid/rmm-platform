@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Expand, Minimize2 } from "lucide-react";
-import original from "@/assets/presentation/partnership-original.html?raw";
+import original from "@/assets/presentation/partnership-new.html?raw";
 import cairo from "@/assets/fonts/Cairo.ttf?inline";
 import reem from "@/assets/fonts/ReemKufi.ttf?inline";
-import { buildOriginalPresentation } from "@/lib/original-presentation.mjs";
+import { buildNewPresentation } from "@/lib/new-presentation.mjs";
 import { useLanguage } from "@/lib/i18n";
 
 export function OriginalPresentation() {
@@ -17,7 +17,7 @@ export function OriginalPresentation() {
 
   useEffect(() => {
     try {
-      setSourceDocument(buildOriginalPresentation(original, window.location.origin, cairo, reem));
+      setSourceDocument(buildNewPresentation(original, cairo, reem));
     } catch (error) {
       console.error("Impossible de préparer la présentation originale :", error);
       setLoadError(true);

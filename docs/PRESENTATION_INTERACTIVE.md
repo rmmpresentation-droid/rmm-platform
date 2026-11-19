@@ -1,3 +1,17 @@
+# Présentation actuelle du studio
+
+Le studio affiche uniquement le nouveau document fourni : `src/assets/presentation/partnership-new.html` (SHA-256 `c16ae05633f54ce3e22b264280b4637e2e71e5bb668422e4a7c0c63d7fda18b3`). Il est affiché directement dans une iframe isolée, conserve ses sept diapositives, interactions, graphisme et onze images intégrées aux cartes et aux fiches, avec les polices locales et un avertissement permanent de revue interne. Les autres présentations ne sont plus proposées dans le studio. Les sources et composants antérieurs sont conservés dans le dépôt comme historique réversible, mais ne sont plus montés dans l'interface ; aucune donnée de séances ou de supports n'a été supprimée.
+
+Le document est affiché en arabe, quelle que soit la langue de l'interface : la traduction complète demandée auparavant reste à réaliser. Les prix, chiffres, conditions, certificats et allégations médicales et financières qu'il contient sont des éléments de la source non validés ; aucun usage public ou commercial avant validation de l'entreprise et revue juridique tunisienne. Les éléments ajoutés à la copie affichée se limitent à l'isolation, aux polices locales et à l'avertissement. Le fichier fourni n'est pas modifié ; les fins de ligne sont normalisées seulement dans la copie affichée.
+
+Vérification locale : ouvrir Studio présentation avec un compte autorisé, parcourir les sept diapositives, ouvrir une fiche dans chaque catégorie produit puis utiliser les flèches de fiche, le plein écran et sa sortie. Chromium headless avec API simulée a vérifié la navigation, l'ouverture et le chargement des onze images, les flèches de fiche et les deux modes plein écran (natif et secours mobile), sans erreur JavaScript. Ce test ne valide ni le contenu ni la connexion PostgreSQL réelle.
+
+---
+
+# Historique des versions précédentes (non accessibles dans le studio)
+
+Les descriptions ci-dessous documentent des versions antérieures ; les mentions de boutons ou parcours accessibles ne décrivent plus l'interface actuelle.
+
 # Parcours interactif présentateur — brouillon interne
 
 L'espace « Studio présentation » propose un parcours en arabe basé sur les 23 sections transmises. Il est organisé en cinq étapes avec navigation directe, cartes de discussion, questions à révéler, notes pour le présentateur, médias locaux et plein écran. Le studio précédent reste accessible par son bouton. Les médias chargés ne quittent pas le navigateur et sont perdus au changement de présentation ou à la fermeture ; la photo de couverture est une illustration générée, pas un témoignage ou une preuve.
