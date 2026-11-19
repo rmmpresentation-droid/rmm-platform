@@ -63,7 +63,7 @@ export function TrainingVideos({ canUpload }: { canUpload: boolean }) {
   }
   return (
     <section className="mt-8 rounded-xl border border-border bg-card p-6">
-      <h2 className="font-serif text-2xl">{t("Vidéothèque de formation")}</h2>
+      <h2 className="font-serif text-2xl">{t("Vidéothèque de présentation")}</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         {t(
           "Vidéos internes ; vérifiez les droits, le consentement et les allégations avant de les ajouter.",

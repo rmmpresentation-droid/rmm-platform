@@ -9,6 +9,7 @@ import { initializeCommerce, mountCommerce } from './commerce.mjs';
 import { initializeAccounting, mountAccounting } from './accounting.mjs';
 import { initializeObjectives, mountObjectives } from './objectives.mjs';
 import { mountTrainingVideos } from './training-videos.mjs';
+import { initializePresentationSessions, mountPresentationSessions } from './presentation-sessions.mjs';
 
 const productReviewNotes = JSON.parse(readFileSync(new URL('./product-review-notes.json', import.meta.url), 'utf8'));
 const productCatalogue = JSON.parse(readFileSync(new URL('../src/lib/product-catalogue.json', import.meta.url), 'utf8'));
@@ -44,6 +45,7 @@ export async function initialize(pool, email, password) {
   await pool.query('CREATE TABLE IF NOT EXISTS task_progress (task_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL, PRIMARY KEY (task_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS appointment_reports (appointment_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, report TEXT NOT NULL, PRIMARY KEY (appointment_id,user_id))');
   await pool.query('CREATE TABLE IF NOT EXISTS training_attendance (training_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, attended BOOLEAN NOT NULL, quiz_score TEXT NOT NULL DEFAULT \'\', PRIMARY KEY (training_id,user_id))');
+  await initializePresentationSessions(pool);
   await initializeObjectives(pool);
   await initializeCommerce(pool);
   await initializeAccounting(pool);
@@ -90,6 +92,7 @@ export function createApp(pool, { publicRequestAdminId = "", videoDirectory = pr
     req.user = result.rows[0]; req.token = token; next();
   } catch (err) { next(err); } }
   mountTrainingVideos(app, {auth, admin, presenter, directory: videoDirectory});
+  mountPresentationSessions(app, pool, {auth, admin, presenter});
   mountCommerce(app, pool, {auth, admin, catalogueEntryId});
   mountAccounting(app, pool, {auth, admin});
   mountObjectives(app, pool, {auth, admin});
@@ -533,6 +536,7 @@ export function createApp(pool, { publicRequestAdminId = "", videoDirectory = pr
     if(req.params.section==='taches' && (await pool.query('SELECT goal_id FROM networker_goal_tasks WHERE task_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Cette tâche est liée à un objectif et ne peut pas être supprimée.'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM prospect_notes WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect possède des notes et ne peut pas être supprimé.'});
     if(req.params.section==='prospects' && (await pool.query('SELECT id FROM commerce_consumer_orders WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect est lié à une commande consommateur.'});
+    if(req.params.section==='prospects' && (await pool.query('SELECT prospect_id FROM presentation_session_prospects WHERE prospect_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce prospect est lié à une séance de présentation.'});
     if(req.params.section==='prospects') {const meetings=(await pool.query("SELECT extra FROM entries WHERE section='rendezvous'")).rows; if(meetings.some(m=>{const x=JSON.parse(m.extra||'{}');return x.prospect_id===req.params.id || (parseAdditionalNetworkers(x.additional_prospect_ids)||[]).includes(req.params.id.toLowerCase());})) return res.status(409).json({error:'Ce prospect est lié à un rendez-vous.'});}
     if(req.params.section==='stock' && (await pool.query('SELECT id FROM commerce_variants WHERE product_id=$1',[req.params.id])).rows.length) return res.status(409).json({error:'Ce produit possède des références de stock et ne peut pas être supprimé.'});
     if(req.params.section==='stock') {const orders=(await pool.query("SELECT extra FROM entries WHERE section='commandes'")).rows; if(orders.some(o=>JSON.parse(o.extra||'{}').pack_id===req.params.id)) return res.status(409).json({error:'Ce pack est utilisé dans une commande.'});}

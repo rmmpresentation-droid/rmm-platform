@@ -1,6 +1,27 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
-  ["Vidéothèque de formation", "Training video library", "مكتبة فيديوهات التدريب"],
+  [
+    "Séances de présentation et présences",
+    "Presentation sessions and attendance",
+    "جلسات العرض والحضور",
+  ],
+  ["Date et heure", "Date and time", "التاريخ والوقت"],
+  ["Créer la séance", "Create session", "إنشاء جلسة"],
+  ["Séances accessibles", "Accessible sessions", "الجلسات المتاحة"],
+  ["Aucune séance.", "No sessions.", "لا توجد جلسات."],
+  ["Participants et présences", "Participants and attendance", "المشاركون والحضور"],
+  [
+    "Non renseigné ne signifie pas absent.",
+    "Not recorded does not mean absent.",
+    "عدم التسجيل لا يعني الغياب.",
+  ],
+  ["Participant", "Participant", "مشارك"],
+  ["Ajouter le participant", "Add participant", "إضافة مشارك"],
+  ["Aucun participant enregistré.", "No participants recorded.", "لا يوجد مشاركون مسجلون."],
+  ["Présence", "Attendance", "الحضور"],
+  ["Mes séances de présentation", "My presentation sessions", "جلسات العرض الخاصة بي"],
+  ["Aucune séance enregistrée.", "No recorded sessions.", "لا توجد جلسات مسجلة."],
+  ["Vidéothèque de présentation", "Presentation video library", "مكتبة فيديوهات العرض"],
   [
     "Vidéos internes ; vérifiez les droits, le consentement et les allégations avant de les ajouter.",
     "Internal videos: check rights, consent and claims before adding them.",
