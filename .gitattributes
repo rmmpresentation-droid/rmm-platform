@@ -2,3 +2,6 @@
 src/assets/presentation/partnership-original.html -text
 
 src/assets/presentation/partnership-new.html -text
+
+# Preserve the five supplied presentations byte for byte
+src/assets/presentation/part-*.html -text

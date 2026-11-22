@@ -54,7 +54,7 @@ test("copie isolée, polices locales et avis, conserve les scripts et images", (
   assert.throws(() => buildNewPresentation(source, "https://bad", font));
   assert.equal(buildNewPresentation(source.replace(/\n/g, "\r\n"), font, font), html);
 });
-test("seule la présentation demandée est exposée dans le studio", () => {
+test("le studio ne monte pas les versions historiques", () => {
   const workspace = readFileSync(
     new URL("../src/components/workspace/LocalWorkspace.tsx", import.meta.url),
     "utf8",
@@ -65,7 +65,8 @@ test("seule la présentation demandée est exposée dans le studio", () => {
   );
   assert.match(workspace, /<OriginalPresentation\s*\/>/);
   assert.doesNotMatch(workspace, /<PresentationStudio\s*\/>/);
-  assert.match(component, /partnership-new\.html\?raw/);
+  assert.match(component, /part-1\.html\?raw/);
+  assert.doesNotMatch(component, /partnership-new\.html\?raw/);
   assert.match(component, /sandbox="allow-scripts"/);
   assert.match(component, /Quitter le plein écran/);
 });

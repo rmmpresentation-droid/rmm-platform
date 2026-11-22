@@ -1,3 +1,17 @@
+# Présentation actuelle : parcours en cinq parties
+
+Le studio présente les cinq fichiers reçus dans cet ordre : investissement (6 diapositives), vente directe (6), société Swisderm (5), produits (9) et plan de partenariat (17). Les fichiers originaux `src/assets/presentation/part-1.html` à `part-5.html` sont conservés byte pour byte et leurs images intégrées restent dans les documents. Le chargement est effectué une partie à la fois. À la fin des parties 1 à 4, un bouton mène à la suivante ; la barre supérieure permet de revenir à la partie précédente. Revenir à une partie recharge son document et remet ses interactions à zéro.
+
+Les barres de défilement sont masquées dans le studio de présentation et les documents, mais le contenu long reste accessible avec la molette, le geste tactile ou le clavier. Les diapositives sont focalisables au clavier. Les autres espaces ne sont pas modifiés. Le plein écran et son mode de secours sont conservés ; la vidéothèque, les supports et les séances restent disponibles. Les versions antérieures ne sont pas montées dans l'interface et leurs fichiers sont conservés en historique réversible.
+
+Les documents sont intégrés en iframe isolée (`sandbox` sans `allow-same-origin`, CSP sans connexion ou formulaire) avec polices locales et un avertissement permanent de revue interne. Un script technique Cloudflare présent dans le troisième fichier est retiré uniquement de la copie affichée, pas du fichier original. Les chiffres, références, certificats, bénéfices de produits et exemples financiers restent des **affirmations non vérifiées de la source**, pas des faits ou des engagements validés ; aucune utilisation publique ou commerciale avant validation de l'entreprise et revue juridique tunisienne. Le contenu est actuellement en arabe : la traduction complète selon la langue reste à réaliser.
+
+Vérification avec données fictives : ouvrir Studio présentation, cliquer sur les points pour parcourir chaque partie, puis sur le bouton à la fin des parties 1 à 4 ; vérifier le bouton retour, les fiches produits et le plein écran. Test Chromium headless avec réponses API simulées : transitions 1→5, retour, plein écran natif et repli en largeur 375 px, navigation mobile et ouverture des onze fiches avec images chargées, sans erreur JavaScript. Test de rendu effectué dans le navigateur simulé, non sur appareil mobile physique ni avec connexion PostgreSQL réelle. Les autres polices externes historiques de l'application ne sont pas nécessaires aux cinq documents ; le navigateur de test les a bloquées.
+
+---
+
+# Historique : présentation unique précédente (non accessible dans le studio)
+
 # Présentation actuelle du studio
 
 Le studio affiche uniquement le nouveau document fourni : `src/assets/presentation/partnership-new.html` (SHA-256 `c16ae05633f54ce3e22b264280b4637e2e71e5bb668422e4a7c0c63d7fda18b3`). Il est affiché directement dans une iframe isolée, conserve ses sept diapositives, interactions, graphisme et onze images intégrées aux cartes et aux fiches, avec les polices locales et un avertissement permanent de revue interne. Les autres présentations ne sont plus proposées dans le studio. Les sources et composants antérieurs sont conservés dans le dépôt comme historique réversible, mais ne sont plus montés dans l'interface ; aucune donnée de séances ou de supports n'a été supprimée.

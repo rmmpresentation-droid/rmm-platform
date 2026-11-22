@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>البيع المباشر – العرض 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Reem+Kufi:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF3F6;--fg:#0E2A3B;--mut:#52707E;--card:#fff;--line:#c9dae2;--aqua:#12889A;--amber:#B87500;--amb2:#E8A317;--red:#C2453A;--glow:rgba(232,163,23,.18);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#081A27;--fg:#EAF3F6;--mut:#93B2BE;--card:#0F2B3D;--line:#1D4357;--aqua:#4FD0DE;--amber:#F2B93B;--amb2:#F2B93B;--red:#F0847A;--glow:rgba(242,185,59,.14)}}
+:root[data-theme="dark"]{--bg:#081A27;--fg:#EAF3F6;--mut:#93B2BE;--card:#0F2B3D;--line:#1D4357;--aqua:#4FD0DE;--amber:#F2B93B;--amb2:#F2B93B;--red:#F0847A;--glow:rgba(242,185,59,.14)}
+*{box-sizing:border-box;margin:0}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:Cairo,Tahoma,"Segoe UI",sans-serif;font-size:clamp(15px,1.5vw,19px);line-height:1.7}
+h1,h2,.num{font-family:"Reem Kufi",Cairo,Tahoma,sans-serif}
+body::before{content:"";position:fixed;inset:-20%;background:radial-gradient(circle at 20% 20%,var(--glow),transparent 40%),radial-gradient(circle at 85% 80%,color-mix(in srgb,var(--aqua) 16%,transparent),transparent 38%);animation:dr 18s ease-in-out infinite alternate;z-index:0}
+@keyframes dr{to{transform:translate(4%,3%) scale(1.08)}}
+#bar{position:fixed;top:0;inset-inline:0;height:4px;z-index:6;background:var(--line)}#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amb2),var(--aqua));transition:width .8s cubic-bezier(.3,.7,.2,1)}
+.deck{position:relative;height:100%;z-index:1}
+.slide{position:absolute;inset:0;padding:clamp(20px,4vw,52px) clamp(18px,6vw,88px) 84px;overflow-y:auto;opacity:0;visibility:hidden;transform:translateX(-50px) scale(.98);filter:blur(6px);transition:opacity .6s,transform .6s,filter .6s,visibility .6s}
+.slide.on{opacity:1;visibility:visible;transform:none;filter:none}.slide.past{transform:translateX(50px) scale(.98)}
+.in{max-width:1100px;margin:auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:18px}
+h1{font-size:clamp(38px,7.4vw,92px);line-height:1.18;font-weight:700}h1 em{font-style:normal;color:var(--amber)}
+h2{font-size:clamp(26px,4.4vw,50px);line-height:1.3;font-weight:700}h2 em{font-style:normal;color:var(--amber)}
+.lead{color:var(--mut);max-width:60ch}.tag{color:var(--aqua);font-weight:600;letter-spacing:.02em}
+.rv{opacity:0;transform:translateY(16px)}.on .rv{animation:up .75s forwards;animation-delay:var(--d,0s)}@keyframes up{to{opacity:1;transform:none}}
+.num{font-size:clamp(40px,7vw,86px);line-height:1;color:var(--amber)}
+.src{color:var(--mut);font-size:.78em;display:block}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:6px 18px;transition:.25s}
+.chip:hover{border-color:var(--amb2)}.chip[aria-pressed=true]{background:var(--amb2);border-color:var(--amb2);color:#0E2A3B;font-weight:700;transform:scale(1.05)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button:focus-visible,input:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--amb2)}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center}
+.cta{background:var(--amb2);color:#0E2A3B;border:0;border-radius:999px;padding:12px 36px;font-weight:800;align-self:flex-start;transition:transform .25s,box-shadow .25s;box-shadow:0 8px 24px var(--glow)}.cta:hover{transform:translateY(-3px)}
+/* pictogram */
+#pic{display:grid;grid-template-columns:repeat(10,1fr);gap:clamp(3px,.6vw,8px);max-width:420px}
+#pic svg{width:100%;fill:var(--line);transition:fill .3s,transform .3s}#pic svg.h{fill:var(--amb2);transform:scale(1.12)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
+/* bars */
+.br{margin:10px 0}.br b{display:flex;justify-content:space-between;font-weight:600}
+.br div{height:20px;border-radius:10px;background:var(--line);overflow:hidden;margin-top:4px}.br i{display:block;height:100%;width:0;border-radius:10px;background:var(--aqua);transition:width 1.4s cubic-bezier(.2,.8,.2,1) .4s}
+.br.w i{background:var(--aqua)}.br.p i{background:var(--amb2)}.br.f i{background:var(--red)}
+.on .br i{width:var(--w)}
+.steps{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.steps span{font-family:"Reem Kufi",sans-serif;font-size:1.4em}.steps small{display:block;font-size:.55em;color:var(--mut);font-family:Cairo,sans-serif}
+/* coins */
+#coins{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.coin{width:clamp(30px,5vw,48px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE08A,var(--amb2) 60%,#B87500);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);transition:opacity .6s,transform .6s,filter .6s}
+.coin.gone{opacity:.15;transform:translateY(10px) scale(.8);filter:grayscale(1)}
+.big{font-family:"Reem Kufi",sans-serif;font-size:clamp(34px,5vw,60px);color:var(--red)}
+/* exodus */
+#fl{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:8px 0}
+#fl svg{width:100%;fill:var(--aqua);transition:transform 1s ease-in,opacity 1s}#fl svg.go{transform:translateX(-260%) translateY(-60%) rotate(-12deg);opacity:0}
+#clk{font-family:"Reem Kufi",sans-serif;font-size:1.6em;color:var(--amber)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.st{border-top:3px solid var(--amb2);padding:8px 2px}.st small{display:block;color:var(--mut);font-size:.8em}
+/* flip cards */
+.fc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;perspective:900px}
+.fcard{position:relative;height:170px;border:0;background:none;padding:0}.fcard>div{position:absolute;inset:0;border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;text-align:center;backface-visibility:hidden;transition:transform .7s cubic-bezier(.2,.8,.2,1);border:1.5px solid var(--line);background:var(--card)}
+.fcard .bk{transform:rotateY(180deg);background:var(--fg);color:var(--bg);font-size:.92em}.fcard.f .ft{transform:rotateY(-180deg)}.fcard.f .bk{transform:none}
+.fcard.key .ft{border-color:var(--amb2);box-shadow:0 0 0 3px var(--glow)}
+#ans{min-height:2.2em;font-weight:800;color:var(--amber);font-size:1.2em}
+#nav{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));inset-inline:0;display:flex;justify-content:center;align-items:center;gap:12px;z-index:5}
+#nav button{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--card)}
+#dots{display:flex;gap:7px}#dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--line);padding:0;transition:.3s}#dots button.on{background:var(--amb2);width:28px;border-radius:6px}
+/* cover svg */
+.sun{animation:pu 4s ease-in-out infinite;transform-origin:250px 60px}@keyframes pu{50%{transform:scale(1.12)}}
+.stem{stroke-dasharray:140;stroke-dashoffset:140}.on .stem{animation:gr 2.2s .6s forwards}@keyframes gr{to{stroke-dashoffset:0}}
+.lf{transform:scale(0);transform-box:fill-box;transform-origin:center bottom}.on .lf{animation:pop .7s forwards}@keyframes pop{to{transform:scale(1)}}
+.cn{transform:translateY(-80px);opacity:0}.on .cn{animation:dp .6s forwards}@keyframes dp{to{transform:none;opacity:1}}
+@media(max-width:760px){.hero,.two{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv,.cn{opacity:1;transform:none}.stem{stroke-dashoffset:0}.lf{transform:none}.on .br i{width:var(--w)}}
+
+.ln{stroke:var(--aqua);stroke-width:2;stroke-dasharray:140;stroke-dashoffset:140;opacity:.75}.on .ln{animation:gr 1.2s forwards;animation-delay:var(--t)}
+.nd{transform:scale(0);transform-box:fill-box;transform-origin:center;fill:var(--aqua)}.on .nd{animation:pop .5s forwards;animation-delay:var(--t)}.nd.c{fill:var(--amb2)}.nd.c{animation-name:pop,pu2!important;animation-duration:.5s,3s;animation-iteration-count:1,infinite}
+@keyframes pu2{50%{filter:drop-shadow(0 0 10px var(--amb2))}}
+#ch{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.bx{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 16px;font-weight:600;opacity:0;transform:translateY(12px)}.bx.s{animation:up .5s forwards;animation-delay:var(--d)}.bx.k{border-color:var(--amb2);background:color-mix(in srgb,var(--amb2) 18%,var(--card))}.ar{color:var(--mut);opacity:0}.ar.s{animation:up .4s forwards;animation-delay:var(--d)}
+.sw{transition:opacity .3s,transform .3s}.sw.out{opacity:0;transform:translateY(8px)}
+.sec{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}.sec span{background:var(--water,var(--glow));border:1px solid var(--line);border-radius:999px;padding:4px 16px;font-size:.92em}
+.ck{display:flex;flex-direction:column;gap:8px}.ck button{display:flex;gap:12px;align-items:center;text-align:start;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:9px 14px;transition:.25s}.ck button i{width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;font-style:normal;color:transparent;transition:.25s}.ck button[aria-pressed=true]{border-color:var(--aqua)}.ck button[aria-pressed=true] i{background:var(--aqua);border-color:var(--aqua);color:#fff}
+#gg{height:16px;border-radius:8px;background:var(--line);overflow:hidden}#gg i{display:block;height:100%;width:0;background:var(--red);transition:width .6s,background .4s}
+#vd{font-weight:800;font-size:1.15em;min-height:1.6em}.fl{color:var(--red)}.fl li{margin-inline-start:18px}
+@media(max-width:760px){.two3{grid-template-columns:1fr!important}}
+</style></head><body>
+<div id="bar"><i></i></div>
+<main class="deck">
+
+<section class="slide on"><div class="in hero"><div style="display:flex;flex-direction:column;gap:16px">
+<p class="tag rv" style="--d:.1s">RMM · العرض 2 من 5</p>
+<h1 class="rv" style="--d:.25s">البيع المباشر:<br><em>صناعة عالمية</em> بشروطها</h1>
+<p class="lead rv" style="--d:.45s">ما هو، وما حجمه اليوم، وما الذي يفرّق الجادّ عن المضلِّل؟ بأحدث أرقام نوفمبر 2026.</p>
+<button class="cta rv" style="--d:.65s" onclick="go(1)">ابدأ</button></div>
+<svg id="net" viewBox="0 0 340 300" role="img" aria-label="شبكة علاقات تتّسع" class="rv" style="--d:.3s"></svg></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">كيف تصل المنتجات <em>إلى الناس؟</em></h2>
+<div class="row rv" style="--d:.1s" id="md"></div>
+<div class="panel rv" style="--d:.2s"><div id="ch"></div><p class="lead sw" id="mt"></p><div class="sec sw" id="ms"></div></div>
+<span class="src">البيع المباشر يتم عبر موزّعين مستقلين. تختلف خطط العمولات من شركة لأخرى.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">الصناعة اليوم: <em>أرقام 2025</em></h2>
+<div class="stats rv" style="--d:.1s">
+<div class="st"><div class="num" data-to="167.3" data-dec="1">0</div><small>مليار دولار مبيعات (+1.6%)</small></div>
+<div class="st"><div class="num" data-to="98.8" data-dec="1">0</div><small>مليون موزّع مستقل</small></div>
+<div class="st"><div class="num" data-to="70" data-suf="%">0</div><small>منهم نساء</small></div>
+<div class="st"><div class="num" data-to="57" data-suf="%">0</div><small>من الأسواق سجّلت نمواً</small></div></div>
+<div class="two rv" style="--d:.3s"><div class="panel"><b>نمو المبيعات حسب المنطقة (2025)</b><div class="row" style="margin:8px 0" id="rc"></div><div class="num" id="rn" style="font-size:clamp(34px,5vw,60px)">0</div><span class="src" id="rt"></span></div>
+<div class="panel"><b>أكبر فئات المنتجات (2024)</b>
+<div class="br w" style="--w:29%"><b><span>العافية والمكمّلات</span><span>29%</span></b><div><i></i></div></div>
+<div class="br p" style="--w:22.8%"><b><span>التجميل والعناية</span><span>22.8%</span></b><div><i></i></div></div>
+<div class="br f" style="--w:15.3%"><b><span>السلع المنزلية</span><span>15.3%</span></b><div><i></i></div></div></div></div>
+<span class="src">المصدر: WFDSA STATS 2025 (نُشر 12 نوفمبر 2026) وتقرير WFDSA عن سنة 2024 للفئات.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">لماذا يختاره الناس؟ <em>وماذا في الواقع؟</em></h2>
+<p class="lead rv" style="--d:.1s">اضغط على كل بطاقة لترى الوجه الآخر.</p>
+<div class="fc rv" style="--d:.25s" id="fc"></div>
+<span class="src">المزايا من عرض الشركة؛ الواقع من تقرير FTC (2024) وتقرير WFDSA.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">سليم أم <em>هرمي؟</em> اختبر بنفسك</h2>
+<div class="two two3 rv" style="--d:.15s"><div><div class="ck" id="ck"></div></div>
+<div><div class="panel"><b>درجة الأمان</b><div id="gg"><i></i></div><div id="vd"></div></div>
+<div class="panel" style="margin-top:12px"><b class="fl">علامات تحذير</b><ul class="fl"><li>الربح الأساسي من رسوم الانضمام</li><li>وعود الثراء السريع</li><li>شهادات دخل بلا ذكر المصاريف</li><li>ادعاءات علاجية للمنتجات</li></ul></div></div></div>
+<span class="src">هيئات رقابية، منها اللجنة التونسية للتحاليل المالية، سبق أن حذّرت من البيع الهرمي. الاختبار أداة تفكير لا حكم قانوني.</span></div></section>
+
+<section class="slide"><div class="in">
+<h2 class="rv">الحقيقة <em>كاملة</em></h2>
+<div class="two rv" style="--d:.15s"><div><div class="num" data-to="1000" data-sep="1" data-pre="≤ " data-suf=" $">0</div><p class="lead">هو ما ربحه أغلب المشاركين في سنة، أي نحو 84 دولاراً في الشهر قبل المصاريف، في 70 بياناً للدخل حلّلتها لجنة التجارة الأمريكية (FTC، 2024).</p></div>
+<div><div class="num" data-to="17" style="color:var(--red)">0</div><p class="lead">شركة على الأقل لم يربح فيها معظم المشاركين شيئاً.</p></div></div>
+<div class="sec rv" style="--d:.35s"><span>نبيع منتجاً حقيقياً</span><span>نعرض الأرقام كما هي</span><span>القرار قرارك</span></div>
+<p class="lead rv" style="--d:.45s">لذلك يهمّك أن تعرف مع من تعمل. فهل <b>Swisderm</b> شركة جادّة؟</p>
+<button class="cta rv" style="--d:.55s" onclick="document.getElementById('an').textContent='الجواب في العرض الثالث: الشركة بوثائقها وحدودها.'">اكتشف ◂</button><div id="an" style="font-weight:800;color:var(--amber)"></div>
+<span class="src">المصدر: FTC Staff Report on MLM Income Disclosure Statements (سبتمبر 2024). أرقام أمريكية وليست خاصة بشركة بعينها.</span></div></section>
+</main>
+<nav id="nav"><button onclick="go(i-1)" aria-label="السابق">›</button><div id="dots"></div><button onclick="go(i+1)" aria-label="التالي">‹</button></nav>
+<script>
+const S=[...document.querySelectorAll('.slide')],dots=document.getElementById('dots'),bar=document.querySelector('#bar i');let i=0;
+S.forEach((_,k)=>{const b=document.createElement('button');b.setAttribute('aria-label','شريحة '+(k+1));b.onclick=()=>go(k);dots.append(b)});
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function count(el){const to=+el.dataset.to,d=+(el.dataset.dec||0),suf=el.dataset.suf||'',pre=el.dataset.pre||'',sep=el.dataset.sep;let t0=null;
+ const f=t=>{t0??=t;const p=Math.min((t-t0)/1500,1),v=to*(1-Math.pow(1-p,3));el.textContent=pre+(sep?fmt(v):v.toFixed(d))+suf;if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function go(n){n=Math.max(0,Math.min(S.length-1,n));S.forEach((s,k)=>{s.classList.toggle('on',k===n);s.classList.toggle('past',k<n)});i=n;
+ [...dots.children].forEach((b,k)=>b.classList.toggle('on',k===n));bar.style.width=((n+1)/S.length*100)+'%';S[n].scrollTop=0;
+ S[n].querySelectorAll('.num[data-to]').forEach(count);if(n===1)setM(0);if(n===2)setR(3)}
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='PageDown')go(i+1);if(e.key==='ArrowRight'||e.key==='PageUp')go(i-1)});
+let x0=null;addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(x0==null)return;const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>70)go(i+(d<0?1:-1));x0=null});
+function swap(el,fn){el.classList.add('out');setTimeout(()=>{fn();el.classList.remove('out')},250)}
+// 1 network drawing
+(function(){const svg=document.getElementById('net'),c=[170,150];let h='',t=0;const pt=(r,a)=>[c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)];
+ for(let k=0;k<6;k++){const a=k*Math.PI/3+.3,p=pt(70,a);h+='<line class="ln" style="--t:'+(.4+k*.12)+'s" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+p[0]+'" y2="'+p[1]+'"/>';
+  for(let j=-1;j<=0;j++){const q=pt(128,a+j*.32+.16);h+='<line class="ln" style="--t:'+(1.1+k*.1+j*.05)+'s" x1="'+p[0]+'" y1="'+p[1]+'" x2="'+q[0]+'" y2="'+q[1]+'"/><circle class="nd" style="--t:'+(1.6+k*.1)+'s" cx="'+q[0]+'" cy="'+q[1]+'" r="7"/>'}
+  h+='<circle class="nd" style="--t:'+(.8+k*.12)+'s" cx="'+p[0]+'" cy="'+p[1]+'" r="11"/>'}
+ h+='<circle class="nd c" style="--t:.2s" cx="170" cy="150" r="20"/>';svg.innerHTML=h})();
+// 2 distribution models
+const M=[{n:'التوزيع التقليدي',c:['المصنع','موزّع الجملة','تاجر التجزئة','الإعلان والرفّ','المستهلك'],k:4,t:'حلقات وسيطة وإعلانات وأرفف عرض: تتوزّع الكلفة بين كل هذه الحلقات قبل أن يصل المنتج إلى المستهلك.',s:[]},
+{n:'البيع المباشر',c:['الشركة','موزّع مستقل','المستهلك بتوصية شخصية'],k:2,t:'حلقات أقل: ينتقل جزء من ميزانية الوساطة والإعلان إلى هوامش وعمولات الموزّعين، بحسب خطة كل شركة.',s:['دخل 1: هامش بيع المنتجات للزبائن','دخل 2: عمولات على مبيعات فريقك']}];
+const md=document.getElementById('md'),ch=document.getElementById('ch');
+function setM(k){[...md.children].forEach((b,j)=>b.setAttribute('aria-pressed',j===k));const m=M[k];let h='',d=0;
+ m.c.forEach((x,j)=>{h+=(j?'<span class="ar" style="--d:'+(d-.1)+'s">‹</span>':'')+'<span class="bx s'+(j===m.k?' k':'')+'" style="--d:'+d+'s">'+x+'</span>';d+=.28});ch.innerHTML=h;
+ swap(document.getElementById('mt'),()=>document.getElementById('mt').textContent=m.t);swap(document.getElementById('ms'),()=>document.getElementById('ms').innerHTML=m.s.map(s=>'<span>'+s+'</span>').join(''));
+ [...ch.querySelectorAll('.ar')].forEach(a=>a.classList.add('s'))}
+M.forEach((m,k)=>{const b=document.createElement('button');b.className='chip';b.textContent=m.n;b.onclick=()=>setM(k);md.append(b)});
+// 3 regions
+const R=[['آسيا والمحيط الهادئ',2.5,'حصة 2024: 40.3% من المبيعات العالمية'],['أوروبا',1.6,'حصة 2024: 21.6%'],['الأمريكتان',0.4,'حصة 2024: 37.3%'],['أفريقيا والشرق الأوسط',6.9,'الأسرع نمواً، لكن حصتها 2024 نحو 0.8% فقط']];
+const rc=document.getElementById('rc');
+function setR(k){[...rc.children].forEach((b,j)=>b.setAttribute('aria-pressed',j===k));const e=document.getElementById('rn');e.dataset.to=R[k][1];e.dataset.dec=1;e.dataset.pre='+';e.dataset.suf='%';count(e);document.getElementById('rt').textContent=R[k][0]+' · '+R[k][2]}
+R.forEach((r,k)=>{const b=document.createElement('button');b.className='chip';b.textContent=r[0];b.onclick=()=>setR(k);rc.append(b)});
+// 4 flip cards
+const Q=[['حرية الوقت والمكان','حقيقية، لكن النتيجة تتبع الانتظام: ساعات قليلة بلا استمرار لا تصنع دخلاً.'],['مصدر دخل ثانٍ','يناسب من يملك عملاً حالياً؛ يبدأ صغيراً وقد يبقى كذلك.'],['تجارة خاصة بك','أنت مستقل لا موظف: لا راتب ثابت، وأنت تتحمّل المصاريف والضرائب.'],['بلا حملات إعلانية','التسويق بالتوصية الشخصية، لكن له كلفة: وقت وتنقّل واتصالات ومنتجات للتجربة.'],['رأس مال صغير نسبياً','أقل من فتح محل، لكنه يختلف بين الشركات: اسأل عن الكلفة الكلية قبل الدفع.'],['أرباح بلا سقف وشبكة بلا حدود','لا سقف نظرياً، لكن أغلب المشاركين يربحون القليل. الأرباح الكبيرة استثناء.']];
+const fc=document.getElementById('fc');Q.forEach((q,k)=>{const b=document.createElement('button');b.className='fcard'+(k===5?' key':'');b.setAttribute('aria-label',q[0]);b.innerHTML='<div class="ft"><b>'+q[0]+'</b></div><div class="bk">'+q[1]+'</div>';b.onclick=()=>b.classList.toggle('f');fc.append(b)});
+// 5 checklist
+const C=['الأرباح تأتي أساساً من بيع منتجات لزبائن حقيقيين','المنتج بجودة وسعر مقبولين مقارنة بالسوق','سياسة استرجاع واضحة ومكتوبة','تراخيص ووثائق الشركة سارية وقابلة للتحقق','عقد واضح وأرقام دخل شفافة تشمل من لا يربحون','لا ضغط للشراء الفوري ولا مخزون ضخم إجباري'];
+const ck=document.getElementById('ck'),gi=document.querySelector('#gg i'),vd=document.getElementById('vd');
+function gauge(){const n=[...ck.children].filter(b=>b.getAttribute('aria-pressed')==='true').length,p=n/C.length*100;gi.style.width=p+'%';
+ gi.style.background=n<=2?'var(--red)':n<=4?'var(--amb2)':'var(--aqua)';vd.textContent=n<=2?'حذر شديد: تحقق قبل أي التزام.':n<=4?'تحقق أكثر من النقاط الناقصة.':'علامات جيدة، لكنها لا تغني عن التحقق الشخصي.'}
+C.forEach(t=>{const b=document.createElement('button');b.setAttribute('aria-pressed','false');b.innerHTML='<i>✓</i><span>'+t+'</span>';b.onclick=()=>{b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');gauge()};ck.append(b)});gauge();
+go(0);
+</script></body></html>

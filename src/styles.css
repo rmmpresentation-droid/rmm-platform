@@ -216,3 +216,7 @@ html.light .bg-\[\#080808\] { background-color: var(--card); }
 /* RTL is a layout direction only; stored business values are unchanged. */
 html[dir="rtl"] { text-align: right; }
 html[dir="rtl"] .tracking-\[\.25em\], html[dir="rtl"] .tracking-\[\.2em\], html[dir="rtl"] .tracking-\[\.18em\] { letter-spacing: normal; }
+
+/* The presentation can still scroll by wheel, touch and keyboard without a visible track. */
+html.rmm-presentation-view, html.rmm-presentation-view * { scrollbar-width: none; }
+html.rmm-presentation-view::-webkit-scrollbar, html.rmm-presentation-view *::-webkit-scrollbar { display: none; }

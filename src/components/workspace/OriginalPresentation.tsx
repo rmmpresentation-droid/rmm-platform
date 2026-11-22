@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Expand, Minimize2 } from "lucide-react";
-import original from "@/assets/presentation/partnership-new.html?raw";
 import cairo from "@/assets/fonts/Cairo.ttf?inline";
 import reem from "@/assets/fonts/ReemKufi.ttf?inline";
-import { buildNewPresentation } from "@/lib/new-presentation.mjs";
+import { buildPartPresentation } from "@/lib/five-part-presentation.mjs";
 import { useLanguage } from "@/lib/i18n";
+
+const loadParts = [
+  () => import("@/assets/presentation/part-1.html?raw"),
+  () => import("@/assets/presentation/part-2.html?raw"),
+  () => import("@/assets/presentation/part-3.html?raw"),
+  () => import("@/assets/presentation/part-4.html?raw"),
+  () => import("@/assets/presentation/part-5.html?raw"),
+];
 
 export function OriginalPresentation() {
   const { t } = useLanguage();
   const stage = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const [part, setPart] = useState(1);
   const [sourceDocument, setSourceDocument] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -16,12 +25,35 @@ export function OriginalPresentation() {
   const expanded = isFullscreen || fallback;
 
   useEffect(() => {
-    try {
-      setSourceDocument(buildNewPresentation(original, cairo, reem));
-    } catch (error) {
-      console.error("Impossible de préparer la présentation originale :", error);
-      setLoadError(true);
-    }
+    let cancelled = false;
+    setSourceDocument(null);
+    setLoadError(false);
+    loadParts[part - 1]()
+      .then(({ default: source }) => {
+        const document = buildPartPresentation(source, part, cairo, reem);
+        if (!cancelled) setSourceDocument(document);
+      })
+      .catch((error) => {
+        console.error("Impossible de préparer cette partie de la présentation :", error);
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [part]);
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.source !== frame.current?.contentWindow || event.data?.type !== "rmm-next-part")
+        return;
+      const sourcePart = event.data.part;
+      setPart((current) => (current === sourcePart && current < 5 ? current + 1 : current));
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, []);
+  useEffect(() => {
+    document.documentElement.classList.add("rmm-presentation-view");
+    return () => document.documentElement.classList.remove("rmm-presentation-view");
   }, []);
   useEffect(() => {
     const sync = () => setIsFullscreen(document.fullscreenElement === stage.current);
@@ -71,7 +103,20 @@ export function OriginalPresentation() {
         className={`flex flex-col overflow-hidden border border-border bg-card ${fallback ? "fixed inset-0 z-[100] h-[100dvh] w-screen" : isFullscreen ? "h-[100dvh] w-screen" : "h-[min(75vh,850px)] min-h-[460px] rounded-2xl"}`}
       >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 py-2 text-sm">
-          <span className="text-muted-foreground">{t("Présentation originale intégrale")}</span>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="text-muted-foreground">
+              {t("Partie")} {part} / 5
+            </span>
+            {part > 1 && (
+              <button
+                type="button"
+                className="rounded-full border border-border px-3 py-1 text-xs hover:border-[var(--gold)]"
+                onClick={() => setPart((current) => Math.max(1, current - 1))}
+              >
+                {t("Partie précédente")}
+              </button>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => void fullscreen()}
@@ -88,7 +133,9 @@ export function OriginalPresentation() {
         </div>
         {sourceDocument ? (
           <iframe
-            title={t("Présentation originale arabe — document non validé")}
+            ref={frame}
+            key={part}
+            title={`${t("Présentation arabe — document non validé")} · ${t("Partie")} ${part}`}
             srcDoc={sourceDocument}
             sandbox="allow-scripts"
             className="block min-h-0 w-full flex-1 border-0"

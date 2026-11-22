@@ -1,5 +1,12 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
+  ["Partie", "Part", "الجزء"],
+  ["Partie précédente", "Previous part", "الجزء السابق"],
+  [
+    "Présentation arabe — document non validé",
+    "Arabic presentation — unvalidated document",
+    "عرض بالعربية — وثيقة غير معتمدة",
+  ],
   ["Code du lecteur", "Player error code", "رمز خطأ المشغل"],
   ["Format enregistré", "Stored format", "الصيغة المسجلة"],
   ["Diagnostic en cours…", "Checking…", "جارٍ التشخيص…"],
