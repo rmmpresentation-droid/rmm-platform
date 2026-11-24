@@ -25,7 +25,9 @@ for (let i = 1; i <= 5; i++)
     assert.equal((html.match(/<section class="slide/g) || []).length, slides[i - 1]);
     assert.equal((html.match(/data:image\//g) || []).length, images[i - 1]);
     assert.ok(html.includes("connect-src 'none'"));
-    assert.ok(html.includes("غير متحقّق منها"));
+    assert.ok(!html.includes("rmm-source-notice"));
+    assert.ok(!html.includes("--rmm-notice-height"));
+    assert.ok(!html.includes("نصّ المصدر للمراجعة فقط"));
     assert.ok(html.includes("scrollbar-width:none"));
     assert.ok(!html.includes('href="https://fonts.googleapis.com'));
     assert.ok(!html.includes("/cdn-cgi/challenge-platform/"));
@@ -49,4 +51,7 @@ test("parties invalides et messages non authentifiés refusés", () => {
   assert.match(component, /event\.source !== frame\.current\?\.contentWindow/);
   assert.match(component, /current === sourcePart/);
   assert.match(component, /sandbox="allow-scripts"/);
+  assert.doesNotMatch(component, /Document original non vérifié/);
+  assert.doesNotMatch(component, /document non validé/);
+  assert.match(component, /Présentation originale intégrale/);
 });

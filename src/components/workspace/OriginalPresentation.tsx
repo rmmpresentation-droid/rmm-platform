@@ -88,16 +88,7 @@ export function OriginalPresentation() {
     }
   }
   return (
-    <div className="mt-6 space-y-4">
-      <div
-        role="note"
-        className="rounded-xl border border-amber-600/40 bg-amber-500/10 p-4 text-sm leading-7"
-      >
-        <strong>{t("Document original non vérifié — consultation interne uniquement.")}</strong>{" "}
-        {t(
-          "Il conserve les chiffres, affirmations médicales et financières et simulations fournis ; ils ne constituent pas des faits validés ni des promesses. Vérification et revue juridique nécessaires avant toute utilisation publique ou commerciale.",
-        )}
-      </div>
+    <div className="mt-6">
       <div
         ref={stage}
         className={`flex flex-col overflow-hidden border border-border bg-card ${fallback ? "fixed inset-0 z-[100] h-[100dvh] w-screen" : isFullscreen ? "h-[100dvh] w-screen" : "h-[min(75vh,850px)] min-h-[460px] rounded-2xl"}`}
@@ -135,7 +126,7 @@ export function OriginalPresentation() {
           <iframe
             ref={frame}
             key={part}
-            title={`${t("Présentation arabe — document non validé")} · ${t("Partie")} ${part}`}
+            title={`${t("Présentation originale intégrale")} · ${t("Partie")} ${part}`}
             srcDoc={sourceDocument}
             sandbox="allow-scripts"
             className="block min-h-0 w-full flex-1 border-0"

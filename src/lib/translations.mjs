@@ -2,11 +2,6 @@
 const rows = [
   ["Partie", "Part", "الجزء"],
   ["Partie précédente", "Previous part", "الجزء السابق"],
-  [
-    "Présentation arabe — document non validé",
-    "Arabic presentation — unvalidated document",
-    "عرض بالعربية — وثيقة غير معتمدة",
-  ],
   ["Code du lecteur", "Player error code", "رمز خطأ المشغل"],
   ["Format enregistré", "Stored format", "الصيغة المسجلة"],
   ["Diagnostic en cours…", "Checking…", "جارٍ التشخيص…"],
@@ -1572,26 +1567,11 @@ rows.push(
   ["Présentation originale intégrale", "Complete original presentation", "العرض الأصلي كاملاً"],
   ["Version adaptée", "Adapted version", "النسخة المعدّلة"],
   [
-    "Document original non vérifié — consultation interne uniquement.",
-    "Unverified original document — internal review only.",
-    "وثيقة أصلية غير متحقق منها — للمراجعة الداخلية فقط.",
-  ],
-  [
-    "Il conserve les chiffres, affirmations médicales et financières et simulations fournis ; ils ne constituent pas des faits validés ni des promesses. Vérification et revue juridique nécessaires avant toute utilisation publique ou commerciale.",
-    "It preserves the supplied figures, medical and financial claims, and simulations; these are not verified facts or promises. Verification and legal review are required before public or commercial use.",
-    "تتضمن الوثيقة الأرقام والادعاءات الطبية والمالية والمحاكاة كما قُدمت؛ وهي ليست حقائق أو وعوداً معتمدة. يلزم التحقق والمراجعة القانونية قبل أي استخدام عام أو تجاري.",
-  ],
-  [
     "Ouvrir le document original pour revue",
     "Open original document for review",
     "افتح الوثيقة الأصلية للمراجعة",
   ],
   ["Fermer le document", "Close document", "إغلاق الوثيقة"],
-  [
-    "Présentation originale arabe — document non validé",
-    "Original Arabic presentation — unvalidated document",
-    "العرض العربي الأصلي — وثيقة غير معتمدة",
-  ],
   [
     "Le document original ne peut pas être chargé.",
     "The original document could not be loaded.",

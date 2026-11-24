@@ -38,3 +38,5 @@ dist-ssr
 
 # Local uploaded training videos
 .local-data/
+
+demo-account.txt
