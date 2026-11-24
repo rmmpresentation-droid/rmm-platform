@@ -1,5 +1,11 @@
 // Interface strings only. Stored records and API values are never translated or rewritten.
 const rows = [
+  ["Choisir une présentation", "Choose a presentation", "اختر عرضاً"],
+  ["Investissement", "Investment", "الاستثمار"],
+  ["Vente directe", "Direct selling", "البيع المباشر"],
+  ["La société Swisderm", "The Swisderm company", "شركة سويسديرم"],
+  ["Produits Swisderm", "Swisderm products", "منتجات سويسديرم"],
+  ["Plan de vente directe", "Direct selling plan", "خطة البيع المباشر"],
   ["Partie", "Part", "الجزء"],
   ["Partie précédente", "Previous part", "الجزء السابق"],
   ["Code du lecteur", "Player error code", "رمز خطأ المشغل"],

@@ -3,6 +3,7 @@ import { Expand, Minimize2 } from "lucide-react";
 import cairo from "@/assets/fonts/Cairo.ttf?inline";
 import reem from "@/assets/fonts/ReemKufi.ttf?inline";
 import { buildPartPresentation } from "@/lib/five-part-presentation.mjs";
+import { parsePresentationPart, presentationParts } from "@/lib/presentation-parts.mjs";
 import { useLanguage } from "@/lib/i18n";
 
 const loadParts = [
@@ -95,9 +96,24 @@ export function OriginalPresentation() {
       >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 py-2 text-sm">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="text-muted-foreground">
-              {t("Partie")} {part} / 5
-            </span>
+            <label className="flex min-w-0 items-center gap-2">
+              <span className="sr-only">{t("Choisir une présentation")}</span>
+              <select
+                aria-label={t("Choisir une présentation")}
+                value={part}
+                onChange={(event) => {
+                  const selected = parsePresentationPart(event.target.value);
+                  if (selected !== null) setPart(selected);
+                }}
+                className="max-w-[min(56vw,270px)] rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+              >
+                {presentationParts.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.id} / 5 · {t(item.label)}
+                  </option>
+                ))}
+              </select>
+            </label>
             {part > 1 && (
               <button
                 type="button"
